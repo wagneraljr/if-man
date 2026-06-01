@@ -1,5 +1,100 @@
 [
   {
+    "id": 1780333637275,
+    "data": "01/06/2026",
+    "hora": "14:07",
+    "duracaoSeg": 300,
+    "motivo": "tempo",
+    "participantes": 1,
+    "ranking": [
+      {
+        "nome": "Miguel aura pura",
+        "pontuacao": 4230,
+        "vidas": 6
+      }
+    ]
+  },
+  {
+    "id": 1780332772360,
+    "data": "01/06/2026",
+    "hora": "13:52",
+    "duracaoSeg": 300,
+    "motivo": "tempo",
+    "participantes": 14,
+    "ranking": [
+      {
+        "nome": "Matheus Oliveira",
+        "pontuacao": 2790,
+        "vidas": 3
+      },
+      {
+        "nome": "alice fontainha",
+        "pontuacao": 2570,
+        "vidas": 4
+      },
+      {
+        "nome": "Miguel Dono da Aura",
+        "pontuacao": 2500,
+        "vidas": 0
+      },
+      {
+        "nome": "ana neves",
+        "pontuacao": 2490,
+        "vidas": 4
+      },
+      {
+        "nome": "Julia",
+        "pontuacao": 1570,
+        "vidas": 4
+      },
+      {
+        "nome": "Thamara",
+        "pontuacao": 1550,
+        "vidas": 0
+      },
+      {
+        "nome": "Raphael Valverde GOATIS",
+        "pontuacao": 1280,
+        "vidas": 4
+      },
+      {
+        "nome": "gabriel",
+        "pontuacao": 580,
+        "vidas": 2
+      },
+      {
+        "nome": "Vick",
+        "pontuacao": 120,
+        "vidas": 3
+      },
+      {
+        "nome": "monick silva",
+        "pontuacao": 0,
+        "vidas": 3
+      },
+      {
+        "nome": "larix",
+        "pontuacao": 0,
+        "vidas": 3
+      },
+      {
+        "nome": "Evelyn Amaral",
+        "pontuacao": 0,
+        "vidas": 3
+      },
+      {
+        "nome": "Anônimo",
+        "pontuacao": 0,
+        "vidas": 3
+      },
+      {
+        "nome": "Mariana",
+        "pontuacao": 0,
+        "vidas": 3
+      }
+    ]
+  },
+  {
     "id": 1780331042713,
     "data": "01/06/2026",
     "hora": "13:24",

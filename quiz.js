@@ -148,9 +148,6 @@ function verificarColisaoComResposta() {
                     `Pontuação final: ${pontuacao} pts (bônus de vidas: ${bonus})`, "verde");
                 setTimeout(() => {
                     indicePerguntaAtual = 0;
-                    pontuacao = 0;
-                    vidas = 3;
-                    atualizarPlacar();
                     prepararNovaRodada();
                 }, 2500);
             } else {
