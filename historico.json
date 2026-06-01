@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1780331042713,
+    "data": "01/06/2026",
+    "hora": "13:24",
+    "duracaoSeg": 300,
+    "motivo": "tempo",
+    "participantes": 6,
+    "ranking": [
+      {
+        "nome": "Guilherme",
+        "pontuacao": 4700,
+        "vidas": 5
+      },
+      {
+        "nome": "pedro henrique",
+        "pontuacao": 2400,
+        "vidas": -1
+      },
+      {
+        "nome": "Lorena",
+        "pontuacao": 2150,
+        "vidas": 4
+      },
+      {
+        "nome": "Roberta",
+        "pontuacao": 1540,
+        "vidas": 2
+      },
+      {
+        "nome": "Pedro Augusto",
+        "pontuacao": 1290,
+        "vidas": 3
+      },
+      {
+        "nome": "Bernardo",
+        "pontuacao": 130,
+        "vidas": 3
+      }
+    ]
+  },
+  {
+    "id": 1780160663678,
+    "data": "30/05/2026",
+    "hora": "14:04",
+    "duracaoSeg": 300,
+    "motivo": "manual",
+    "participantes": 2,
+    "ranking": [
+      {
+        "nome": "Paula",
+        "pontuacao": 240,
+        "vidas": 2
+      },
+      {
+        "nome": "Wagner",
+        "pontuacao": 0,
+        "vidas": 3
+      }
+    ]
+  }
+]

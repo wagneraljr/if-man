@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Histórico de Competições - IF Sudeste MG</title>
+    <link rel="stylesheet" href="estilo.css">
+    <style>body { display:none; }</style>
+    <script>
+        if (sessionStorage.getItem("professor_autenticado") !== "true") {
+            window.location.replace("login.html");
+        } else {
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.style.display = "block";
+            });
+        }
+    </script>
+</head>
+<body>
+
+    <nav class="barra-topo">
+        <img src="logo_if.png" alt="Logo IF Sudeste MG" class="logo-nav">
+        <span class="nav-titulo">Histórico de Competições</span>
+        <div class="nav-acoes">
+            <a href="painel-competicao.html" class="btn-nav-outline">Competição 🏆</a>
+            <a href="painel-professor.html"  class="btn-nav-outline">Questões</a>
+            <a href="index.html" class="btn-nav-sair" onclick="sessionStorage.clear()">Sair</a>
+        </div>
+    </nav>
+
+    <main class="painel-wrapper">
+
+        <div class="painel-cabecalho">
+            <div>
+                <h2>Histórico de Competições</h2>
+                <p class="texto-secundario">Resultado de todas as competições realizadas neste servidor.</p>
+            </div>
+        </div>
+
+        <!-- Lista de competições -->
+        <div id="lista-historico"></div>
+
+        <!-- Detalhe de uma competição (painel lateral) -->
+        <div id="painel-detalhe" style="display:none">
+            <div class="detalhe-header">
+                <div>
+                    <h3 id="detalhe-titulo"></h3>
+                    <p class="texto-secundario" id="detalhe-info"></p>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button onclick="exportarCSV()" class="btn-outline-sm">⬇ Exportar CSV</button>
+                    <button onclick="fecharDetalhe()" class="btn-secundario">✕ Fechar</button>
+                </div>
+            </div>
+
+            <!-- Pódio -->
+            <div id="detalhe-podio" class="podio-wrap" style="margin: 20px 0 8px;"></div>
+
+            <!-- Ranking completo -->
+            <div id="detalhe-ranking" style="margin-top: 8px;"></div>
+        </div>
+
+    </main>
+
+    <script>
+        let competicaoAtual = null; // dados completos da competição em detalhe
+
+        const MEDALHAS  = ["🥇","🥈","🥉"];
+        const COR_BORDA = ["#F1C40F","#95A5A6","#CD6133"];
+        const COR_FUNDO = ["#FFFDE7","#F8F9FA","#FDF3EC"];
+
+        // ── Listagem ──────────────────────────────────────────────────────────────
+
+        async function carregarHistorico() {
+            const lista = document.getElementById("lista-historico");
+            lista.innerHTML = `<div class="estado-vazio"><p>Carregando...</p></div>`;
+
+            try {
+                const res    = await fetch("/api/historico");
+                const dados  = await res.json();
+
+                if (dados.length === 0) {
+                    lista.innerHTML = `
+                        <div class="estado-vazio">
+                            <p>Nenhuma competição registrada ainda.</p>
+                            <p class="texto-secundario" style="margin-top:8px; font-size:.85rem">
+                                As competições são salvas automaticamente ao encerrar.
+                            </p>
+                        </div>`;
+                    return;
+                }
+
+                lista.innerHTML = dados.map(comp => `
+                    <div class="questao-card hist-card" onclick="abrirDetalhe(${comp.id})">
+                        <div class="questao-card-header">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <span class="questao-numero">🏆</span>
+                                <div>
+                                    <strong>${comp.data} às ${comp.hora}</strong>
+                                    <span class="hist-badge ${comp.motivo === 'tempo' ? '' : 'hist-badge-manual'}">
+                                        ${comp.motivo === "tempo" ? "⏱ Tempo esgotado" : "■ Encerrada manualmente"}
+                                    </span>
+                                </div>
+                            </div>
+                            <button onclick="event.stopPropagation(); confirmarExclusao(${comp.id})"
+                                class="btn-perigo-sm">Excluir</button>
+                        </div>
+
+                        <div class="hist-meta">
+                            <span>👥 ${comp.participantes} participante${comp.participantes !== 1 ? "s" : ""}</span>
+                            <span>⏱ ${Math.round(comp.duracaoSeg / 60)} min</span>
+                        </div>
+
+                        <div class="alts-wrap" style="margin-top:10px;">
+                            ${comp.top3.map((a, i) => `
+                                <span class="alt-badge ${i === 0 ? "alt-correta" : ""}">
+                                    ${MEDALHAS[i]} ${a.nome} — ${a.pontuacao} pts
+                                </span>`).join("")}
+                        </div>
+
+                        <p class="hint" style="margin-top:10px; font-size:.8rem">
+                            Clique para ver o ranking completo →
+                        </p>
+                    </div>`).join("");
+
+            } catch {
+                lista.innerHTML = `<div class="estado-vazio"><p>Erro ao carregar histórico. Verifique o servidor.</p></div>`;
+            }
+        }
+
+        // ── Detalhe ───────────────────────────────────────────────────────────────
+
+        async function abrirDetalhe(id) {
+            try {
+                const res  = await fetch(`/api/historico/${id}`);
+                competicaoAtual = await res.json();
+                renderizarDetalhe(competicaoAtual);
+                document.getElementById("painel-detalhe").style.display = "block";
+                document.getElementById("painel-detalhe").scrollIntoView({ behavior: "smooth" });
+            } catch {
+                alert("Erro ao carregar detalhes desta competição.");
+            }
+        }
+
+        function fecharDetalhe() {
+            document.getElementById("painel-detalhe").style.display = "none";
+            competicaoAtual = null;
+        }
+
+        function renderizarDetalhe(comp) {
+            document.getElementById("detalhe-titulo").innerText =
+                `${comp.data} às ${comp.hora}`;
+            document.getElementById("detalhe-info").innerText =
+                `${comp.participantes} participante${comp.participantes !== 1 ? "s" : ""} · ${Math.round(comp.duracaoSeg / 60)} min · ${comp.motivo === "tempo" ? "Tempo esgotado" : "Encerrada manualmente"}`;
+
+            renderizarPodioDetalhe(comp.ranking);
+            renderizarRankingDetalhe(comp.ranking);
+        }
+
+        function renderizarPodioDetalhe(ranking) {
+            const podio  = document.getElementById("detalhe-podio");
+            const top3   = ranking.slice(0, 3);
+
+            // Preenche vagas vazias
+            while (top3.length < 3) top3.push(null);
+
+            const alturas = ["prata", "ouro", "bronze"];
+            const config  = [
+                { pos: "2º", medalha: "🥈", cor: "#95A5A6", alt: "prata"  },
+                { pos: "1º", medalha: "🥇", cor: "#F1C40F", alt: "ouro"   },
+                { pos: "3º", medalha: "🥉", cor: "#CD6133", alt: "bronze" }
+            ];
+            const ordemVisual = [top3[1], top3[0], top3[2]];
+
+            podio.innerHTML = ordemVisual.map((aluno, i) => {
+                const cfg = config[i];
+                if (!aluno) return `<div class="podio-lugar podio-${cfg.alt} vazio"></div>`;
+                return `
+                <div class="podio-lugar podio-${cfg.alt}">
+                    <div class="podio-medalha">${cfg.medalha}</div>
+                    <div class="podio-nome">${aluno.nome}</div>
+                    <div class="podio-pts">${aluno.pontuacao} pts</div>
+                    <div class="podio-base" style="background:${cfg.cor}">${cfg.pos}</div>
+                </div>`;
+            }).join("");
+        }
+
+        function renderizarRankingDetalhe(ranking) {
+            const el = document.getElementById("detalhe-ranking");
+            el.innerHTML = `
+                <h3 style="margin-bottom:12px; color:var(--if-verde-escuro)">Ranking completo</h3>
+                ${ranking.map((aluno, i) => {
+                    const pos    = i + 1;
+                    const empate = i > 0 && aluno.pontuacao === ranking[i-1].pontuacao;
+                    const label  = pos <= 3 ? MEDALHAS[pos-1] : pos + "º";
+                    return `
+                    <div class="questao-card placar-linha ${pos <= 3 ? "placar-destaque-"+pos : ""}"
+                         style="margin-bottom:6px;">
+                        <div class="placar-posicao">
+                            ${empate ? '<span style="color:#aaa;font-size:.75rem">=</span>' : label}
+                        </div>
+                        <div class="placar-nome">${aluno.nome}</div>
+                        <div class="placar-pontos">${aluno.pontuacao} pts</div>
+                        <div class="placar-vidas">${"❤".repeat(Math.max(0, aluno.vidas || 0))}</div>
+                    </div>`;
+                }).join("")}`;
+        }
+
+        // ── Exportação CSV ────────────────────────────────────────────────────────
+
+        function exportarCSV() {
+            if (!competicaoAtual) return;
+
+            const comp   = competicaoAtual;
+            const linhas = [
+                ["Posição","Nome","Pontuação","Vidas"],
+                ...comp.ranking.map((a, i) => [i+1, a.nome, a.pontuacao, a.vidas || 0])
+            ];
+
+            const csv = linhas
+                .map(l => l.map(v => `"${String(v).replace(/"/g,'""')}"`).join(","))
+                .join("\n");
+
+            const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement("a");
+            a.href     = url;
+            a.download = `competicao_${comp.data.replace(/\//g,"-")}_${comp.hora.replace(/:/g,"h")}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ── Exclusão ──────────────────────────────────────────────────────────────
+
+        async function confirmarExclusao(id) {
+            if (!confirm("Excluir este registro do histórico? Esta ação não pode ser desfeita.")) return;
+            try {
+                await fetch(`/api/historico/${id}`, { method: "DELETE" });
+                fecharDetalhe();
+                carregarHistorico();
+            } catch {
+                alert("Erro ao excluir. Verifique o servidor.");
+            }
+        }
+
+        // ── Inicialização ─────────────────────────────────────────────────────────
+        carregarHistorico();
+    </script>
+
+    <style>
+        .hist-card {
+            cursor: pointer;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .hist-card:hover {
+            border-color: var(--if-verde);
+            box-shadow: 0 4px 16px rgba(47,158,65,0.15);
+        }
+        .hist-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 0.85rem;
+            color: var(--cor-texto-claro);
+            margin-top: 8px;
+        }
+        .hist-badge {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: var(--if-verde-claro);
+            color: var(--if-verde-escuro);
+            margin-left: 8px;
+            font-weight: 600;
+        }
+        .hist-badge-manual {
+            background: #FAEEDA;
+            color: #633806;
+        }
+        .detalhe-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding: 20px;
+            background: var(--cor-fundo-card);
+            border: var(--borda);
+            border-left: 5px solid var(--if-verde);
+            border-radius: var(--raio);
+            box-shadow: var(--sombra);
+            margin-bottom: 12px;
+        }
+    </style>
+
+</body>
+</html>

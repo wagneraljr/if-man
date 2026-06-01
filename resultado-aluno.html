@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Resultado - Quiz IF-Man</title>
+    <link rel="stylesheet" href="estilo.css">
+</head>
+<body class="pagina-login">
+
+    <div class="login-wrapper" style="max-width: 520px;">
+        <div class="login-card">
+
+            <div class="login-header" id="resultado-header">
+                <img src="logo_if.png" alt="Logo IF Sudeste MG" class="login-logo">
+                <h1 id="resultado-titulo">Carregando...</h1>
+                <p class="login-subtitulo" id="resultado-subtitulo"></p>
+            </div>
+
+            <!-- Estado de carregamento -->
+            <div id="estado-carregando" style="padding: 40px; text-align:center;">
+                <div class="espera-status">
+                    <span class="ponto-piscando">●</span>
+                    <span class="ponto-piscando" style="animation-delay:.3s">●</span>
+                    <span class="ponto-piscando" style="animation-delay:.6s">●</span>
+                </div>
+                <p class="texto-secundario" style="margin-top:12px">Buscando resultado...</p>
+            </div>
+
+            <!-- Resultado carregado -->
+            <div id="estado-resultado" style="display:none; padding: 24px 32px 8px;">
+
+                <!-- Posição do aluno em destaque -->
+                <div class="resultado-posicao-card" id="posicao-card">
+                    <div class="resultado-posicao-num" id="posicao-num">-</div>
+                    <div class="resultado-posicao-info">
+                        <span class="resultado-nome" id="resultado-nome"></span>
+                        <span class="resultado-pontos" id="resultado-pontos"></span>
+                    </div>
+                    <div class="resultado-vidas" id="resultado-vidas"></div>
+                </div>
+
+                <!-- Top 3 -->
+                <div id="secao-top3" style="margin-top: 20px;">
+                    <p class="campo-grupo-label" style="margin-bottom: 10px;">🏆 Top 3</p>
+                    <div id="lista-top3"></div>
+                </div>
+
+                <!-- Ranking completo (colapsável) -->
+                <div id="secao-ranking" style="margin-top: 16px; display:none;">
+                    <p class="campo-grupo-label" style="margin-bottom: 10px;">Ranking completo</p>
+                    <div id="lista-ranking"></div>
+                </div>
+
+                <button onclick="toggleRanking()" id="btn-toggle-ranking"
+                    class="btn-secundario" style="width:100%; margin-top:12px">
+                    Ver ranking completo ▼
+                </button>
+
+            </div>
+
+            <!-- Aguardando encerramento -->
+            <div id="estado-aguardando" style="display:none; padding: 32px; text-align:center;">
+                <div class="espera-icone">⏳</div>
+                <p class="texto-secundario" style="margin-top: 12px">
+                    A competição ainda está em andamento.<br>
+                    Aguarde o encerramento para ver o resultado.
+                </p>
+                <div class="espera-status">
+                    <span class="ponto-piscando">●</span>
+                    <span class="ponto-piscando" style="animation-delay:.3s">●</span>
+                    <span class="ponto-piscando" style="animation-delay:.6s">●</span>
+                </div>
+            </div>
+
+            <div style="padding: 16px 32px 24px; display:flex; flex-direction:column; gap:8px;">
+                <a href="sala-espera.html" class="btn-entrar" style="text-align:center; text-decoration:none; display:block">
+                    Jogar novamente
+                </a>
+                <a href="index.html" class="link-voltar">← Início</a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const NOME  = sessionStorage.getItem("aluno_nome") || "";
+        let rankingAberto = false;
+        let intervaloEspera = null;
+
+        const MEDALHAS  = ["🥇", "🥈", "🥉"];
+        const COR_TOP   = ["#FEF9E7", "#F8F9FA", "#FDF3EC"];
+        const COR_BORDA = ["#F1C40F", "#95A5A6", "#CD6133"];
+
+        async function carregarResultado() {
+            try {
+                const res   = await fetch(`/api/resultado-aluno?nome=${encodeURIComponent(NOME)}`);
+                const dados = await res.json();
+
+                if (dados.fase === "rodando") {
+                    // Ainda rodando: mostra tela de espera e fica verificando
+                    mostrarEstado("aguardando");
+                    if (!intervaloEspera) {
+                        intervaloEspera = setInterval(carregarResultado, 3000);
+                    }
+                    return;
+                }
+
+                // Encerrada: para o polling e mostra resultado
+                if (intervaloEspera) { clearInterval(intervaloEspera); intervaloEspera = null; }
+                mostrarResultado(dados);
+
+            } catch {
+                // Servidor fora: mostra mensagem genérica
+                document.getElementById("resultado-titulo").innerText   = "Servidor inacessível";
+                document.getElementById("resultado-subtitulo").innerText = "Não foi possível buscar o resultado.";
+                mostrarEstado("resultado");
+            }
+        }
+
+        function mostrarResultado(dados) {
+            const { posicao, total, pontuacao, vidas, top3, ranking } = dados;
+
+            // Header dinâmico com ícone e mensagem conforme posição
+            let icone, mensagem;
+            if (!posicao) {
+                icone = "📋"; mensagem = "Participação registrada";
+            } else if (posicao === 1) {
+                icone = "🏆"; mensagem = "Parabéns, você venceu!";
+            } else if (posicao <= 3) {
+                icone = MEDALHAS[posicao - 1]; mensagem = `Você ficou em ${posicao}º lugar!`;
+            } else {
+                icone = "🎮"; mensagem = `Você ficou em ${posicao}º de ${total}`;
+            }
+
+            document.getElementById("resultado-titulo").innerText   = icone + " " + mensagem;
+            document.getElementById("resultado-subtitulo").innerText =
+                posicao ? `${total} participante${total !== 1 ? "s" : ""}` : "Pontuação não registrada";
+
+            // Ajusta cor do header conforme posição
+            const header = document.getElementById("resultado-header");
+            if (posicao === 1)      header.style.background = "linear-gradient(135deg, #1D6B2A, #2F9E41)";
+            else if (posicao === 2) header.style.background = "linear-gradient(135deg, #5D6D7E, #85929E)";
+            else if (posicao === 3) header.style.background = "linear-gradient(135deg, #784212, #A04000)";
+
+            // Card de posição do aluno
+            const cardEl = document.getElementById("posicao-card");
+            if (posicao && posicao <= 3) {
+                cardEl.style.borderColor    = COR_BORDA[posicao - 1];
+                cardEl.style.background     = COR_TOP[posicao - 1];
+            }
+            document.getElementById("posicao-num").innerText  =
+                posicao ? (posicao <= 3 ? MEDALHAS[posicao - 1] : posicao + "º") : "—";
+            document.getElementById("resultado-nome").innerText   = NOME || "Anônimo";
+            document.getElementById("resultado-pontos").innerText = pontuacao + " pontos";
+            document.getElementById("resultado-vidas").innerText  =
+                "❤".repeat(Math.max(0, vidas));
+
+            // Top 3
+            renderizarLista("lista-top3", top3, 1);
+
+            // Ranking completo
+            renderizarLista("lista-ranking", ranking, 1);
+
+            // Esconde botão se ranking tem 3 ou menos
+            if (ranking.length <= 3) {
+                document.getElementById("btn-toggle-ranking").style.display = "none";
+            }
+
+            mostrarEstado("resultado");
+        }
+
+        function renderizarLista(idEl, lista, inicioPos) {
+            const el = document.getElementById(idEl);
+            if (!lista || lista.length === 0) {
+                el.innerHTML = `<p class="texto-secundario" style="font-size:.85rem">Nenhum dado disponível.</p>`;
+                return;
+            }
+            el.innerHTML = lista.map((aluno, i) => {
+                const pos    = i + inicioPos;
+                const sou    = aluno.nome === NOME;
+                const medal  = pos <= 3 ? MEDALHAS[pos - 1] : pos + "º";
+                return `
+                <div class="placar-linha questao-card ${sou ? "placar-linha-eu" : ""}
+                     ${pos <= 3 ? "placar-destaque-" + pos : ""}"
+                     style="margin-bottom:6px; padding: 10px 14px;">
+                    <div class="placar-posicao" style="font-size:1.1rem; min-width:34px">${medal}</div>
+                    <div class="placar-nome">${aluno.nome}${sou ? " <span class='tag-eu'>Você</span>" : ""}</div>
+                    <div class="placar-pontos">${aluno.pontuacao} pts</div>
+                </div>`;
+            }).join("");
+        }
+
+        function toggleRanking() {
+            rankingAberto = !rankingAberto;
+            document.getElementById("secao-ranking").style.display    = rankingAberto ? "block" : "none";
+            document.getElementById("btn-toggle-ranking").innerText   =
+                rankingAberto ? "Ocultar ranking ▲" : "Ver ranking completo ▼";
+        }
+
+        function mostrarEstado(qual) {
+            document.getElementById("estado-carregando").style.display  = qual === "carregando"  ? "block" : "none";
+            document.getElementById("estado-resultado").style.display   = qual === "resultado"   ? "block" : "none";
+            document.getElementById("estado-aguardando").style.display  = qual === "aguardando"  ? "block" : "none";
+        }
+
+        // Inicia
+        carregarResultado();
+    </script>
+
+    <style>
+        /* Estilos locais específicos desta página */
+        .resultado-posicao-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px;
+            border-radius: var(--raio);
+            border: 2px solid var(--if-verde);
+            background: var(--if-verde-claro);
+        }
+        .resultado-posicao-num {
+            font-size: 2rem;
+            min-width: 48px;
+            text-align: center;
+        }
+        .resultado-posicao-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .resultado-nome {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--cor-texto);
+        }
+        .resultado-pontos {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--if-verde-escuro);
+        }
+        .resultado-vidas {
+            font-size: 0.9rem;
+            color: var(--if-vermelho);
+            letter-spacing: 2px;
+        }
+        .placar-linha-eu {
+            border-left-color: var(--if-verde) !important;
+            background: var(--if-verde-claro) !important;
+        }
+        .tag-eu {
+            font-size: 0.7rem;
+            background: var(--if-verde);
+            color: #fff;
+            padding: 1px 6px;
+            border-radius: 10px;
+            vertical-align: middle;
+            margin-left: 6px;
+        }
+    </style>
+
+</body>
+</html>

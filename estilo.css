@@ -1,0 +1,1398 @@
+/* =============================================================================
+   estilo.css — Quiz Pac-Man | IF Sudeste MG
+   Identidade visual institucional com área de jogo preservada.
+   ============================================================================= */
+
+
+/* =============================================================================
+   1. FONTE E VARIÁVEIS
+   ============================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+
+:root {
+    /* Paleta IF Sudeste MG */
+    --if-verde:           #2F9E41;
+    --if-verde-escuro:    #1D6B2A;
+    --if-verde-claro:     #E8F5EA;
+    --if-vermelho:        #CD191E;
+    --if-vermelho-escuro: #A11115;
+
+    /* Neutros */
+    --cor-fundo:       #F8F9FA;
+    --cor-fundo-card:  #FFFFFF;
+    --cor-texto:       #2D3436;
+    --cor-texto-claro: #636E72;
+    --borda:           1px solid #DFE6E9;
+    --sombra:          0 2px 8px rgba(0,0,0,0.08);
+    --raio:            8px;
+
+    /* Canvas / jogo (mantidos internamente) */
+    --jogo-parede:     #1a1aff;
+    --jogo-parede-borda: #4d4dff;
+}
+
+
+/* =============================================================================
+   2. RESET E BASE
+   ============================================================================= */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html { font-size: 14px; }
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+    line-height: 1.5;
+    min-height: 100vh;
+}
+
+h1 { font-size: 1.5rem; color: var(--if-verde); font-weight: 700; }
+h2 { font-size: 1.25rem; color: var(--if-verde); font-weight: 700; }
+h3 { font-size: 1.1rem;  color: var(--if-verde); font-weight: 600; }
+
+
+/* =============================================================================
+   3. BARRA DE NAVEGAÇÃO SUPERIOR
+   ============================================================================= */
+
+.barra-topo {
+    background-color: var(--cor-fundo-card);
+    border-top: 3px solid var(--if-verde);
+    border-bottom: var(--borda);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--sombra);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo-nav {
+    max-height: 44px;
+    width: auto;
+}
+
+.nav-titulo {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--if-verde-escuro);
+    flex: 1;
+}
+
+.nav-acoes {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-nav-sair {
+    background-color: var(--if-vermelho);
+    color: #fff;
+    border: none;
+    padding: 7px 16px;
+    border-radius: var(--raio);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-nav-sair:hover {
+    background-color: var(--if-vermelho-escuro);
+    transform: translateY(-1px);
+}
+
+
+/* =============================================================================
+   4. LAYOUT GERAL DO JOGO
+   ============================================================================= */
+
+.jogo-wrapper {
+    display: flex;
+    justify-content: center;
+    padding: 24px 16px 32px;
+}
+
+.jogo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 780px;
+}
+
+
+/* =============================================================================
+   5. PAINEL DE QUESTÃO (HUD)
+   ============================================================================= */
+
+.painel-questao {
+    width: 100%;
+    background-color: var(--cor-fundo-card);
+    border: var(--borda);
+    border-left: 5px solid var(--if-verde);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    overflow: hidden;
+}
+
+.painel-pergunta-wrap {
+    flex: 1;
+    padding: 14px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.painel-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--if-verde);
+    text-transform: uppercase;
+}
+
+#pergunta {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--cor-texto);
+    line-height: 1.5;
+}
+
+.painel-hud {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border-left: var(--borda);
+    background-color: var(--if-verde-claro);
+    padding: 0 20px;
+    flex-shrink: 0;
+}
+
+.hud-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 14px 16px;
+    gap: 4px;
+}
+
+.hud-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--if-verde-escuro);
+    text-transform: uppercase;
+}
+
+.hud-valor {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--if-verde-escuro);
+}
+
+.hud-vidas {
+    font-size: 1rem;
+    color: var(--if-vermelho);
+    letter-spacing: 2px;
+}
+
+.hud-divider {
+    width: 1px;
+    height: 40px;
+    background-color: #c8deca;
+}
+
+
+/* =============================================================================
+   6. BOTÃO INICIAR RODADA
+   ============================================================================= */
+
+#btn-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#btn-iniciar {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    background-color: var(--if-verde);
+    border: none;
+    border-radius: var(--raio);
+    padding: 12px 40px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(47,158,65,0.35);
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    animation: piscar-btn 1.4s ease-in-out infinite;
+}
+
+#btn-iniciar:hover {
+    background-color: var(--if-verde-escuro);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(47,158,65,0.45);
+    animation: none;
+}
+
+#btn-iniciar:active {
+    transform: translateY(0);
+}
+
+#btn-iniciar.oculto {
+    display: none;
+}
+
+@keyframes piscar-btn {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.7; }
+}
+
+
+/* =============================================================================
+   7. CANVAS DO JOGO
+   ============================================================================= */
+
+#canvas-wrapper {
+    position: relative;
+    display: inline-block;
+    border-radius: var(--raio);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    overflow: hidden;
+}
+
+canvas {
+    background-color: #000010;
+    border: 3px solid var(--if-verde);
+    border-radius: var(--raio);
+    display: block;
+    image-rendering: pixelated;
+}
+
+/* Scanlines sutis sobre o canvas */
+#canvas-wrapper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent, transparent 3px,
+        rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px
+    );
+    pointer-events: none;
+    border-radius: var(--raio);
+}
+
+
+/* =============================================================================
+   8. UTILITÁRIOS
+   ============================================================================= */
+
+.piscando {
+    animation: piscar-btn 1s step-end infinite;
+}
+
+
+/* =============================================================================
+   9. PÁGINA DE LOGIN E SELEÇÃO DE PERFIL
+   ============================================================================= */
+
+.pagina-login {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: var(--cor-fundo);
+}
+
+.login-wrapper {
+    width: 100%;
+    max-width: 440px;
+    padding: 16px;
+}
+
+.login-card {
+    background-color: var(--cor-fundo-card);
+    border-radius: var(--raio);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    border: var(--borda);
+    overflow: hidden;
+}
+
+.login-header {
+    background-color: var(--if-verde);
+    padding: 28px 32px 24px;
+    text-align: center;
+}
+
+.login-header h1 {
+    color: #fff;
+    font-size: 1.4rem;
+    margin-top: 16px;
+}
+
+.login-logo {
+    max-width: 200px;
+    /* Filtra a logo para ficar visível no fundo verde */
+    filter: brightness(0) invert(1);
+}
+
+.login-subtitulo {
+    color: rgba(255,255,255,0.85);
+    font-size: 0.9rem;
+    margin-top: 6px;
+}
+
+.login-form {
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.campo-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.campo-grupo label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--if-verde-escuro);
+}
+
+.campo-grupo input,
+.campo-grupo textarea {
+    padding: 10px 12px;
+    border: 1px solid #BDC3C7;
+    border-radius: var(--raio);
+    font-size: 0.95rem;
+    color: var(--cor-texto);
+    transition: border-color 0.2s;
+    width: 100%;
+}
+
+.campo-grupo input:focus,
+.campo-grupo textarea:focus {
+    outline: none;
+    border-color: var(--if-verde);
+    box-shadow: 0 0 0 3px rgba(47,158,65,0.15);
+}
+
+.btn-entrar {
+    background-color: var(--if-verde);
+    color: #fff;
+    border: none;
+    padding: 12px;
+    border-radius: var(--raio);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-entrar:hover {
+    background-color: var(--if-verde-escuro);
+    transform: translateY(-1px);
+}
+
+.link-voltar {
+    display: block;
+    text-align: center;
+    padding: 16px;
+    color: var(--cor-texto-claro);
+    font-size: 0.88rem;
+    text-decoration: none;
+    border-top: var(--borda);
+    transition: color 0.2s;
+}
+
+.link-voltar:hover { color: var(--if-verde); }
+
+.erro-msg {
+    color: var(--if-vermelho);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Seleção de perfil (aluno / professor) */
+.selecao-perfil {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 24px 28px 28px;
+}
+
+.card-perfil {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 24px 16px;
+    border-radius: var(--raio);
+    border: 2px solid var(--if-verde);
+    text-decoration: none;
+    color: var(--if-verde-escuro);
+    background-color: var(--if-verde-claro);
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.card-perfil:hover {
+    background-color: var(--if-verde);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(47,158,65,0.3);
+}
+
+.card-perfil-professor {
+    border-color: var(--if-vermelho);
+    background-color: #FDF0F0;
+    color: var(--if-vermelho-escuro);
+}
+
+.card-perfil-professor:hover {
+    background-color: var(--if-vermelho);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(205,25,30,0.3);
+}
+
+.perfil-icone { font-size: 2.2rem; }
+.perfil-titulo { font-size: 1rem; font-weight: 700; }
+.perfil-desc   { font-size: 0.8rem; opacity: 0.8; }
+
+
+/* =============================================================================
+   10. PAINEL DO PROFESSOR
+   ============================================================================= */
+
+.painel-wrapper {
+    max-width: 860px;
+    margin: 28px auto;
+    padding: 0 16px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.painel-cabecalho {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.texto-secundario {
+    color: var(--cor-texto-claro);
+    font-size: 0.9rem;
+    margin-top: 4px;
+}
+
+/* Stats */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.stat-card {
+    background-color: var(--cor-fundo-card);
+    border: var(--borda);
+    border-radius: var(--raio);
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: var(--sombra);
+}
+
+.stat-numero {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--if-verde);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--cor-texto-claro);
+}
+
+/* Lista de questões */
+.lista-questoes {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.questao-card {
+    background-color: var(--cor-fundo-card);
+    border: var(--borda);
+    border-left: 4px solid var(--if-verde);
+    border-radius: var(--raio);
+    padding: 16px 20px;
+    box-shadow: var(--sombra);
+}
+
+.questao-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.questao-numero {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--if-verde);
+    background-color: var(--if-verde-claro);
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+
+.questao-acoes { display: flex; gap: 8px; }
+
+.questao-texto {
+    font-size: 0.95rem;
+    color: var(--cor-texto);
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.alts-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.alt-badge {
+    font-size: 0.82rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background-color: #f0f0f0;
+    color: #555;
+    border: 1px solid #ddd;
+}
+
+.alt-correta {
+    background-color: var(--if-verde-claro);
+    color: var(--if-verde-escuro);
+    border-color: var(--if-verde);
+    font-weight: 600;
+}
+
+.alerta-sem-correta {
+    margin-top: 10px;
+    font-size: 0.82rem;
+    color: var(--if-vermelho);
+}
+
+.estado-vazio {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--cor-texto-claro);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.painel-rodape {
+    border-top: var(--borda);
+    padding-top: 16px;
+}
+
+/* Botões variantes */
+.btn-primario {
+    background-color: var(--if-verde);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--raio);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-primario:hover {
+    background-color: var(--if-verde-escuro);
+    transform: translateY(-1px);
+}
+
+.btn-secundario {
+    background-color: transparent;
+    color: var(--cor-texto-claro);
+    border: 1px solid #BDC3C7;
+    padding: 10px 20px;
+    border-radius: var(--raio);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-secundario:hover { background-color: var(--cor-fundo); }
+
+.btn-nav-outline {
+    background-color: transparent;
+    color: var(--if-vermelho);
+    border: 1.5px solid var(--if-vermelho);
+    padding: 7px 16px;
+    border-radius: var(--raio);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: background 0.2s, color 0.2s;
+}
+
+.btn-nav-outline:hover {
+    background-color: var(--if-vermelho);
+    color: #fff;
+}
+
+.btn-outline-sm {
+    background-color: transparent;
+    color: var(--if-verde);
+    border: 1.5px solid var(--if-verde);
+    padding: 5px 12px;
+    border-radius: var(--raio);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.btn-outline-sm:hover {
+    background-color: var(--if-verde);
+    color: #fff;
+}
+
+.btn-perigo-sm {
+    background-color: transparent;
+    color: var(--if-vermelho);
+    border: 1.5px solid var(--if-vermelho);
+    padding: 5px 12px;
+    border-radius: var(--raio);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.btn-perigo-sm:hover {
+    background-color: var(--if-vermelho);
+    color: #fff;
+}
+
+.btn-perigo-outline {
+    background-color: transparent;
+    color: var(--if-vermelho);
+    border: 1.5px solid var(--if-vermelho);
+    padding: 8px 18px;
+    border-radius: var(--raio);
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.btn-perigo-outline:hover {
+    background-color: var(--if-vermelho);
+    color: #fff;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.modal-card {
+    background-color: var(--cor-fundo-card);
+    border-radius: var(--raio);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: var(--borda);
+    background-color: var(--if-verde-claro);
+}
+
+.modal-header h3 { color: var(--if-verde-escuro); }
+
+.btn-fechar-modal {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    color: var(--cor-texto-claro);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    line-height: 1;
+}
+
+.btn-fechar-modal:hover { background-color: #eee; color: var(--cor-texto); }
+
+.modal-corpo {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    border-top: var(--borda);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Alternativas no modal */
+.campo-grupo-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--if-verde-escuro);
+    margin-bottom: 8px;
+}
+
+.hint {
+    font-weight: 400;
+    color: var(--cor-texto-claro);
+}
+
+.obrigatorio { color: var(--if-vermelho); }
+
+.alternativa-linha {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.radio-correta { accent-color: var(--if-verde); width: 16px; height: 16px; cursor: pointer; }
+
+.radio-label {
+    font-weight: 700;
+    color: var(--if-verde-escuro);
+    width: 18px;
+    flex-shrink: 0;
+}
+
+.input-alternativa {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #BDC3C7;
+    border-radius: var(--raio);
+    font-size: 0.9rem;
+}
+
+.input-alternativa:focus {
+    outline: none;
+    border-color: var(--if-verde);
+    box-shadow: 0 0 0 3px rgba(47,158,65,0.15);
+}
+
+
+/* =============================================================================
+   11. SALA DE ESPERA DO ALUNO
+   ============================================================================= */
+
+.espera-icone {
+    font-size: 3.5rem;
+    margin-bottom: 8px;
+}
+
+.espera-status {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 20px 0;
+}
+
+.ponto-piscando {
+    font-size: 1.6rem;
+    color: var(--if-verde);
+    animation: piscar-btn 1s ease-in-out infinite;
+}
+
+.espera-dica {
+    font-size: 0.88rem;
+    color: var(--cor-texto-claro);
+    line-height: 1.6;
+    padding: 0 8px;
+}
+
+
+/* =============================================================================
+   12. PAINEL DE COMPETIÇÃO — CONFIGURAÇÃO
+   ============================================================================= */
+
+.config-card {
+    background-color: var(--cor-fundo-card);
+    border: var(--borda);
+    border-radius: var(--raio);
+    padding: 24px;
+    box-shadow: var(--sombra);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.duracao-opcoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.btn-duracao {
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+    border: 1.5px solid #BDC3C7;
+    padding: 8px 20px;
+    border-radius: var(--raio);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-duracao:hover {
+    border-color: var(--if-verde);
+    color: var(--if-verde);
+}
+
+.btn-duracao.ativo {
+    background-color: var(--if-verde);
+    color: #fff;
+    border-color: var(--if-verde);
+}
+
+.duracao-custom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    color: var(--cor-texto-claro);
+}
+
+.duracao-custom input {
+    width: 72px;
+    padding: 7px 10px;
+    border: 1.5px solid #BDC3C7;
+    border-radius: var(--raio);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.duracao-custom input:focus {
+    outline: none;
+    border-color: var(--if-verde);
+}
+
+.alunos-aguardando {
+    background-color: var(--if-verde-claro);
+    border-radius: var(--raio);
+    padding: 16px;
+}
+
+.chips-alunos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    min-height: 36px;
+}
+
+.chip-aluno {
+    background-color: var(--if-verde);
+    color: #fff;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.chip-vazio {
+    color: var(--cor-texto-claro);
+    font-size: 0.88rem;
+    font-style: italic;
+}
+
+.btn-iniciar-comp {
+    font-size: 1.05rem;
+    padding: 14px;
+    letter-spacing: 0.3px;
+}
+
+
+/* =============================================================================
+   13. PLACAR AO VIVO E TIMER
+   ============================================================================= */
+
+/* Timer na nav do jogo (visível para aluno) */
+.timer-hud {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--if-verde-escuro);
+    background-color: var(--if-verde-claro);
+    border: 1.5px solid var(--if-verde);
+    border-radius: var(--raio);
+    padding: 5px 14px;
+    letter-spacing: 1px;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Timer grande no painel do professor */
+.timer-grande {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--if-verde-escuro);
+    letter-spacing: 2px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Estado urgente: menos de 30s */
+.timer-urgente {
+    color: var(--if-vermelho) !important;
+    animation: piscar-btn 0.7s ease-in-out infinite;
+}
+
+.timer-encerrado {
+    color: #95A5A6 !important;
+    animation: none;
+}
+
+/* Linhas do placar ao vivo */
+.placar-linha {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px !important;
+}
+
+.placar-posicao {
+    font-size: 1.4rem;
+    min-width: 40px;
+    text-align: center;
+}
+
+.posicao-num {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--cor-texto-claro);
+}
+
+.placar-nome {
+    flex: 1;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--cor-texto);
+}
+
+.placar-pontos {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--if-verde-escuro);
+    min-width: 90px;
+    text-align: right;
+}
+
+.placar-vidas {
+    font-size: 0.85rem;
+    color: var(--if-vermelho);
+    min-width: 60px;
+    text-align: right;
+    letter-spacing: 2px;
+}
+
+/* Destaque top 3 no placar ao vivo */
+.placar-destaque-1 { border-left-color: #F1C40F; background-color: #FFFDE7; }
+.placar-destaque-2 { border-left-color: #95A5A6; background-color: #F8F9FA; }
+.placar-destaque-3 { border-left-color: #CD6133; background-color: #FDF3EC; }
+
+
+/* =============================================================================
+   14. PÓDIO FINAL
+   ============================================================================= */
+
+.podio-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 12px;
+    padding: 24px 0 0;
+    min-height: 220px;
+}
+
+.podio-lugar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 160px;
+}
+
+.podio-lugar.vazio {
+    opacity: 0.25;
+}
+
+.podio-medalha { font-size: 2.8rem; }
+
+.podio-nome {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--cor-texto);
+    text-align: center;
+    max-width: 150px;
+    word-break: break-word;
+}
+
+.podio-pts {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--cor-texto-claro);
+}
+
+.podio-base {
+    width: 100%;
+    text-align: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-radius: 6px 6px 0 0;
+    padding: 8px 0;
+}
+
+/* Alturas diferentes das bases do pódio */
+.podio-ouro   .podio-base { padding-top: 32px; }
+.podio-prata  .podio-base { padding-top: 18px; }
+.podio-bronze .podio-base { padding-top: 10px; }
+
+
+/* =============================================================================
+   15. NAV — NOME DO ALUNO E AJUSTES
+   ============================================================================= */
+
+.nav-nome-aluno {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--cor-texto-claro);
+}
+
+
+/* =============================================================================
+   16. SELEÇÃO DE MODO (sala de espera — passo 2)
+   ============================================================================= */
+
+.saudacao-modo {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--if-verde-escuro);
+    margin-bottom: 16px;
+}
+
+.selecao-modo {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.card-modo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 18px 20px;
+    border-radius: var(--raio);
+    border: 2px solid var(--if-verde);
+    background-color: var(--if-verde-claro);
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: background 0.18s, transform 0.12s, box-shadow 0.18s;
+}
+
+.card-modo:hover {
+    background-color: var(--if-verde);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(47,158,65,0.28);
+}
+
+.card-modo:hover .modo-titulo,
+.card-modo:hover .modo-desc {
+    color: #fff;
+}
+
+.card-modo-comp {
+    border-color: #E67E22;
+    background-color: #FEF5EC;
+}
+
+.card-modo-comp:hover {
+    background-color: #E67E22;
+    box-shadow: 0 4px 16px rgba(230,126,34,0.28);
+}
+
+.modo-icone {
+    font-size: 1.8rem;
+    margin-bottom: 4px;
+}
+
+.modo-titulo {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--if-verde-escuro);
+    transition: color 0.18s;
+}
+
+.card-modo-comp .modo-titulo {
+    color: #A04000;
+}
+
+.modo-desc {
+    font-size: 0.85rem;
+    color: var(--cor-texto-claro);
+    transition: color 0.18s;
+}
+
+.btn-voltar-modo {
+    background: none;
+    border: none;
+    color: var(--cor-texto-claro);
+    font-size: 0.88rem;
+    cursor: pointer;
+    padding: 4px 0;
+    text-decoration: underline;
+    display: block;
+}
+
+.btn-voltar-modo:hover {
+    color: var(--if-verde);
+}
+
+
+/* =============================================================================
+   17. ELEMENTOS FLUTUANTES DO JOGO (sobre o canvas)
+   ============================================================================= */
+
+/* Página do jogo não tem barra de topo nem padding extra */
+.jogo-pagina {
+    background-color: var(--cor-fundo);
+}
+
+.jogo-pagina .jogo-wrapper {
+    padding-top: 16px;
+}
+
+/* Base dos flutuantes — posicionados sobre o canvas-wrapper */
+#canvas-wrapper {
+    position: relative;
+}
+
+.flutuante {
+    position: absolute;
+    z-index: 10;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1;
+    pointer-events: auto;
+    transition: opacity 0.2s;
+}
+
+/* Timer — canto superior esquerdo */
+.flutuante-timer {
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 16, 0.72);
+    color: #ffffff;
+    border: 1.5px solid rgba(47, 158, 65, 0.7);
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 1px;
+    backdrop-filter: blur(2px);
+}
+
+.flutuante-timer.timer-urgente {
+    border-color: rgba(205, 25, 30, 0.9);
+    color: #ff6b6b;
+    animation: piscar-btn 0.7s ease-in-out infinite;
+}
+
+.flutuante-timer.timer-encerrado {
+    border-color: rgba(150, 150, 150, 0.5);
+    color: #aaaaaa;
+    animation: none;
+}
+
+/* Botão Sair — canto superior direito */
+.flutuante-sair {
+    top: 10px;
+    right: 10px;
+    background: rgba(205, 25, 30, 0.82);
+    color: #ffffff;
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    padding: 6px 14px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    opacity: 0.6;
+    transition: opacity 0.2s, background 0.2s;
+    backdrop-filter: blur(2px);
+}
+
+.flutuante-sair:hover {
+    opacity: 1;
+    background: rgba(205, 25, 30, 0.97);
+}
+
+/* Nome do aluno — canto inferior esquerdo */
+.flutuante-nome {
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0, 0, 16, 0.60);
+    color: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 5px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    pointer-events: none;
+    backdrop-filter: blur(2px);
+}
+
+
+/* =============================================================================
+   18. PÁGINA DE CONFIGURAÇÕES (setup.html)
+   ============================================================================= */
+
+.setup-pagina {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: var(--cor-fundo);
+}
+
+.setup-wrapper {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 32px 16px;
+}
+
+
+/* =============================================================================
+   19. TIMER — ESTADO SEM CONEXÃO
+   ============================================================================= */
+
+.flutuante-timer.timer-sem-conexao {
+    border-color: rgba(230, 126, 34, 0.9);
+    color: #f39c12;
+    animation: piscar-btn 1s ease-in-out infinite;
+}
+
+
+/* =============================================================================
+   20. RESPONSIVIDADE DO CANVAS
+   ============================================================================= */
+
+/* Garante que o scale não seja cortado pelo overflow */
+#canvas-wrapper {
+    overflow: visible;
+    transition: transform 0.2s ease;
+}
+
+/* Em telas menores que o canvas, remove padding lateral excessivo */
+@media (max-width: 800px) {
+    .jogo-wrapper {
+        padding: 12px 0 16px;
+    }
+
+    .jogo-pagina .jogo-wrapper {
+        padding-top: 8px;
+    }
+
+    /* Painel de questão compacto em telas pequenas */
+    .painel-questao {
+        flex-direction: column;
+        border-left: none;
+        border-top: 5px solid var(--if-verde);
+    }
+
+    .painel-hud {
+        border-left: none;
+        border-top: var(--borda);
+        justify-content: center;
+    }
+
+    /* HUD em linha horizontal compacta */
+    .hud-item {
+        flex-direction: row;
+        gap: 8px;
+        padding: 10px 16px;
+        align-items: center;
+    }
+
+    .hud-label {
+        font-size: 0.7rem;
+    }
+
+    .hud-valor {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 500px) {
+    /* Pergunta com fonte menor em telas muito pequenas */
+    #pergunta {
+        font-size: 0.82rem;
+    }
+}

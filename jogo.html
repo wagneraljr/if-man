@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quiz IF-Man - IF Sudeste MG</title>
+    <link rel="stylesheet" href="estilo.css">
+</head>
+<body class="jogo-pagina">
+
+    <main class="jogo-wrapper">
+        <div class="jogo-container">
+
+            <div id="painel" class="painel-questao">
+                <div class="painel-pergunta-wrap">
+                    <span class="painel-label">QUESTÃO</span>
+                    <p id="pergunta">Preparando a primeira pergunta...</p>
+                </div>
+                <div class="painel-hud">
+                    <div class="hud-item">
+                        <span class="hud-label">PONTOS</span>
+                        <span id="pontos" class="hud-valor">0</span>
+                    </div>
+                    <div class="hud-divider"></div>
+                    <div class="hud-item">
+                        <span class="hud-label">VIDAS</span>
+                        <span id="vidas" class="hud-valor hud-vidas">❤ ❤ ❤</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="btn-wrapper">
+                <button id="btn-iniciar" onclick="iniciarRodada()">▶ Iniciar Rodada</button>
+            </div>
+
+            <!-- Canvas com botões flutuantes sobrepostos -->
+            <div id="canvas-wrapper">
+                <canvas id="telaJogo" width="760" height="600"></canvas>
+
+                <!-- Timer flutuante (canto superior esquerdo, só em competição) -->
+                <div id="timer-competicao" class="flutuante flutuante-timer" style="display:none">
+                    <span id="timer-texto">⏱ 00:00</span>
+                </div>
+
+                <!-- Botão Sair flutuante (canto superior direito, sempre visível) -->
+                <a href="index.html" id="btn-sair-flutuante" class="flutuante flutuante-sair">
+                    ✕ Sair
+                </a>
+
+                <!-- Nome do aluno flutuante (canto inferior esquerdo) -->
+                <div id="nome-flutuante" class="flutuante flutuante-nome" style="display:none"></div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="questoes-storage.js"></script>
+    <script src="mapa.js"></script>
+    <script src="quiz.js"></script>
+    <script src="entidades.js"></script>
+    <script src="motor.js"></script>
+    <script src="competicao.js"></script>
+    <script>
+        // Garante que o aluno sempre tenha nome antes de jogar
+        if (!sessionStorage.getItem("aluno_nome")) {
+            window.location.replace("sala-espera.html");
+        }
+
+        // Exibe nome do aluno flutuante
+        const nomeAluno = sessionStorage.getItem("aluno_nome");
+        if (nomeAluno) {
+            const elNome = document.getElementById("nome-flutuante");
+            elNome.innerText = nomeAluno;
+            elNome.style.display = "block";
+        }
+
+        // Integra competição ao motor do jogo
+        (async function configurarCompeticao() {
+            try {
+                const res   = await fetch("/api/estado");
+                const dados = await res.json();
+
+                if (dados.fase === "rodando") {
+                    document.getElementById("timer-competicao").style.display = "flex";
+                    atualizarTimerVisual(dados.restante);
+
+                    iniciarPolling(function onEncerrar() {
+                        pausarRodada();
+                        encerrarJogoCompeticao();
+                    });
+
+                    iniciarEnvioPontuacao(
+                        () => pontuacao,
+                        () => vidas
+                    );
+                }
+            } catch {
+                // Servidor inacessível: modo livre
+            }
+        })();
+
+        async function encerrarJogoCompeticao() {
+            // Envia pontuação final ao servidor (endpoint aceita mesmo após encerrada)
+            try {
+                await fetch("/api/pontuacao-final", {
+                    method:  "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body:    JSON.stringify({
+                        nome:      sessionStorage.getItem("aluno_nome") || "Anônimo",
+                        pontuacao: pontuacao,
+                        vidas:     vidas
+                    })
+                });
+            } catch { /* silencioso */ }
+
+            // Redireciona para a tela de resultado do aluno após 1s
+            setTimeout(() => {
+                window.location.href = "resultado-aluno.html";
+            }, 800);
+        }
+    </script>
+
+    <script>
+        // ── Responsividade do canvas ──────────────────────────────────────────────
+        // O canvas tem dimensões fixas (760×600). Em vez de reescrever o jogo,
+        // escalamos o wrapper inteiro proporcionalmente à largura disponível.
+        // Os elementos flutuantes (timer, sair, nome) escalam junto.
+
+        const CANVAS_W = 760;
+        const CANVAS_H = 600;
+        const MARGEM   = 32; // px de padding lateral total da página
+
+        function ajustarEscala() {
+            const wrapper    = document.getElementById("canvas-wrapper");
+            const container  = document.querySelector(".jogo-container");
+            const painel     = document.getElementById("painel");
+            const btnWrapper = document.getElementById("btn-wrapper");
+
+            // Largura disponível descontando margens
+            const largDisp = Math.min(
+                window.innerWidth - MARGEM,
+                container.clientWidth || window.innerWidth - MARGEM
+            );
+
+            // Só escala se a tela for menor que o canvas
+            const escala = largDisp < CANVAS_W ? largDisp / CANVAS_W : 1;
+
+            // Aplica escala no wrapper do canvas (afeta canvas + flutuantes)
+            wrapper.style.transform       = `scale(${escala})`;
+            wrapper.style.transformOrigin = "top center";
+
+            // Compensa o espaço que o canvas ocupa após o scale
+            // (o elemento continua ocupando 760px no layout, mas visualmente menor)
+            const alturaReal = CANVAS_H * escala;
+            const alturaOcupada = CANVAS_H; // altura original no fluxo
+            wrapper.style.marginBottom = `${alturaReal - alturaOcupada}px`;
+
+            // Ajusta largura do painel e botão para acompanhar o canvas escalado
+            const larguraEscalada = CANVAS_W * escala;
+            painel.style.maxWidth     = larguraEscalada + "px";
+            btnWrapper.style.maxWidth = larguraEscalada + "px";
+        }
+
+        // Executa ao carregar e ao redimensionar
+        window.addEventListener("load",   ajustarEscala);
+        window.addEventListener("resize", ajustarEscala);
+    </script>
+
+</body>
+</html>

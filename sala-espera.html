@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sala de Espera - Quiz IF-Man</title>
+    <link rel="stylesheet" href="estilo.css">
+</head>
+<body class="pagina-login">
+
+    <div class="login-wrapper" style="max-width: 480px;">
+        <div class="login-card">
+
+            <div class="login-header">
+                <img src="logo_if.png" alt="Logo IF Sudeste MG" class="login-logo">
+                <h1>Quiz IF-Man</h1>
+                <p class="login-subtitulo">Laboratório de Informática — IF Sudeste MG</p>
+            </div>
+
+            <!-- PASSO 1: Nome ────────────────────────────────────────────────── -->
+            <div id="passo-nome" style="padding: 28px 32px;">
+                <div class="campo-grupo">
+                    <label for="campo-nome">Qual é o seu nome?</label>
+                    <input type="text" id="campo-nome"
+                        placeholder="Ex: Maria Silva"
+                        maxlength="40" autofocus>
+                    <span id="erro-nome" class="erro-msg" style="display:none">
+                        Digite seu nome antes de continuar.
+                    </span>
+                </div>
+                <button onclick="confirmarNome()" class="btn-entrar" style="margin-top: 8px">
+                    Continuar →
+                </button>
+                <a href="index.html" class="link-voltar">← Voltar</a>
+            </div>
+
+            <!-- PASSO 2: Escolha do modo ─────────────────────────────────────── -->
+            <div id="passo-modo" style="display:none; padding: 24px 28px 28px;">
+
+                <p class="saudacao-modo" id="saudacao-modo"></p>
+                <p class="campo-grupo-label" style="margin-bottom: 14px;">
+                    Como você quer jogar?
+                </p>
+
+                <div class="selecao-modo">
+
+                    <button onclick="entrarModoLivre()" class="card-modo">
+                        <span class="modo-icone">🕹️</span>
+                        <span class="modo-titulo">Modo Livre</span>
+                        <span class="modo-desc">Jogue agora, no seu ritmo, sem competição.</span>
+                    </button>
+
+                    <button onclick="entrarCompeticao()" class="card-modo card-modo-comp">
+                        <span class="modo-icone">🏆</span>
+                        <span class="modo-titulo">Competição</span>
+                        <span class="modo-desc">Entre na sala e aguarde o professor iniciar.</span>
+                    </button>
+
+                </div>
+
+                <p id="aviso-duplicata" class="erro-msg" style="display:none; margin-top:4px;"></p>
+
+                <button onclick="voltarParaNome()" class="btn-voltar-modo">
+                    ← Trocar nome
+                </button>
+            </div>
+
+            <!-- PASSO 3: Aguardando o professor (modo competição) ───────────── -->
+            <div id="passo-espera" style="display:none; padding: 28px 32px; text-align:center;">
+                <div class="espera-icone">🏆</div>
+                <h2 id="saudacao-espera" style="margin: 12px 0 6px; color: var(--if-verde-escuro)"></h2>
+                <p class="texto-secundario">Aguardando o professor iniciar a competição...</p>
+
+                <div class="espera-status">
+                    <span class="ponto-piscando">●</span>
+                    <span class="ponto-piscando" style="animation-delay:.3s">●</span>
+                    <span class="ponto-piscando" style="animation-delay:.6s">●</span>
+                </div>
+
+                <p class="espera-dica" id="espera-dica">
+                    Fique nesta tela. O jogo abrirá automaticamente quando o professor iniciar.
+                </p>
+
+                <button onclick="voltarParaModo()" class="btn-voltar-modo" style="margin-top: 16px">
+                    ← Voltar
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let intervaloVerificacao = null;
+
+        // ── Passo 1 → 2 ───────────────────────────────────────────────────────
+
+        function confirmarNome() {
+            const nome = document.getElementById("campo-nome").value.trim();
+            const erro = document.getElementById("erro-nome");
+
+            if (!nome) {
+                erro.style.display = "block";
+                document.getElementById("campo-nome").focus();
+                return;
+            }
+            erro.style.display = "none";
+            sessionStorage.setItem("aluno_nome", nome);
+
+            document.getElementById("saudacao-modo").innerText = "Olá, " + nome + "! 👋";
+            mostrarPasso("passo-modo");
+        }
+
+        // ── Passo 2: escolha do modo ──────────────────────────────────────────
+
+        function entrarModoLivre() {
+            sessionStorage.setItem("modo", "livre");
+            window.location.href = "jogo.html";
+        }
+
+        async function entrarCompeticao() {
+            const nome = sessionStorage.getItem("aluno_nome");
+            const erro = document.getElementById("erro-duplicata");
+            if (erro) erro.style.display = "none";
+
+            try {
+                // 1. Verifica duplicata de nome na sala
+                const resSala = await fetch("/api/sala");
+                const dadosSala = await resSala.json();
+                const jaExiste = dadosSala.alunos.some(
+                    a => a.nome.toLowerCase() === nome.toLowerCase()
+                );
+
+                if (jaExiste) {
+                    // Mostra aviso de nome duplicado no passo de modo
+                    const avisoEl = document.getElementById("aviso-duplicata");
+                    avisoEl.style.display = "block";
+                    avisoEl.innerText = `⚠ O nome "${nome}" já está em uso na sala. Troque seu nome ou aguarde o outro jogador sair.`;
+                    return;
+                }
+
+                // 2. Verifica estado da competição
+                const res   = await fetch("/api/estado");
+                const dados = await res.json();
+
+                if (dados.fase === "rodando") {
+                    sessionStorage.setItem("modo", "competicao");
+                    window.location.href = "jogo.html";
+                    return;
+                }
+
+                if (dados.fase === "encerrada") {
+                    document.getElementById("espera-dica").innerText =
+                        "A competição foi encerrada. Aguarde o professor iniciar uma nova ou jogue no Modo Livre.";
+                }
+
+            } catch {
+                document.getElementById("espera-dica").innerText =
+                    "Não foi possível contatar o servidor. Verifique a conexão.";
+            }
+
+            sessionStorage.setItem("modo", "competicao");
+            document.getElementById("saudacao-espera").innerText = "Olá, " + nome + "!";
+            mostrarPasso("passo-espera");
+            iniciarPollingEspera();
+        }
+
+        // ── Passo 3: polling de início + heartbeat na sala ───────────────────
+
+        let intervaloHeartbeat = null;
+
+        async function registrarNaSala() {
+            try {
+                await fetch("/api/entrar-sala", {
+                    method:  "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body:    JSON.stringify({ nome: sessionStorage.getItem("aluno_nome") })
+                });
+            } catch { /* silencioso */ }
+        }
+
+        function iniciarPollingEspera() {
+            if (intervaloVerificacao) clearInterval(intervaloVerificacao);
+            if (intervaloHeartbeat)   clearInterval(intervaloHeartbeat);
+
+            // Registra imediatamente e renova a cada 10s (heartbeat)
+            registrarNaSala();
+            intervaloHeartbeat = setInterval(registrarNaSala, 10000);
+
+            intervaloVerificacao = setInterval(async () => {
+                try {
+                    const res   = await fetch("/api/estado");
+                    const dados = await res.json();
+
+                    if (dados.fase === "rodando") {
+                        clearInterval(intervaloVerificacao);
+                        clearInterval(intervaloHeartbeat);
+                        window.location.href = "jogo.html";
+                    } else if (dados.fase === "encerrada") {
+                        clearInterval(intervaloVerificacao);
+                        clearInterval(intervaloHeartbeat);
+                        document.getElementById("espera-dica").innerText =
+                            "A competição foi encerrada. Volte e jogue no Modo Livre ou aguarde uma nova competição.";
+                    }
+                } catch { /* continua tentando */ }
+            }, 2000);
+        }
+
+        // ── Navegação entre passos ────────────────────────────────────────────
+
+        function voltarParaNome() {
+            const aviso = document.getElementById("aviso-duplicata");
+            if (aviso) aviso.style.display = "none";
+            mostrarPasso("passo-nome");
+            document.getElementById("campo-nome").focus();
+        }
+
+        function voltarParaModo() {
+            if (intervaloVerificacao) { clearInterval(intervaloVerificacao); intervaloVerificacao = null; }
+            if (intervaloHeartbeat)   { clearInterval(intervaloHeartbeat);   intervaloHeartbeat   = null; }
+            mostrarPasso("passo-modo");
+        }
+
+        function mostrarPasso(idAtivo) {
+            ["passo-nome", "passo-modo", "passo-espera"].forEach(id => {
+                document.getElementById(id).style.display = id === idAtivo ? "block" : "none";
+            });
+        }
+
+        // Enter no campo de nome
+        document.getElementById("campo-nome").addEventListener("keydown", e => {
+            if (e.key === "Enter") confirmarNome();
+        });
+
+        // Se o aluno já tinha nome salvo na sessão, pula para o passo 2
+        const nomeSalvo = sessionStorage.getItem("aluno_nome");
+        if (nomeSalvo) {
+            document.getElementById("campo-nome").value = nomeSalvo;
+            document.getElementById("saudacao-modo").innerText = "Olá, " + nomeSalvo + "! 👋";
+            mostrarPasso("passo-modo");
+        }
+    </script>
+
+</body>
+</html>

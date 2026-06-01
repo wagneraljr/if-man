@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Acesso do Professor - IF Sudeste MG</title>
+    <link rel="stylesheet" href="estilo.css">
+</head>
+<body class="pagina-login">
+
+    <div class="login-wrapper">
+        <div class="login-card">
+
+            <div class="login-header">
+                <img src="logo_if.png" alt="Logo IF Sudeste MG" class="login-logo">
+                <h1>Área do Professor</h1>
+                <p class="login-subtitulo">Digite sua senha para acessar o painel de questões.</p>
+            </div>
+
+            <div class="login-form">
+                <div class="campo-grupo">
+                    <label for="senha">Senha de acesso</label>
+                    <input type="password" id="senha" placeholder="Digite sua senha" autofocus>
+                    <span id="erro-login" class="erro-msg" style="display:none"></span>
+                </div>
+                <button onclick="fazerLogin()" id="btn-login" class="btn-entrar">
+                    Acessar Painel
+                </button>
+            </div>
+
+            <a href="index.html" class="link-voltar">← Voltar para o início</a>
+
+        </div>
+    </div>
+
+    <script>
+        async function fazerLogin() {
+            const senha = document.getElementById("senha").value.trim();
+            const erro  = document.getElementById("erro-login");
+            const btn   = document.getElementById("btn-login");
+
+            if (!senha) {
+                erro.innerText = "Digite sua senha.";
+                erro.style.display = "block";
+                return;
+            }
+
+            btn.disabled   = true;
+            btn.innerText  = "Verificando...";
+            erro.style.display = "none";
+
+            try {
+                const res = await fetch("/api/login", {
+                    method:  "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body:    JSON.stringify({ senha })
+                });
+
+                if (res.ok) {
+                    sessionStorage.setItem("professor_autenticado", "true");
+                    window.location.href = "painel-professor.html";
+                } else {
+                    const dados = await res.json();
+                    erro.innerText = dados.erro || "Senha incorreta. Tente novamente.";
+                    erro.style.display = "block";
+                    document.getElementById("senha").value = "";
+                    document.getElementById("senha").focus();
+                }
+            } catch {
+                erro.innerText = "Erro de conexão. O servidor está rodando?";
+                erro.style.display = "block";
+            } finally {
+                btn.disabled  = false;
+                btn.innerText = "Acessar Painel";
+            }
+        }
+
+        document.getElementById("senha").addEventListener("keydown", e => {
+            if (e.key === "Enter") fazerLogin();
+        });
+    </script>
+
+</body>
+</html>

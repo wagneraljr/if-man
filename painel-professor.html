@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Painel do Professor - IF Sudeste MG</title>
+    <link rel="stylesheet" href="estilo.css">
+    <style>
+        /* Proteção: esconde tudo até verificar sessão */
+        body { display: none; }
+    </style>
+    <script>
+        // Redireciona imediatamente se não estiver autenticado
+        if (sessionStorage.getItem("professor_autenticado") !== "true") {
+            window.location.replace("login.html");
+        } else {
+            document.addEventListener("DOMContentLoaded", function() {
+                document.body.style.display = "block";
+            });
+        }
+    </script>
+</head>
+<body>
+
+    <nav class="barra-topo">
+        <img src="logo_if.png" alt="Logo IF Sudeste MG" class="logo-nav">
+        <span class="nav-titulo">Painel do Professor</span>
+        <div class="nav-acoes">
+            <a href="painel-competicao.html" class="btn-nav-outline">Competição 🏆</a>
+            <a href="setup.html" class="btn-nav-outline">⚙ Configurações</a>
+            <a href="index.html" class="btn-nav-sair" onclick="sessionStorage.clear()">Sair</a>
+        </div>
+    </nav>
+
+    <main class="painel-wrapper">
+
+        <!-- ── CABEÇALHO DA SEÇÃO ─────────────────────────────────────── -->
+        <div class="painel-cabecalho">
+            <div>
+                <h2>Banco de Questões</h2>
+                <p class="texto-secundario">Gerencie as perguntas que aparecem no Quiz IF-Man.</p>
+            </div>
+            <button onclick="abrirModal()" class="btn-primario">+ Nova Questão</button>
+        </div>
+
+        <!-- ── CARDS DE ESTATÍSTICAS ──────────────────────────────────── -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-numero" id="stat-total">0</span>
+                <span class="stat-label">Total de questões</span>
+            </div>
+            <div class="stat-card stat-card-alerta">
+                <span class="stat-numero" id="stat-sem-correta" style="color: var(--if-vermelho)">0</span>
+                <span class="stat-label">Sem resposta correta</span>
+            </div>
+        </div>
+
+        <!-- ── LISTA DE QUESTÕES ──────────────────────────────────────── -->
+        <div id="lista-questoes" class="lista-questoes"></div>
+
+        <!-- ── RODAPÉ DE AÇÕES ────────────────────────────────────────── -->
+        <div class="painel-rodape">
+            <button onclick="restaurarERenderizar()" class="btn-perigo-outline">
+                ↺ Restaurar questões padrão
+            </button>
+        </div>
+
+    </main>
+
+    <!-- ══ MODAL DE CRIAÇÃO / EDIÇÃO ════════════════════════════════════ -->
+    <div id="modal-overlay" class="modal-overlay" style="display:none" onclick="fecharModalFora(event)">
+        <div class="modal-card">
+
+            <div class="modal-header">
+                <h3 id="modal-titulo">Nova Questão</h3>
+                <button onclick="fecharModal()" class="btn-fechar-modal">✕</button>
+            </div>
+
+            <div class="modal-corpo">
+
+                <div class="campo-grupo">
+                    <label>Enunciado da questão <span class="obrigatorio">*</span></label>
+                    <textarea id="campo-texto" rows="3" placeholder="Ex: Qual componente age como o 'cérebro' do computador?"></textarea>
+                </div>
+
+                <div class="alternativas-grid">
+                    <p class="campo-grupo-label">Alternativas <span class="obrigatorio">*</span>
+                        <span class="hint">— marque a correta</span>
+                    </p>
+
+                    <div id="lista-alternativas">
+                        <!-- Preenchida por JS -->
+                    </div>
+                </div>
+
+                <span id="erro-modal" class="erro-msg" style="display:none"></span>
+
+            </div>
+
+            <div class="modal-footer">
+                <button onclick="fecharModal()" class="btn-secundario">Cancelar</button>
+                <button onclick="salvarQuestaoModal()" class="btn-primario" id="btn-salvar-modal">Salvar Questão</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="questoes-storage.js"></script>
+    <script>
+        let idEditando = null;
+        let questoesCache = []; // cache local para edições
+
+        // ── Renderização da lista ─────────────────────────────────────────────
+
+        async function renderizarLista() {
+            const lista = document.getElementById("lista-questoes");
+            lista.innerHTML = `<div class="estado-vazio"><p>Carregando questões...</p></div>`;
+            try {
+                questoesCache = await obterQuestoes();
+            } catch {
+                lista.innerHTML = `<div class="estado-vazio"><p>Erro ao carregar questões. Verifique o servidor.</p></div>`;
+                return;
+            }
+
+            const questoes  = questoesCache;
+            const semCorreta = questoes.filter(q => !q.alternativas.some(a => a.correta)).length;
+            document.getElementById("stat-total").innerText       = questoes.length;
+            document.getElementById("stat-sem-correta").innerText = semCorreta;
+
+            if (questoes.length === 0) {
+                lista.innerHTML = `
+                    <div class="estado-vazio">
+                        <p>Nenhuma questão cadastrada ainda.</p>
+                        <button onclick="abrirModal()" class="btn-primario">Criar primeira questão</button>
+                    </div>`;
+                return;
+            }
+
+            lista.innerHTML = questoes.map((q, idx) => {
+                const correta = q.alternativas.find(a => a.correta);
+                const alts    = q.alternativas.map(a => `
+                    <span class="alt-badge ${a.correta ? 'alt-correta' : ''}">
+                        ${a.correta ? '✓ ' : ''}${a.texto}
+                    </span>`).join("");
+                return `
+                <div class="questao-card">
+                    <div class="questao-card-header">
+                        <span class="questao-numero">Q${idx + 1}</span>
+                        <div class="questao-acoes">
+                            <button onclick="abrirModalEdicao(${q.id})" class="btn-outline-sm">Editar</button>
+                            <button onclick="confirmarExclusao(${q.id})" class="btn-perigo-sm">Excluir</button>
+                        </div>
+                    </div>
+                    <p class="questao-texto">${q.texto}</p>
+                    <div class="alts-wrap">${alts}</div>
+                    ${!correta ? '<p class="alerta-sem-correta">⚠ Nenhuma alternativa marcada como correta</p>' : ''}
+                </div>`;
+            }).join("");
+        }
+
+        // ── Modal ─────────────────────────────────────────────────────────────
+
+        function abrirModal(questao) {
+            idEditando = questao ? questao.id : null;
+            document.getElementById("modal-titulo").innerText =
+                questao ? "Editar Questão" : "Nova Questão";
+            document.getElementById("campo-texto").value =
+                questao ? questao.texto : "";
+            document.getElementById("erro-modal").style.display = "none";
+
+            // Monta os 4 campos de alternativas
+            const alts = questao ? questao.alternativas : [
+                { texto: "", correta: false },
+                { texto: "", correta: false },
+                { texto: "", correta: false },
+                { texto: "", correta: false }
+            ];
+            const letras = ["A", "B", "C", "D"];
+            document.getElementById("lista-alternativas").innerHTML =
+                alts.map((a, i) => `
+                <div class="alternativa-linha">
+                    <input type="radio" name="correta" id="radio-${i}"
+                        value="${i}" ${a.correta ? "checked" : ""}
+                        class="radio-correta">
+                    <label for="radio-${i}" class="radio-label">${letras[i]}</label>
+                    <input type="text" id="alt-texto-${i}"
+                        value="${a.texto}"
+                        placeholder="Texto da alternativa ${letras[i]}"
+                        class="input-alternativa">
+                </div>`).join("");
+
+            document.getElementById("modal-overlay").style.display = "flex";
+            document.getElementById("campo-texto").focus();
+        }
+
+        function abrirModalEdicao(id) {
+            const questao = questoesCache.find(q => q.id === id);
+            if (questao) abrirModal(questao);
+        }
+
+        function fecharModal() {
+            document.getElementById("modal-overlay").style.display = "none";
+            idEditando = null;
+        }
+
+        function fecharModalFora(event) {
+            if (event.target === document.getElementById("modal-overlay")) fecharModal();
+        }
+
+        async function salvarQuestaoModal() {
+            const texto = document.getElementById("campo-texto").value.trim();
+            const erro  = document.getElementById("erro-modal");
+            const btn   = document.getElementById("btn-salvar-modal");
+
+            if (!texto) {
+                erro.innerText = "O enunciado da questão não pode estar vazio.";
+                erro.style.display = "block"; return;
+            }
+
+            const alternativas = [0, 1, 2, 3].map(i => ({
+                texto:   document.getElementById("alt-texto-" + i).value.trim(),
+                correta: document.querySelector(`input[name="correta"]:checked`)?.value == i
+            }));
+
+            if (!alternativas.some(a => a.texto !== "")) {
+                erro.innerText = "Preencha pelo menos uma alternativa.";
+                erro.style.display = "block"; return;
+            }
+
+            erro.style.display = "none";
+            btn.disabled  = true;
+            btn.innerText = "Salvando...";
+
+            try {
+                const questao = { texto, alternativas };
+                if (idEditando !== null) {
+                    questao.id = idEditando;
+                    await atualizarQuestao(questao);
+                } else {
+                    await adicionarQuestao(questao);
+                }
+                fecharModal();
+                await renderizarLista();
+            } catch {
+                erro.innerText = "Erro ao salvar. Verifique o servidor.";
+                erro.style.display = "block";
+            } finally {
+                btn.disabled  = false;
+                btn.innerText = "Salvar Questão";
+            }
+        }
+
+        // ── Exclusão ─────────────────────────────────────────────────────────
+
+        async function confirmarExclusao(id) {
+            const questao = questoesCache.find(q => q.id === id);
+            if (!questao) return;
+            if (confirm(`Excluir a questão:\n\n"${questao.texto}"\n\nEsta ação não pode ser desfeita.`)) {
+                try {
+                    await excluirQuestao(id);
+                    await renderizarLista();
+                } catch {
+                    alert("Erro ao excluir. Verifique o servidor.");
+                }
+            }
+        }
+
+        async function restaurarERenderizar() {
+            if (!confirm('Restaurar as questões padrão? Todas as questões atuais serão substituídas.')) return;
+            try { await restaurarPadrao(); await renderizarLista(); }
+            catch { alert('Erro ao restaurar. Verifique o servidor.'); }
+        }
+
+        // ── Inicialização ─────────────────────────────────────────────────────
+        renderizarLista();
+    </script>
+
+</body>
+</html>

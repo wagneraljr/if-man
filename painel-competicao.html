@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Competição - Painel do Professor</title>
+    <link rel="stylesheet" href="estilo.css">
+    <style>
+        body { display: none; }
+    </style>
+    <script>
+        if (sessionStorage.getItem("professor_autenticado") !== "true") {
+            window.location.replace("login.html");
+        } else {
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.style.display = "block";
+            });
+        }
+    </script>
+</head>
+<body>
+
+    <nav class="barra-topo">
+        <img src="logo_if.png" alt="Logo IF Sudeste MG" class="logo-nav">
+        <span class="nav-titulo">Painel do Professor — Competição</span>
+        <div class="nav-acoes">
+            <a href="painel-professor.html" class="btn-nav-outline">Questões</a>
+            <a href="historico.html" class="btn-nav-outline">📋 Histórico</a>
+            <a href="index.html" class="btn-nav-sair" onclick="sessionStorage.clear()">Sair</a>
+        </div>
+    </nav>
+
+    <main class="painel-wrapper">
+
+        <!-- ── CONFIGURAÇÃO (fase: aguardando) ──────────────────────────── -->
+        <div id="secao-configurar">
+            <div class="painel-cabecalho">
+                <div>
+                    <h2>Nova Competição</h2>
+                    <p class="texto-secundario">Configure e inicie quando todos os alunos estiverem na sala de espera.</p>
+                </div>
+            </div>
+
+            <div class="config-card">
+                <div class="campo-grupo">
+                    <label for="duracao-min">Duração da competição</label>
+                    <div class="duracao-opcoes">
+                        <button class="btn-duracao ativo" onclick="selecionarDuracao(this, 5)">5 min</button>
+                        <button class="btn-duracao" onclick="selecionarDuracao(this, 10)">10 min</button>
+                        <button class="btn-duracao" onclick="selecionarDuracao(this, 15)">15 min</button>
+                        <button class="btn-duracao" onclick="selecionarDuracao(this, 20)">20 min</button>
+                        <div class="duracao-custom">
+                            <input type="number" id="duracao-custom" min="1" max="60"
+                                placeholder="outro" oninput="selecionarDuracaoCustom(this)">
+                            <span>min</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alunos-aguardando">
+                    <p class="campo-grupo-label">Alunos na sala de espera</p>
+                    <div id="lista-alunos-espera" class="chips-alunos">
+                        <span class="chip-vazio">Nenhum aluno conectado ainda...</span>
+                    </div>
+                    <p class="hint" style="margin-top:8px">
+                        Atualiza automaticamente a cada 3 segundos.
+                    </p>
+                </div>
+
+                <button onclick="iniciarCompeticao()" class="btn-primario btn-iniciar-comp">
+                    ▶ Iniciar Competição
+                </button>
+            </div>
+        </div>
+
+        <!-- ── COMPETIÇÃO RODANDO (fase: rodando) ───────────────────────── -->
+        <div id="secao-rodando" style="display:none">
+            <div class="painel-cabecalho">
+                <div>
+                    <h2>Competição em andamento</h2>
+                    <p class="texto-secundario">Placar atualiza a cada 3 segundos.</p>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <span id="timer-professor" class="timer-grande">00:00</span>
+                    <button onclick="encerrarManualmente()" class="btn-perigo-outline">
+                        ■ Encerrar agora
+                    </button>
+                </div>
+            </div>
+
+            <div id="placar-ao-vivo" class="lista-questoes"></div>
+        </div>
+
+        <!-- ── RESULTADO FINAL (fase: encerrada) ────────────────────────── -->
+        <div id="secao-resultado" style="display:none">
+            <div class="painel-cabecalho">
+                <div>
+                    <h2>Resultado Final</h2>
+                    <p class="texto-secundario">Competição encerrada.</p>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button onclick="exportarCSV()" class="btn-outline-sm">⬇ Exportar CSV</button>
+                    <button onclick="resetarCompeticao()" class="btn-primario">+ Nova Competição</button>
+                </div>
+            </div>
+
+            <!-- Pódio top 3 -->
+            <div id="podio" class="podio-wrap"></div>
+
+            <!-- Lista completa -->
+            <div id="resultado-completo" class="lista-questoes" style="margin-top:20px"></div>
+        </div>
+
+    </main>
+
+    <script>
+        let duracaoSelecionada = 5 * 60; // segundos
+        let intervaloPolling   = null;
+        let faseAtual          = "aguardando";
+        let rankingAtual       = []; // cache do ranking para exportação
+
+        // ── Duração ────────────────────────────────────────────────────────────
+
+        function selecionarDuracao(btn, minutos) {
+            document.querySelectorAll(".btn-duracao").forEach(b => b.classList.remove("ativo"));
+            btn.classList.add("ativo");
+            document.getElementById("duracao-custom").value = "";
+            duracaoSelecionada = minutos * 60;
+        }
+
+        function selecionarDuracaoCustom(input) {
+            document.querySelectorAll(".btn-duracao").forEach(b => b.classList.remove("ativo"));
+            const val = parseInt(input.value);
+            if (val > 0) duracaoSelecionada = val * 60;
+        }
+
+        // ── Iniciar ────────────────────────────────────────────────────────────
+
+        async function iniciarCompeticao() {
+            if (!confirm(`Iniciar competição de ${Math.round(duracaoSelecionada/60)} minutos?\n\nTodos os alunos na sala de espera entrarão no jogo automaticamente.`)) return;
+
+            try {
+                await fetch("/api/iniciar", {
+                    method:  "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body:    JSON.stringify({ duracaoSeg: duracaoSelecionada })
+                });
+                mudarFase("rodando");
+            } catch {
+                alert("Erro ao comunicar com o servidor. O servidor está rodando?");
+            }
+        }
+
+        // ── Encerrar manualmente ───────────────────────────────────────────────
+
+        async function encerrarManualmente() {
+            if (!confirm("Encerrar a competição agora?")) return;
+            await fetch("/api/encerrar", { method: "POST" });
+            mudarFase("encerrada");
+            carregarResultadoFinal();
+        }
+
+        // ── Resetar para nova competição ───────────────────────────────────────
+
+        async function resetarCompeticao() {
+            await fetch("/api/resetar", { method: "POST" });
+            mudarFase("aguardando");
+        }
+
+        // ── Alternância de seções ──────────────────────────────────────────────
+
+        function mudarFase(fase) {
+            faseAtual = fase;
+            document.getElementById("secao-configurar").style.display = fase === "aguardando" ? "block" : "none";
+            document.getElementById("secao-rodando").style.display    = fase === "rodando"    ? "block" : "none";
+            document.getElementById("secao-resultado").style.display  = fase === "encerrada"  ? "block" : "none";
+
+            if (fase === "rodando") {
+                iniciarPollingPlacar();
+            } else {
+                pararPolling();
+            }
+        }
+
+        // ── Polling do placar ao vivo ─────────────────────────────────────────
+
+        function iniciarPollingPlacar() {
+            atualizarPlacarETimer();
+            intervaloPolling = setInterval(atualizarPlacarETimer, 3000);
+        }
+
+        function pararPolling() {
+            if (intervaloPolling) { clearInterval(intervaloPolling); intervaloPolling = null; }
+        }
+
+        async function atualizarPlacarETimer() {
+            try {
+                // Timer
+                const resEstado = await fetch("/api/estado");
+                const estado    = await resEstado.json();
+                renderizarTimerProfessor(estado.restante);
+
+                if (estado.fase === "encerrada" && faseAtual === "rodando") {
+                    mudarFase("encerrada");
+                    carregarResultadoFinal();
+                    return;
+                }
+
+                // Placar
+                const resPlacar = await fetch("/api/placar");
+                const placar    = await resPlacar.json();
+                renderizarPlacarAoVivo(placar.ranking);
+
+            } catch { /* servidor inacessível */ }
+        }
+
+        function renderizarTimerProfessor(segundos) {
+            const el  = document.getElementById("timer-professor");
+            const min = Math.floor(segundos / 60).toString().padStart(2, "0");
+            const seg = (segundos % 60).toString().padStart(2, "0");
+            el.innerText = `${min}:${seg}`;
+            el.className = "timer-grande" + (segundos <= 30 ? " timer-urgente" : "");
+        }
+
+        function renderizarPlacarAoVivo(ranking) {
+            const container = document.getElementById("placar-ao-vivo");
+            if (!ranking || ranking.length === 0) {
+                container.innerHTML = `<div class="estado-vazio"><p>Aguardando pontuações dos alunos...</p></div>`;
+                return;
+            }
+
+            const medalhas = ["🥇", "🥈", "🥉"];
+            container.innerHTML = ranking.map((aluno, i) => `
+                <div class="questao-card placar-linha ${i < 3 ? 'placar-destaque-' + (i+1) : ''}">
+                    <div class="placar-posicao">
+                        ${i < 3 ? medalhas[i] : `<span class="posicao-num">${i+1}º</span>`}
+                    </div>
+                    <div class="placar-nome">${aluno.nome}</div>
+                    <div class="placar-pontos">${aluno.pontuacao} pts</div>
+                    <div class="placar-vidas">${"❤".repeat(Math.max(0, aluno.vidas))}</div>
+                </div>
+            `).join("");
+        }
+
+        // ── Resultado final ────────────────────────────────────────────────────
+
+        async function carregarResultadoFinal() {
+            try {
+                const res    = await fetch("/api/placar");
+                const dados  = await res.json();
+                rankingAtual = dados.ranking; // armazena para exportação
+                renderizarPodio(dados.ranking);
+                renderizarListaCompleta(dados.ranking);
+            } catch {
+                document.getElementById("podio").innerHTML =
+                    "<p>Erro ao carregar resultado. Verifique o servidor.</p>";
+            }
+        }
+
+        function exportarCSV() {
+            if (!rankingAtual || rankingAtual.length === 0) {
+                alert("Nenhum resultado disponível para exportar."); return;
+            }
+
+            const agora  = new Date();
+            const data   = agora.toLocaleDateString("pt-BR").replace(/\//g, "-");
+            const hora   = agora.toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" }).replace(":", "h");
+
+            const linhas = [
+                ["Posição", "Nome", "Pontuação", "Vidas"],
+                ...rankingAtual.map((a, i) => [i + 1, a.nome, a.pontuacao, a.vidas || 0])
+            ];
+
+            const csv  = linhas
+                .map(l => l.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
+                .join("\n");
+
+            const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement("a");
+            a.href     = url;
+            a.download = `resultado_${data}_${hora}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function renderizarPodio(ranking) {
+            const podio = document.getElementById("podio");
+
+            if (ranking.length === 0) {
+                podio.innerHTML = `<div class="estado-vazio"><p>Nenhuma pontuação registrada.</p></div>`;
+                return;
+            }
+
+            // Agrupa empates: alunos com mesma pontuação ficam na mesma posição
+            const grupos = [];
+            let posAtual = 1;
+            ranking.forEach((aluno, i) => {
+                if (i === 0 || aluno.pontuacao < ranking[i-1].pontuacao) {
+                    grupos.push({ posicao: posAtual, alunos: [aluno] });
+                } else {
+                    grupos[grupos.length - 1].alunos.push(aluno);
+                }
+                posAtual++;
+            });
+
+            const config = [
+                { posicao: "1º", medalha: "🥇", altura: "ouro",   cor: "#F1C40F" },
+                { posicao: "2º", medalha: "🥈", altura: "prata",  cor: "#95A5A6" },
+                { posicao: "3º", medalha: "🥉", altura: "bronze", cor: "#CD6133" }
+            ];
+
+            // Pega até 3 grupos (posições) para o pódio
+            const top3Grupos = grupos.slice(0, 3);
+
+            // Preenche vagas vazias se menos de 3 posições
+            while (top3Grupos.length < 3) top3Grupos.push(null);
+
+            // Reordena visualmente: 2º | 1º | 3º
+            const ordemVisual = [top3Grupos[1], top3Grupos[0], top3Grupos[2]];
+            const configVisual = [config[1], config[0], config[2]];
+
+            podio.innerHTML = ordemVisual.map((grupo, i) => {
+                const cfg = configVisual[i];
+                if (!grupo) return `<div class="podio-lugar podio-${cfg.altura} vazio"></div>`;
+
+                // Múltiplos alunos empatados na mesma posição
+                const nomesHtml = grupo.alunos.map(a =>
+                    `<div class="podio-nome">${a.nome}</div>`
+                ).join("");
+
+                return `
+                <div class="podio-lugar podio-${cfg.altura}">
+                    <div class="podio-medalha">${cfg.medalha}</div>
+                    ${nomesHtml}
+                    <div class="podio-pts">${grupo.alunos[0].pontuacao} pts</div>
+                    <div class="podio-base" style="background:${cfg.cor}">${cfg.posicao}</div>
+                </div>`;
+            }).join("");
+        }
+
+        function renderizarListaCompleta(ranking) {
+            const container = document.getElementById("resultado-completo");
+
+            // Calcula posições com empates
+            const linhas = ranking.map((aluno, i) => {
+                const posicao = i === 0 ? 1
+                    : aluno.pontuacao === ranking[i-1].pontuacao
+                        ? null  // mesmo grupo — não mostra nova posição
+                        : i + 1;
+                return { aluno, posicao: posicao !== null ? i + 1 : null, empate: posicao === null };
+            });
+
+            if (linhas.length === 0) { container.innerHTML = ""; return; }
+
+            const MEDALHAS = ["🥇","🥈","🥉"];
+
+            container.innerHTML = `
+                <h3 style="margin-bottom:12px; color:var(--if-verde-escuro)">Resultado completo</h3>
+                ${linhas.map(({ aluno }, i) => {
+                    const pos = i + 1;
+                    const posLabel = pos <= 3 ? MEDALHAS[pos-1] : `${pos}º`;
+                    // Marca empates com mesma pontuação do anterior
+                    const empate = i > 0 && aluno.pontuacao === ranking[i-1].pontuacao;
+                    return `
+                    <div class="questao-card placar-linha ${pos <= 3 ? 'placar-destaque-'+pos : ''}">
+                        <div class="placar-posicao">
+                            ${empate
+                                ? '<span style="font-size:.75rem;color:#999">=</span>'
+                                : `<span>${posLabel}</span>`}
+                        </div>
+                        <div class="placar-nome">${aluno.nome}</div>
+                        <div class="placar-pontos">${aluno.pontuacao} pts</div>
+                        <div class="placar-vidas">${"❤".repeat(Math.max(0, aluno.vidas))}</div>
+                    </div>`;
+                }).join("")}`;
+        }
+
+        // ── Polling de alunos na sala de espera (fase aguardando) ─────────────
+
+        async function atualizarAlunosEspera() {
+            if (faseAtual !== "aguardando") return;
+            try {
+                const res   = await fetch("/api/sala");
+                const dados = await res.json();
+                const lista = document.getElementById("lista-alunos-espera");
+
+                if (!dados.alunos || dados.alunos.length === 0) {
+                    lista.innerHTML = `<span class="chip-vazio">Nenhum aluno na sala ainda...</span>`;
+                    return;
+                }
+
+                lista.innerHTML = dados.alunos
+                    .map(a => `<span class="chip-aluno">🎮 ${a.nome}</span>`)
+                    .join("");
+
+            } catch {
+                document.getElementById("lista-alunos-espera").innerHTML =
+                    `<span class="chip-vazio">Não foi possível contatar o servidor.</span>`;
+            }
+        }
+
+        // ── Inicialização ──────────────────────────────────────────────────────
+
+        async function inicializar() {
+            try {
+                const res   = await fetch("/api/estado");
+                const dados = await res.json();
+                mudarFase(dados.fase);
+                if (dados.fase === "encerrada") carregarResultadoFinal();
+            } catch {
+                // Servidor fora: fica na tela de configuração
+                mudarFase("aguardando");
+            }
+        }
+
+        setInterval(atualizarAlunosEspera, 3000);
+        inicializar();
+    </script>
+
+</body>
+</html>

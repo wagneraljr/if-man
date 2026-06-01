@@ -1,0 +1,68 @@
+[
+  {
+    "id": 1,
+    "texto": "Qual componente age como o 'cérebro' que pensa e resolve os problemas?",
+    "alternativas": [
+      {
+        "texto": "CPU",
+        "correta": true
+      },
+      {
+        "texto": "RAM",
+        "correta": false
+      },
+      {
+        "texto": "HD",
+        "correta": false
+      },
+      {
+        "texto": "Monitor",
+        "correta": false
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "texto": "Qual destes dispositivos é classificado APENAS como unidade de entrada?",
+    "alternativas": [
+      {
+        "texto": "Teclado",
+        "correta": true
+      },
+      {
+        "texto": "Caixa de Som",
+        "correta": false
+      },
+      {
+        "texto": "Impressora",
+        "correta": false
+      },
+      {
+        "texto": "Monitor",
+        "correta": false
+      }
+    ]
+  },
+  {
+    "texto": "Qual dispositivo é mais indicado para alta velocidade de inicialização do Sistema Operacional?",
+    "alternativas": [
+      {
+        "texto": "SSD",
+        "correta": true
+      },
+      {
+        "texto": "HD",
+        "correta": false
+      },
+      {
+        "texto": "Pen Drive",
+        "correta": false
+      },
+      {
+        "texto": "CD-ROM",
+        "correta": false
+      }
+    ],
+    "id": 3
+  }
+]

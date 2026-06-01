@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Configurações - IF Sudeste MG</title>
+    <link rel="stylesheet" href="estilo.css">
+    <style>body { display:none; }</style>
+    <script>
+        if (sessionStorage.getItem("professor_autenticado") !== "true") {
+            window.location.replace("login.html");
+        } else {
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.style.display = "block";
+            });
+        }
+    </script>
+</head>
+<body class="setup-pagina">
+
+    <nav class="barra-topo">
+        <img src="logo_if.png" alt="Logo IF Sudeste MG" class="logo-nav">
+        <span class="nav-titulo">Configurações</span>
+        <div class="nav-acoes">
+            <a href="painel-professor.html" class="btn-nav-outline">&larr; Voltar ao painel</a>
+            <a href="index.html" class="btn-nav-sair" onclick="sessionStorage.clear()">Sair</a>
+        </div>
+    </nav>
+
+    <div class="setup-wrapper">
+        <div class="login-card" style="max-width:440px; width:100%;">
+
+            <div class="login-header">
+                <img src="logo_if.png" alt="Logo IF Sudeste MG" class="login-logo">
+                <h1>Configurações</h1>
+                <p class="login-subtitulo">Altere a senha de acesso do professor.</p>
+            </div>
+
+            <div class="login-form">
+
+                <div class="campo-grupo">
+                    <label for="senha-atual">Senha atual</label>
+                    <input type="password" id="senha-atual" placeholder="Digite a senha atual" autofocus>
+                </div>
+
+                <div class="campo-grupo">
+                    <label for="senha-nova">Nova senha</label>
+                    <input type="password" id="senha-nova" placeholder="Mínimo 4 caracteres">
+                </div>
+
+                <div class="campo-grupo">
+                    <label for="senha-conf">Confirmar nova senha</label>
+                    <input type="password" id="senha-conf" placeholder="Repita a nova senha">
+                </div>
+
+                <span id="erro-setup" class="erro-msg" style="display:none"></span>
+                <span id="sucesso-setup" style="display:none; color:var(--if-verde); font-size:.9rem; font-weight:600">
+                    ✓ Senha alterada com sucesso!
+                </span>
+
+                <button onclick="alterarSenha()" id="btn-salvar" class="btn-entrar">
+                    Salvar nova senha
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        async function alterarSenha() {
+            const atual  = document.getElementById("senha-atual").value.trim();
+            const nova   = document.getElementById("senha-nova").value.trim();
+            const conf   = document.getElementById("senha-conf").value.trim();
+            const erro   = document.getElementById("erro-setup");
+            const ok     = document.getElementById("sucesso-setup");
+            const btn    = document.getElementById("btn-salvar");
+
+            erro.style.display    = "none";
+            ok.style.display      = "none";
+
+            if (!atual || !nova || !conf) {
+                erro.innerText = "Preencha todos os campos.";
+                erro.style.display = "block"; return;
+            }
+            if (nova !== conf) {
+                erro.innerText = "A nova senha e a confirmação não coincidem.";
+                erro.style.display = "block"; return;
+            }
+            if (nova.length < 4) {
+                erro.innerText = "A nova senha deve ter ao menos 4 caracteres.";
+                erro.style.display = "block"; return;
+            }
+
+            btn.disabled  = true;
+            btn.innerText = "Salvando...";
+
+            try {
+                const res  = await fetch("/api/alterar-senha", {
+                    method:  "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body:    JSON.stringify({ senhaAtual: atual, senhaNova: nova })
+                });
+                const dados = await res.json();
+
+                if (res.ok) {
+                    ok.style.display = "block";
+                    document.getElementById("senha-atual").value = "";
+                    document.getElementById("senha-nova").value  = "";
+                    document.getElementById("senha-conf").value  = "";
+                } else {
+                    erro.innerText = dados.erro || "Erro ao alterar senha.";
+                    erro.style.display = "block";
+                }
+            } catch {
+                erro.innerText = "Erro de conexão com o servidor.";
+                erro.style.display = "block";
+            } finally {
+                btn.disabled  = false;
+                btn.innerText = "Salvar nova senha";
+            }
+        }
+
+        document.addEventListener("keydown", e => {
+            if (e.key === "Enter") alterarSenha();
+        });
+    </script>
+
+</body>
+</html>
