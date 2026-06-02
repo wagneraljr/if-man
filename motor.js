@@ -6,6 +6,12 @@ let vidas = 3;
 let jogoAtivo = false;        // controla se monstros/teclado estão ativos
 let intervaloMonstros = null;
 
+// ── Velocidade crescente dos fantasmas ───────────────────────────────────────
+const VELOCIDADE_INICIAL = 600;  // ms — intervalo inicial (mais lento)
+const VELOCIDADE_MINIMA  = 220;  // ms — teto máximo de velocidade
+const REDUCAO_POR_ACERTO = 40;   // ms reduzidos a cada questão correta
+let   velocidadeAtual    = VELOCIDADE_INICIAL;
+
 function atualizarPlacar() {
     document.getElementById("pontos").innerText = pontuacao;
     let coracoes = "";
@@ -13,9 +19,32 @@ function atualizarPlacar() {
     document.getElementById("vidas").innerText = coracoes.trim() || "☠";
 }
 
+function atualizarCombo(consecutivos) {
+    const el = document.getElementById("indicador-combo");
+    if (!el) return;
+
+    const wrapper = document.getElementById("hud-combo");
+
+    if (consecutivos <= 1) {
+        el.innerText = "";
+        el.classList.remove("combo-ativo");
+        if (wrapper) wrapper.style.display = "none";
+        return;
+    }
+
+    const mult = consecutivos >= 4 ? "×3"
+               : consecutivos === 3 ? "×2"
+               : "×1.5";
+
+    el.innerText = `🔥 COMBO ${mult}`;
+    el.classList.add("combo-ativo");
+    if (wrapper) wrapper.style.display = "flex";
+}
+
 function verificarDerrota() {
     if (vidas <= 0) {
-        // Exibe tela de game over no canvas por 2s antes de resetar
+        // Para os monstros imediatamente antes de exibir game over
+        pausarRodada();
         desenharTelaErro(
             "Fim de Jogo!",
             `Suas vidas acabaram. Pontuação final: ${pontuacao} pontos.`
@@ -26,8 +55,10 @@ function verificarDerrota() {
             vidas = 3;
             indicePerguntaAtual = 0;
 
+            resetarVelocidade();
+            acertosConsecutivos = 0;
             atualizarPlacar();
-            pausarRodada();
+            atualizarCombo(0);
             sortearMapaDaRodada();
             carregarPergunta();
             jogador.coluna = 9;
@@ -171,7 +202,48 @@ function iniciarRodada() {
     // Redesenha sem o overlay
     atualizarTela();
     window.addEventListener("keydown", moverJogador);
-    intervaloMonstros = setInterval(moverMonstros, 600);
+    intervaloMonstros = setInterval(tickMonstros, velocidadeAtual);
+}
+
+
+// Wrapper do intervalo: respeita o estado de colisão
+function tickMonstros() {
+    moverMonstros();
+    // Só redesenha se não houver feedback/colisão em andamento
+    if (!emColisao) {
+        atualizarTela();
+    }
+}
+
+
+// Chamada pelo quiz.js após cada resposta correta
+function aumentarVelocidade() {
+    velocidadeAtual = Math.max(VELOCIDADE_MINIMA, velocidadeAtual - REDUCAO_POR_ACERTO);
+    atualizarIndicadorVelocidade();
+}
+
+// Reseta a velocidade ao reiniciar o jogo (game over ou fim de todas as questões)
+function resetarVelocidade() {
+    velocidadeAtual = VELOCIDADE_INICIAL;
+    atualizarIndicadorVelocidade();
+}
+
+// Atualiza o indicador visual de velocidade no HUD
+function atualizarIndicadorVelocidade() {
+    const el = document.getElementById("indicador-velocidade");
+    if (!el) return;
+
+    // Calcula nível de 1 a 5 baseado na velocidade atual
+    const range  = VELOCIDADE_INICIAL - VELOCIDADE_MINIMA;
+    const progresso = (VELOCIDADE_INICIAL - velocidadeAtual) / range; // 0.0 a 1.0
+    const nivel  = Math.floor(progresso * 4) + 1; // 1 a 5
+
+    const nomes  = ["", "Fácil", "Médio", "Rápido", "Difícil", "Máximo"];
+    const cores  = ["", "#2F9E41", "#E67E22", "#E67E22", "#CD191E", "#CD191E"];
+
+    el.innerText  = `⚡ ${nomes[nivel]}`;
+    el.style.color       = cores[nivel];
+    el.style.borderColor = cores[nivel] + "88";
 }
 
 // ── Fluxo de inicialização ────────────────────────────────────────────────────
@@ -184,9 +256,9 @@ function prepararRodadaInicial() {
     sortearMapaDaRodada();
     carregarPergunta();
     atualizarPlacar();
+    atualizarIndicadorVelocidade();
     atualizarTela();
-    desenharTelaEspera();   // mostra overlay de espera
-    // botão já visível por padrão no HTML
+    desenharTelaEspera();
 }
 
 // Chamada pelo quiz.js a cada nova pergunta (acerto ou erro com vidas restantes)

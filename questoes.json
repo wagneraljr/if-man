@@ -64,5 +64,71 @@
       }
     ],
     "id": 3
+  },
+  {
+    "texto": "Qual tecla é usada para digital letras maiúsculas automaticamente?",
+    "alternativas": [
+      {
+        "texto": "Shift",
+        "correta": false
+      },
+      {
+        "texto": "Caps Lock",
+        "correta": true
+      },
+      {
+        "texto": "Alt Gr",
+        "correta": false
+      },
+      {
+        "texto": "Ctrl",
+        "correta": false
+      }
+    ],
+    "id": 4
+  },
+  {
+    "texto": "Qual dessas é uma tecla de função legada?",
+    "alternativas": [
+      {
+        "texto": "Backspace",
+        "correta": false
+      },
+      {
+        "texto": "Page Up",
+        "correta": false
+      },
+      {
+        "texto": "Scroll Lock",
+        "correta": true
+      },
+      {
+        "texto": "End",
+        "correta": false
+      }
+    ],
+    "id": 5
+  },
+  {
+    "texto": "Qual desses é um dispositivo volátil?",
+    "alternativas": [
+      {
+        "texto": "HD",
+        "correta": false
+      },
+      {
+        "texto": "SSD",
+        "correta": false
+      },
+      {
+        "texto": "CPU",
+        "correta": false
+      },
+      {
+        "texto": "Memória RAM",
+        "correta": true
+      }
+    ],
+    "id": 6
   }
 ]

@@ -1396,3 +1396,19 @@ canvas {
         font-size: 0.82rem;
     }
 }
+
+
+/* =============================================================================
+   21. INDICADOR DE VELOCIDADE
+   ============================================================================= */
+
+.hud-velocidade {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--if-verde-escuro);
+    border: 1.5px solid var(--if-verde);
+    border-radius: var(--raio);
+    padding: 2px 10px;
+    letter-spacing: 0.5px;
+    transition: color 0.4s, border-color 0.4s;
+}

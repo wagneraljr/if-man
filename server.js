@@ -417,7 +417,7 @@ const servidor = http.createServer(async (req, res) => {
 
 servidor.listen(PORTA, "0.0.0.0", () => {
     console.log("=".repeat(52));
-    console.log("  Quiz Pac-Man — Servidor rodando");
+    console.log("  Quiz IF-Man — Servidor rodando");
     console.log(`  Local:   http://localhost:${PORTA}`);
     console.log(`  Rede:    http://SEU_IP:${PORTA}`);
     console.log("=".repeat(52));

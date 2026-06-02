@@ -1,5 +1,260 @@
 [
   {
+    "id": 1780335967128,
+    "data": "01/06/2026",
+    "hora": "14:46",
+    "duracaoSeg": 300,
+    "motivo": "tempo",
+    "participantes": 4,
+    "ranking": [
+      {
+        "nome": "Miguel e aura a MESMA COISA....💀",
+        "pontuacao": 79070,
+        "vidas": 52
+      },
+      {
+        "nome": "Raphael goatis aajonus🩸🥩",
+        "pontuacao": 79030,
+        "vidas": 49
+      },
+      {
+        "nome": "GUSTAVO AURAAAA",
+        "pontuacao": 40410,
+        "vidas": 20
+      },
+      {
+        "nome": "Akizzx",
+        "pontuacao": 31730,
+        "vidas": 9
+      }
+    ]
+  },
+  {
+    "id": 1780335598112,
+    "data": "01/06/2026",
+    "hora": "14:39",
+    "duracaoSeg": 300,
+    "motivo": "manual",
+    "participantes": 6,
+    "ranking": [
+      {
+        "nome": "Raphael goatis aajonus🩸🥩",
+        "pontuacao": 51310,
+        "vidas": 35
+      },
+      {
+        "nome": "Miguel e aura a MESMA COISA....💀",
+        "pontuacao": 49190,
+        "vidas": 34
+      },
+      {
+        "nome": "GUSTAVO",
+        "pontuacao": 28870,
+        "vidas": 13
+      },
+      {
+        "nome": "Akizz",
+        "pontuacao": 24250,
+        "vidas": 6
+      },
+      {
+        "nome": "Bernardo",
+        "pontuacao": 130,
+        "vidas": 3
+      },
+      {
+        "nome": "ask",
+        "pontuacao": 0,
+        "vidas": 3
+      }
+    ]
+  },
+  {
+    "id": 1780335579078,
+    "data": "01/06/2026",
+    "hora": "14:39",
+    "duracaoSeg": 300,
+    "motivo": "tempo",
+    "participantes": 6,
+    "ranking": [
+      {
+        "nome": "Raphael goatis aajonus🩸🥩",
+        "pontuacao": 51090,
+        "vidas": 35
+      },
+      {
+        "nome": "Miguel e aura a MESMA COISA....💀",
+        "pontuacao": 49080,
+        "vidas": 34
+      },
+      {
+        "nome": "GUSTAVO",
+        "pontuacao": 28840,
+        "vidas": 13
+      },
+      {
+        "nome": "Akizz",
+        "pontuacao": 24140,
+        "vidas": 7
+      },
+      {
+        "nome": "Bernardo",
+        "pontuacao": 10,
+        "vidas": 3
+      },
+      {
+        "nome": "ask",
+        "pontuacao": 0,
+        "vidas": 3
+      }
+    ]
+  },
+  {
+    "id": 1780335115826,
+    "data": "01/06/2026",
+    "hora": "14:31",
+    "duracaoSeg": 300,
+    "motivo": "manual",
+    "participantes": 11,
+    "ranking": [
+      {
+        "nome": "Raphael goatis aajonus🩸🥩",
+        "pontuacao": 23010,
+        "vidas": 15
+      },
+      {
+        "nome": "Dubecks",
+        "pontuacao": 12300,
+        "vidas": 2
+      },
+      {
+        "nome": "gabriela",
+        "pontuacao": 10700,
+        "vidas": 4
+      },
+      {
+        "nome": "heloisairis",
+        "pontuacao": 5930,
+        "vidas": 3
+      },
+      {
+        "nome": "ana duarte mineiro",
+        "pontuacao": 5320,
+        "vidas": 2
+      },
+      {
+        "nome": "Esther",
+        "pontuacao": 4200,
+        "vidas": 5
+      },
+      {
+        "nome": "GIOVANNA",
+        "pontuacao": 1270,
+        "vidas": 3
+      },
+      {
+        "nome": "eric",
+        "pontuacao": 1220,
+        "vidas": 2
+      },
+      {
+        "nome": "Miguel e aura a MESMA COISA...💀",
+        "pontuacao": 1050,
+        "vidas": 3
+      },
+      {
+        "nome": "Tomasco",
+        "pontuacao": 670,
+        "vidas": 3
+      },
+      {
+        "nome": "riry du grau",
+        "pontuacao": 400,
+        "vidas": 3
+      }
+    ]
+  },
+  {
+    "id": 1780334935316,
+    "data": "01/06/2026",
+    "hora": "14:28",
+    "duracaoSeg": 300,
+    "motivo": "tempo",
+    "participantes": 11,
+    "ranking": [
+      {
+        "nome": "Raphael goatis aajonus🩸🥩",
+        "pontuacao": 22970,
+        "vidas": 15
+      },
+      {
+        "nome": "Dubecks",
+        "pontuacao": 12120,
+        "vidas": 2
+      },
+      {
+        "nome": "gabriela",
+        "pontuacao": 9700,
+        "vidas": 3
+      },
+      {
+        "nome": "heloisairis",
+        "pontuacao": 5850,
+        "vidas": 3
+      },
+      {
+        "nome": "ana duarte mineiro",
+        "pontuacao": 5320,
+        "vidas": 3
+      },
+      {
+        "nome": "Esther",
+        "pontuacao": 4180,
+        "vidas": 5
+      },
+      {
+        "nome": "GIOVANNA",
+        "pontuacao": 1270,
+        "vidas": 3
+      },
+      {
+        "nome": "eric",
+        "pontuacao": 1140,
+        "vidas": 2
+      },
+      {
+        "nome": "Miguel e aura a MESMA COISA...💀",
+        "pontuacao": 890,
+        "vidas": 3
+      },
+      {
+        "nome": "Tomasco",
+        "pontuacao": 570,
+        "vidas": 3
+      },
+      {
+        "nome": "riry du grau",
+        "pontuacao": 340,
+        "vidas": 3
+      }
+    ]
+  },
+  {
+    "id": 1780334471929,
+    "data": "01/06/2026",
+    "hora": "14:21",
+    "duracaoSeg": 300,
+    "motivo": "manual",
+    "participantes": 1,
+    "ranking": [
+      {
+        "nome": "Miguel aura pura",
+        "pontuacao": 4230,
+        "vidas": 6
+      }
+    ]
+  },
+  {
     "id": 1780333637275,
     "data": "01/06/2026",
     "hora": "14:07",

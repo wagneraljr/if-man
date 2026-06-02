@@ -1,5 +1,6 @@
-let bancoDeQuestoes = [];
+let bancoDeQuestoes     = [];
 let indicePerguntaAtual = 0;
+let acertosConsecutivos = 0;  // combo de acertos seguidos
 
 async function carregarBancoDeQuestoes() {
     try {
@@ -133,32 +134,64 @@ function verificarColisaoComResposta() {
         pausarRodada();
 
         if (acertou) {
-            pontuacao += 1000;
-            vidas += 1;
+            acertosConsecutivos++;
+
+            // ── Bônus de exploração (pontinhos coletados na rodada) ───────────
+            // A cada 5 pontinhos coletados, ganha +100pts no prêmio da questão
+            const bonusExplora = Math.min(20, Math.floor(pontinhosColecionados / 5)) * 100;
+
+            // ── Multiplicador de combo (acertos consecutivos) ─────────────────
+            // 1 acerto = ×1 | 2 = ×1.5 | 3 = ×2 | 4+ = ×3
+            const multCombo = acertosConsecutivos >= 4 ? 3
+                            : acertosConsecutivos === 3 ? 2
+                            : acertosConsecutivos === 2 ? 1.5
+                            : 1;
+
+            const baseAcerto  = 1000;
+            const totalAcerto = Math.round(baseAcerto * multCombo) + bonusExplora;
+
+            pontuacao += totalAcerto;
+            vidas++;
+            aumentarVelocidade();
             atualizarPlacar();
+            atualizarCombo(acertosConsecutivos);
+
+            // Monta linha de detalhes do feedback
+            let detalhes = `+${totalAcerto} pts`;
+            if (multCombo > 1)    detalhes += `  |  combo ×${multCombo}`;
+            if (bonusExplora > 0) detalhes += `  |  exploração +${bonusExplora}`;
+            detalhes += "  |  +1 vida";
 
             const ultimaQuestao = indicePerguntaAtual + 1 >= bancoDeQuestoes.length;
             indicePerguntaAtual++;
 
             if (ultimaQuestao) {
-                let bonus = vidas * 100;
-                pontuacao += bonus;
+                let bonusVidas = vidas * 100;
+                pontuacao += bonusVidas;
                 atualizarPlacar();
                 desenharFeedback("✓ Você concluiu todas as questões!",
-                    `Pontuação final: ${pontuacao} pts (bônus de vidas: ${bonus})`, "verde");
+                    `Pontuação final: ${pontuacao} pts  |  bônus de vidas: +${bonusVidas}`, "verde");
                 setTimeout(() => {
                     indicePerguntaAtual = 0;
+                    pontuacao = 0;
+                    vidas = 3;
+                    acertosConsecutivos = 0;
+                    resetarVelocidade();
+                    atualizarPlacar();
+                    atualizarCombo(0);
                     prepararNovaRodada();
                 }, 2500);
             } else {
-                desenharFeedback("✓ Resposta correta!", "+1000 pontos  |  +1 vida", "verde");
+                desenharFeedback("✓ Resposta correta!", detalhes, "verde");
                 setTimeout(() => { prepararNovaRodada(); }, 1800);
             }
 
         } else {
+            acertosConsecutivos = 0; // quebra o combo
             vidas--;
             atualizarPlacar();
-            desenharFeedback("✗ Resposta incorreta", "Você perdeu 1 vida.", "vermelho");
+            atualizarCombo(0);
+            desenharFeedback("✗ Resposta incorreta", "Combo zerado  |  você perdeu 1 vida.", "vermelho");
             setTimeout(() => {
                 verificarDerrota();
                 if (vidas > 0) prepararNovaRodada();
