@@ -398,6 +398,41 @@ const servidor = http.createServer(async (req, res) => {
         return;
     }
 
+
+    // ══ HISTÓRICO ════════════════════════════════════════════════════════════
+
+    // GET /api/historico — lista todas as competições (resumo sem ranking completo)
+    if (metodo === "GET" && url === "/api/historico") {
+        const historico = lerJSON(ARQUIVO_HIST, []);
+        const resumo = historico.map(({ id, data, hora, duracaoSeg, motivo, participantes, ranking }) => ({
+            id, data, hora, duracaoSeg, motivo, participantes,
+            top3: (ranking || []).slice(0, 3)
+        }));
+        responderJSON(res, 200, resumo);
+        return;
+    }
+
+    // GET /api/historico/:id — detalhes completos de uma competição
+    if (metodo === "GET" && url.startsWith("/api/historico/") && url.split("/").length === 4) {
+        const id        = parseInt(url.split("/")[3]);
+        const historico = lerJSON(ARQUIVO_HIST, []);
+        const comp      = historico.find(h => h.id === id);
+        if (!comp) { responderJSON(res, 404, { erro: "Competição não encontrada." }); return; }
+        responderJSON(res, 200, comp);
+        return;
+    }
+
+    // DELETE /api/historico/:id — remove uma competição do histórico
+    if (metodo === "DELETE" && url.startsWith("/api/historico/")) {
+        const id  = parseInt(url.split("/")[3]);
+        let hist  = lerJSON(ARQUIVO_HIST, []);
+        hist      = hist.filter(h => h.id !== id);
+        salvarJSON(ARQUIVO_HIST, hist);
+        console.log(`[${new Date().toLocaleTimeString()}] Histórico ${id} removido.`);
+        responderJSON(res, 200, { ok: true });
+        return;
+    }
+
     // ══ ARQUIVOS ESTÁTICOS ════════════════════════════════════════════════════
 
     let caminhoArquivo = url === "/" ? "/index.html" : url;
@@ -417,7 +452,7 @@ const servidor = http.createServer(async (req, res) => {
 
 servidor.listen(PORTA, "0.0.0.0", () => {
     console.log("=".repeat(52));
-    console.log("  Quiz IF-Man — Servidor rodando");
+    console.log("  Quiz Pac-Man — Servidor rodando");
     console.log(`  Local:   http://localhost:${PORTA}`);
     console.log(`  Rede:    http://SEU_IP:${PORTA}`);
     console.log("=".repeat(52));

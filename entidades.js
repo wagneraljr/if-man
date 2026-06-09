@@ -96,7 +96,7 @@ function desenharJogador(contexto) {
     contexto.closePath();
     contexto.fill();
 
-    // Olho
+    /* Olho
     let olhoAngulo = rotacao - Math.PI / 4;
     let olhoX = centroX + Math.cos(olhoAngulo) * raio * 0.48;
     let olhoY = centroY + Math.sin(olhoAngulo) * raio * 0.48;
@@ -138,7 +138,7 @@ function desenharJogador(contexto) {
     contexto.beginPath();
     contexto.arc(borlaBaseX + borlaCompr * 0.5, borlaBaseY + borlaCompr + 3, 3.5, 0, Math.PI * 2);
     contexto.fill();
-
+*/
     contexto.restore();
 }
 

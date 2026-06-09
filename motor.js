@@ -263,14 +263,27 @@ function prepararRodadaInicial() {
 
 // Chamada pelo quiz.js a cada nova pergunta (acerto ou erro com vidas restantes)
 function prepararNovaRodada() {
+    // Para o intervalo imediatamente — evita que tickMonstros dispare durante o setup
+    jogoAtivo = false;
+    if (intervaloMonstros) {
+        clearInterval(intervaloMonstros);
+        intervaloMonstros = null;
+    }
+    window.removeEventListener("keydown", moverJogador);
+
+    // Configura o novo estado
     sortearMapaDaRodada();
     carregarPergunta();
     jogador.coluna = 9;
     jogador.linha  = 5;
     resetarMonstros();
+
+    // Desenha o novo mapa e exibe overlay de espera
     atualizarTela();
     desenharTelaEspera();
-    pausarRodada();
+
+    // Exibe o botão de iniciar
+    document.getElementById("btn-iniciar").classList.remove("oculto");
 }
 
 window.onload = iniciarJogo;

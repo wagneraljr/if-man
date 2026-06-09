@@ -1,5 +1,20 @@
 [
   {
+    "id": 1780607287571,
+    "data": "04/06/2026",
+    "hora": "18:08",
+    "duracaoSeg": 300,
+    "motivo": "manual",
+    "participantes": 1,
+    "ranking": [
+      {
+        "nome": "aluno",
+        "pontuacao": 1450,
+        "vidas": 4
+      }
+    ]
+  },
+  {
     "id": 1780335967128,
     "data": "01/06/2026",
     "hora": "14:46",

@@ -143,11 +143,16 @@ const LARGURA_SALA = 3;
 const ALTURA_SALA  = 2;
 
 let frameTick = 0;
+let ultimoMapaIndex = -1; // evita repetição do mesmo mapa
 
 // ─── Montagem do labirinto ────────────────────────────────────────────────────
 
 function sortearMapaDaRodada() {
-    let indiceSorteado = Math.floor(Math.random() * bancoDeMapas.length);
+    // Sorteia excluindo o mapa da rodada anterior
+    let indicios = Array.from({ length: bancoDeMapas.length }, (_, i) => i)
+                       .filter(i => i !== ultimoMapaIndex);
+    let indiceSorteado = indicios[Math.floor(Math.random() * indicios.length)];
+    ultimoMapaIndex    = indiceSorteado;
     let mapaEscolhido  = bancoDeMapas[indiceSorteado];
 
     // Converte valores do layout: 0→pontinho(2), 4→livre(0), resto mantém

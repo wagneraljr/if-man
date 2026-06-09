@@ -120,9 +120,13 @@ function verificarColisaoComResposta() {
 
     for (let i = 0; i < alternativas.length; i++) {
         let pos = posicoesRespostasAtuais[i];
-        // Jogador está dentro da sala se estiver em qualquer um dos 6 blocos
-        let dentroColuna = jogador.coluna >= pos.coluna && jogador.coluna < pos.coluna + LARGURA_SALA;
-        let dentroLinha  = jogador.linha  >= pos.linha  && jogador.linha  < pos.linha  + ALTURA_SALA;
+
+        // Exige que o jogador chegue à coluna CENTRAL da sala (col+1 de 3)
+        // evitando disparar ao apenas roçar a borda da sala pelo corredor adjacente.
+        let colunaConfirmacao = pos.coluna + 1;
+        let dentroColuna = jogador.coluna === colunaConfirmacao;
+        let dentroLinha  = jogador.linha >= pos.linha && jogador.linha < pos.linha + ALTURA_SALA;
+
         if (dentroColuna && dentroLinha) {
             tocouEmAlguma = true;
             if (alternativas[i].correta) acertou = true;
