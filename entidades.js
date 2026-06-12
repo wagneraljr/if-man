@@ -413,7 +413,9 @@ function moverJogador(evento) {
         }
     }
 
-    verificarColisaoComResposta();
+    const respondeuQuestao = verificarColisaoComResposta();
+    if (respondeuQuestao) return;
+
     verificarColisaoComMonstro();
     atualizarTela();
 }

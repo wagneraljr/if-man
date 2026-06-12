@@ -1,6 +1,7 @@
 let bancoDeQuestoes     = [];
 let indicePerguntaAtual = 0;
 let acertosConsecutivos = 0;  // combo de acertos seguidos
+let acaoAposFeedback    = null;
 
 async function carregarBancoDeQuestoes() {
     try {
@@ -173,21 +174,25 @@ function verificarColisaoComResposta() {
                 let bonusVidas = vidas * 100;
                 pontuacao += bonusVidas;
                 atualizarPlacar();
-                desenharFeedback("✓ Você concluiu todas as questões!",
-                    `Pontuação final: ${pontuacao} pts  |  bônus de vidas: +${bonusVidas}`, "verde");
-                setTimeout(() => {
-                    indicePerguntaAtual = 0;
-                    pontuacao = 0;
-                    vidas = 3;
-                    acertosConsecutivos = 0;
-                    resetarVelocidade();
-                    atualizarPlacar();
-                    atualizarCombo(0);
-                    prepararNovaRodada();
-                }, 2500);
+                desenharFeedback(
+                    "✓ Você concluiu todas as questões!",
+                    `Pontuação final: ${pontuacao} pts  |  bônus de vidas: +${bonusVidas}`,
+                    "verde",
+                    () => {
+                        indicePerguntaAtual = 0;
+                        pontuacao = 0;
+                        vidas = 3;
+                        acertosConsecutivos = 0;
+                        resetarVelocidade();
+                        atualizarPlacar();
+                        atualizarCombo(0);
+                        prepararNovaRodada();
+                    }
+                );
             } else {
-                desenharFeedback("✓ Resposta correta!", detalhes, "verde");
-                setTimeout(() => { prepararNovaRodada(); }, 1800);
+                desenharFeedback("✓ Resposta correta!", detalhes, "verde", () => {
+                    prepararNovaRodada();
+                });
             }
 
         } else {
@@ -195,18 +200,27 @@ function verificarColisaoComResposta() {
             vidas--;
             atualizarPlacar();
             atualizarCombo(0);
-            desenharFeedback("✗ Resposta incorreta", "Combo zerado  |  você perdeu 1 vida.", "vermelho");
-            setTimeout(() => {
+            desenharFeedback("✗ Resposta incorreta", "Combo zerado  |  você perdeu 1 vida.", "vermelho", () => {
                 verificarDerrota();
                 if (vidas > 0) prepararNovaRodada();
-            }, 1800);
+            });
         }
     }
+
+    return tocouEmAlguma;
 }
 
 // ── Feedback visual no canvas (acerto / erro) ─────────────────────────────────
 
-function desenharFeedback(titulo, subtitulo, tipo) {
+function ocultarFeedbackVisual() {
+    const modal = document.getElementById("modal-feedback");
+    if (!modal) return;
+
+    modal.classList.remove("modal-visivel");
+    modal.classList.add("modal-oculto");
+}
+
+function desenharFeedbackNoCanvas(titulo, subtitulo, tipo) {
     const ctx = contexto;
     const corFaixa = tipo === "verde" ? "#2F9E41" : "#CD191E";
 
@@ -250,4 +264,53 @@ function desenharFeedback(titulo, subtitulo, tipo) {
     ctx.moveTo(bx + 8, by + bh - 1);
     ctx.lineTo(bx + bw - 8, by + bh - 1);
     ctx.stroke();
+}
+
+function confirmarFeedbackVisual() {
+    ocultarFeedbackVisual();
+
+    const acao = acaoAposFeedback;
+    acaoAposFeedback = null;
+    if (typeof acao === "function") acao();
+}
+
+function desenharFeedback(titulo, subtitulo, tipo, onConfirm = null) {
+    // Sempre desenha no canvas para garantir feedback mesmo se houver
+    // qualquer problema visual/empilhamento com o modal HTML.
+    desenharFeedbackNoCanvas(titulo, subtitulo, tipo);
+
+    const modal = document.getElementById("modal-feedback");
+    const card = document.getElementById("feedback-card");
+    const tituloEl = document.getElementById("feedback-titulo");
+    const mensagemEl = document.getElementById("feedback-mensagem");
+
+    if (!modal || !card || !tituloEl || !mensagemEl) {
+        if (typeof onConfirm === "function") onConfirm();
+        return;
+    }
+
+    acaoAposFeedback = typeof onConfirm === "function" ? onConfirm : null;
+
+    tituloEl.innerText = titulo;
+    mensagemEl.innerText = subtitulo;
+
+    // Reinicia a animação em toda resposta (mesmo repetindo o mesmo tipo)
+    card.classList.remove("acerto", "erro", "animar-feedback");
+    void card.offsetWidth;
+
+    if (tipo === "vermelho") {
+        card.classList.add("erro");
+    } else {
+        card.classList.add("acerto");
+    }
+    card.classList.add("animar-feedback");
+
+    modal.classList.remove("modal-oculto");
+    modal.classList.add("modal-visivel");
+
+    const btnOk = document.getElementById("feedback-ok");
+    if (btnOk && btnOk.dataset.feedbackBind !== "1") {
+        btnOk.addEventListener("click", confirmarFeedbackVisual);
+        btnOk.dataset.feedbackBind = "1";
+    }
 }

@@ -275,7 +275,8 @@ h3 { font-size: 1.1rem;  color: var(--if-verde); font-weight: 600; }
     display: inline-block;
     border-radius: var(--raio);
     box-shadow: 0 4px 24px rgba(0,0,0,0.18);
-    overflow: hidden;
+    overflow: visible;
+    transition: transform 0.2s ease;
 }
 
 canvas {
@@ -298,15 +299,6 @@ canvas {
     );
     pointer-events: none;
     border-radius: var(--raio);
-}
-
-
-/* =============================================================================
-   8. UTILITÁRIOS
-   ============================================================================= */
-
-.piscando {
-    animation: piscar-btn 1s step-end infinite;
 }
 
 
@@ -973,20 +965,6 @@ canvas {
    13. PLACAR AO VIVO E TIMER
    ============================================================================= */
 
-/* Timer na nav do jogo (visível para aluno) */
-.timer-hud {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--if-verde-escuro);
-    background-color: var(--if-verde-claro);
-    border: 1.5px solid var(--if-verde);
-    border-radius: var(--raio);
-    padding: 5px 14px;
-    letter-spacing: 1px;
-    display: inline-flex;
-    align-items: center;
-}
-
 /* Timer grande no painel do professor */
 .timer-grande {
     font-size: 2rem;
@@ -1052,7 +1030,7 @@ canvas {
 
 /* Destaque top 3 no placar ao vivo */
 .placar-destaque-1 { border-left-color: #F1C40F; background-color: #FFFDE7; }
-.placar-destaque-2 { border-left-color: #95A5A6; background-color: #F8F9FA; }
+.placar-destaque-2 { border-left-color: #95A5A6; background-color: var(--cor-fundo); }
 .placar-destaque-3 { border-left-color: #CD6133; background-color: #FDF3EC; }
 
 
@@ -1101,7 +1079,7 @@ canvas {
 .podio-base {
     width: 100%;
     text-align: center;
-    color: #fff;
+    color: var(--cor-fundo-card);
     font-weight: 700;
     font-size: 1.1rem;
     border-radius: 6px 6px 0 0;
@@ -1112,17 +1090,6 @@ canvas {
 .podio-ouro   .podio-base { padding-top: 32px; }
 .podio-prata  .podio-base { padding-top: 18px; }
 .podio-bronze .podio-base { padding-top: 10px; }
-
-
-/* =============================================================================
-   15. NAV — NOME DO ALUNO E AJUSTES
-   ============================================================================= */
-
-.nav-nome-aluno {
-    font-size: 0.85rem;
-    font-weight: 400;
-    color: var(--cor-texto-claro);
-}
 
 
 /* =============================================================================
@@ -1230,11 +1197,6 @@ canvas {
     padding-top: 16px;
 }
 
-/* Base dos flutuantes — posicionados sobre o canvas-wrapper */
-#canvas-wrapper {
-    position: relative;
-}
-
 .flutuante {
     position: absolute;
     z-index: 10;
@@ -1251,7 +1213,7 @@ canvas {
     top: 10px;
     left: 10px;
     background: rgba(0, 0, 16, 0.72);
-    color: #ffffff;
+    color: var(--cor-fundo-card);
     border: 1.5px solid rgba(47, 158, 65, 0.7);
     padding: 6px 12px;
     display: flex;
@@ -1278,7 +1240,7 @@ canvas {
     top: 10px;
     right: 10px;
     background: rgba(205, 25, 30, 0.82);
-    color: #ffffff;
+    color: var(--cor-fundo-card);
     border: 1.5px solid rgba(255, 255, 255, 0.2);
     padding: 6px 14px;
     text-decoration: none;
@@ -1344,12 +1306,6 @@ canvas {
    20. RESPONSIVIDADE DO CANVAS
    ============================================================================= */
 
-/* Garante que o scale não seja cortado pelo overflow */
-#canvas-wrapper {
-    overflow: visible;
-    transition: transform 0.2s ease;
-}
-
 /* Em telas menores que o canvas, remove padding lateral excessivo */
 @media (max-width: 800px) {
     .jogo-wrapper {
@@ -1411,4 +1367,120 @@ canvas {
     padding: 2px 10px;
     letter-spacing: 0.5px;
     transition: color 0.4s, border-color 0.4s;
+}
+
+/* =============================================================================
+   MODAL DE FEEDBACK DE RESPOSTA
+   ============================================================================= */
+.modal-oculto {
+    display: none;
+}
+
+.modal-visivel {
+    display: flex !important;
+    position: fixed; /* Cobre a tela toda, independentemente do scroll */
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.feedback-card {
+    background: var(--cor-fundo-card);
+    padding: 40px 60px;
+    border-radius: var(--raio);
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    border-top: 8px solid var(--if-verde);
+    transform: scale(1);
+    opacity: 1;
+    will-change: transform, opacity, box-shadow;
+}
+
+.feedback-card.acerto {
+    border-top-color: var(--if-verde);
+}
+
+.feedback-card.erro {
+    border-top-color: var(--if-vermelho);
+}
+
+.feedback-card.animar-feedback.acerto {
+    animation: animarFeedback 0.28s ease-out, brilhoAcerto 0.75s ease-out;
+}
+
+.feedback-card.animar-feedback.erro {
+    animation: animarFeedback 0.28s ease-out, impactoErro 0.65s ease-out;
+}
+
+.feedback-card h2 {
+    margin: 0 0 12px 0;
+    font-size: 2.2rem;
+    color: var(--cor-texto);
+}
+
+.feedback-card p {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--cor-texto-claro);
+}
+
+.feedback-ok {
+    margin-top: 18px;
+    background-color: var(--if-verde);
+    color: var(--cor-fundo-card);
+    border: none;
+    border-radius: var(--raio);
+    padding: 10px 24px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.feedback-card.erro .feedback-ok {
+    background-color: var(--if-vermelho);
+}
+
+.feedback-ok:hover {
+    filter: brightness(0.95);
+}
+
+@keyframes animarFeedback {
+    from {
+        transform: scale(0.85);
+        opacity: 0.2;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes brilhoAcerto {
+    0% {
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    40% {
+        box-shadow: 0 12px 30px rgba(47,158,65,0.45);
+    }
+    100% {
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+}
+
+@keyframes impactoErro {
+    0% {
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    45% {
+        box-shadow: 0 14px 34px rgba(205,25,30,0.5);
+    }
+    100% {
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
 }

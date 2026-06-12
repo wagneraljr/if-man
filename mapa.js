@@ -6,15 +6,12 @@
 // Grade: 19 × 15 | tamanhoBloco = 40px | canvas = 760 × 600px
 // Casa dos fantasmas: fixa em rows 6-9, cols 7-11 (sobreposta em todos os mapas)
 
-// ─── Ponto de saída da casa (fantasmas emergem aqui) ─────────────────────────
-const FORA_CASA = { coluna: 9, linha: 5 };
-
 // ─── Mapas ────────────────────────────────────────────────────────────────────
 
 const mapa1 = {
     posicoes: [
         { coluna: 1, linha: 1 }, { coluna: 15, linha: 1 },
-        { coluna: 1, linha: 11 }, { coluna: 15, linha: 11 }
+        { coluna: 1, linha: 12 }, { coluna: 15, linha: 12 }
     ],
     layout: [
         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -28,9 +25,9 @@ const mapa1 = {
         [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
         [1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1],
-        [1, 4, 4, 4, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 4, 4, 4, 1],
+        [1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1],
         [1, 4, 4, 4, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 4, 4, 4, 1],
-        [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+        [1, 4, 4, 4, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 4, 4, 4, 1],
         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     ]
 };
@@ -62,7 +59,7 @@ const mapa2 = {
 const mapa3 = {
     posicoes: [
         { coluna: 1, linha: 1 }, { coluna: 15, linha: 1 },
-        { coluna: 1, linha: 11 }, { coluna: 15, linha: 11 }
+        { coluna: 1, linha: 12 }, { coluna: 15, linha: 12 }
     ],
     layout: [
         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -76,9 +73,9 @@ const mapa3 = {
         [1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1],
         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
         [1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1],
-        [1, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 4, 4, 4, 1],
+        [1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1],
         [1, 4, 4, 4, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 4, 4, 4, 1],
-        [1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+        [1, 4, 4, 4, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 4, 4, 4, 1],
         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     ]
 };
@@ -110,7 +107,7 @@ const mapa4 = {
 // ─── Mapa 5: O Labirinto Espiral ──────────────────────────────────────────────
 // Caminhos que contornam a casa dos fantasmas central, criando
 // rotas mais longas e estratégicas para chegar às salas de resposta.
-const mapaEspiral = {
+const mapa5 = {
     posicoes: [
         { coluna: 1, linha: 1 }, { coluna: 15, linha: 1 },
         { coluna: 1, linha: 11 }, { coluna: 15, linha: 11 }
@@ -134,7 +131,7 @@ const mapaEspiral = {
     ]
 };
 
-const bancoDeMapas = [mapa1, mapa2, mapa3, mapa4, mapaEspiral];
+const bancoDeMapas = [mapa1, mapa2, mapa3, mapa4, mapa5];
 
 let labirinto = [];
 let posicoesRespostasAtuais = [];
