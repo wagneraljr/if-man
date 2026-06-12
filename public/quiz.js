@@ -5,6 +5,13 @@ let acaoAposFeedback    = null;
 let feedbackAtivo       = false;
 let feedbackBotaoArea   = null;
 
+function embaralharBancoQuestoes() {
+    for (let i = bancoDeQuestoes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [bancoDeQuestoes[i], bancoDeQuestoes[j]] = [bancoDeQuestoes[j], bancoDeQuestoes[i]];
+    }
+}
+
 function atualizarFeedbackCanvasClick() {
     const canvas = document.getElementById("telaJogo");
     if (!canvas || canvas.dataset.feedbackClickBind === "1") return;
@@ -60,10 +67,7 @@ async function carregarBancoDeQuestoes() {
     }
 
     // Embaralha a ordem das questões a cada partida
-    for (let i = bancoDeQuestoes.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [bancoDeQuestoes[i], bancoDeQuestoes[j]] = [bancoDeQuestoes[j], bancoDeQuestoes[i]];
-    }
+    embaralharBancoQuestoes();
 
     prepararRodadaInicial();
 }
@@ -206,29 +210,15 @@ function verificarColisaoComResposta() {
             indicePerguntaAtual++;
 
             if (ultimaQuestao) {
-                let bonusVidas = vidas * 100;
-                pontuacao += bonusVidas;
-                atualizarPlacar();
-                desenharFeedback(
-                    "✓ Você concluiu todas as questões!",
-                    `Pontuação final: ${pontuacao} pts  |  bônus de vidas: +${bonusVidas}`,
-                    "verde",
-                    () => {
-                        indicePerguntaAtual = 0;
-                        pontuacao = 0;
-                        vidas = 3;
-                        acertosConsecutivos = 0;
-                        resetarVelocidade();
-                        atualizarPlacar();
-                        atualizarCombo(0);
-                        prepararNovaRodada();
-                    }
-                );
+                indicePerguntaAtual = 0;
+                embaralharBancoQuestoes();
             } else {
-                desenharFeedback("✓ Resposta correta!", detalhes, "verde", () => {
-                    prepararNovaRodada();
-                });
+                // mantém o índice já avançado
             }
+
+            desenharFeedback("✓ Resposta correta!", detalhes, "verde", () => {
+                prepararNovaRodada();
+            });
 
         } else {
             acertosConsecutivos = 0; // quebra o combo
