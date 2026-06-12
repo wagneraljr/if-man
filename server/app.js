@@ -15,9 +15,12 @@ const path   = require("path");
 const crypto = require("crypto");
 
 const PORTA          = 3000;
-const ARQUIVO_CONFIG = path.join(__dirname, "config.json");
-const ARQUIVO_QUEST  = path.join(__dirname, "questoes.json");
-const ARQUIVO_HIST   = path.join(__dirname, "historico.json");
+const ROOT_DIR       = path.join(__dirname, "..");
+const DATA_DIR       = path.join(ROOT_DIR, "data");
+const PUBLIC_DIR     = path.join(ROOT_DIR, "public");
+const ARQUIVO_CONFIG = path.join(DATA_DIR, "config.json");
+const ARQUIVO_QUEST  = path.join(DATA_DIR, "questoes.json");
+const ARQUIVO_HIST   = path.join(DATA_DIR, "historico.json");
 
 // ── Questões padrão (usadas se questoes.json não existir) ─────────────────────
 
@@ -436,7 +439,14 @@ const servidor = http.createServer(async (req, res) => {
     // ══ ARQUIVOS ESTÁTICOS ════════════════════════════════════════════════════
 
     let caminhoArquivo = url === "/" ? "/index.html" : url;
-    const arquivoFull  = path.join(__dirname, caminhoArquivo);
+    const arquivoFull  = path.normalize(path.join(PUBLIC_DIR, caminhoArquivo));
+
+    if (!arquivoFull.startsWith(PUBLIC_DIR)) {
+        res.writeHead(403, { "Content-Type": "text/plain" });
+        res.end("Acesso negado");
+        return;
+    }
+
     const extensao     = path.extname(arquivoFull);
 
     fs.readFile(arquivoFull, (erro, dados) => {

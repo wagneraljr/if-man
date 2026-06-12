@@ -2,9 +2,9 @@
   "name": "quiz-pacman-if",
   "version": "2.0.0",
   "description": "Quiz Pac-Man — IF Sudeste MG",
-  "main": "server.js",
+  "main": "server/app.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server/app.js"
   },
   "keywords": [],
   "author": "",
