@@ -53,17 +53,33 @@
                 <span class="stat-numero" id="stat-sem-correta" style="color: var(--if-vermelho)">0</span>
                 <span class="stat-label">Sem resposta correta</span>
             </div>
+            <div class="stat-card">
+                <span class="stat-numero" id="stat-categorias">0</span>
+                <span class="stat-label">Categorias cadastradas</span>
+            </div>
+        </div>
+
+        <div class="filtros-questoes">
+            <label for="filtro-categoria">Buscar por categoria</label>
+            <div class="filtros-linha">
+                <select id="filtro-categoria" class="input-selecao" onchange="atualizarFiltroCategoria()">
+                    <option value="Todas">Todas</option>
+                </select>
+                <button onclick="limparFiltroCategoria()" class="btn-secundario" type="button">Limpar filtro</button>
+            </div>
+            <div class="paginacao-controles">
+                <span>Exibir por página:</span>
+                <select id="itens-por-pagina" class="input-selecao" onchange="atualizarItensPorPagina()">
+                    <option value="5" selected>5</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                </select>
+            </div>
         </div>
 
         <!-- ── LISTA DE QUESTÕES ──────────────────────────────────────── -->
         <div id="lista-questoes" class="lista-questoes"></div>
-
-        <!-- ── RODAPÉ DE AÇÕES ────────────────────────────────────────── -->
-        <div class="painel-rodape">
-            <button onclick="restaurarERenderizar()" class="btn-perigo-outline">
-                ↺ Restaurar questões padrão
-            </button>
-        </div>
+        <div id="navegacao-paginas" class="navegacao-paginas"></div>
 
     </main>
 
@@ -77,6 +93,16 @@
             </div>
 
             <div class="modal-corpo">
+
+                <div class="campo-grupo">
+                    <label>Categoria da questão <span class="obrigatorio">*</span></label>
+                    <input type="text" id="campo-categoria" list="lista-categorias" placeholder="Ex: Informática Básica">
+                    <datalist id="lista-categorias"></datalist>
+                    <select id="seletor-categoria-existente" class="input-selecao" onchange="usarCategoriaExistente()">
+                        <option value="">Escolher categoria existente</option>
+                    </select>
+                    <span class="hint">Digite uma categoria nova ou escolha uma existente.</span>
+                </div>
 
                 <div class="campo-grupo">
                     <label>Enunciado da questão <span class="obrigatorio">*</span></label>
@@ -109,34 +135,59 @@
     <script>
         let idEditando = null;
         let questoesCache = []; // cache local para edições
+        let categoriasCache = [];
+        let categoriaFiltro = "Todas";
+        let paginaAtual = 1;
+        let itensPorPagina = 5;
 
         // ── Renderização da lista ─────────────────────────────────────────────
 
         async function renderizarLista() {
             const lista = document.getElementById("lista-questoes");
+            const navegacao = document.getElementById("navegacao-paginas");
             lista.innerHTML = `<div class="estado-vazio"><p>Carregando questões...</p></div>`;
+            navegacao.innerHTML = "";
             try {
                 questoesCache = await obterQuestoes();
+                categoriasCache = listarCategoriasQuestoes(questoesCache);
+                if (!categoriasCache.includes(categoriaFiltro)) categoriaFiltro = "Todas";
+                preencherSelectCategorias(document.getElementById("filtro-categoria"), categoriasCache, categoriaFiltro);
             } catch {
                 lista.innerHTML = `<div class="estado-vazio"><p>Erro ao carregar questões. Verifique o servidor.</p></div>`;
                 return;
             }
 
-            const questoes  = questoesCache;
-            const semCorreta = questoes.filter(q => !q.alternativas.some(a => a.correta)).length;
-            document.getElementById("stat-total").innerText       = questoes.length;
+            const questoesFiltradas = filtrarQuestoesPorCategoria(questoesCache, categoriaFiltro);
+            const semCorreta = questoesFiltradas.filter(q => !q.alternativas.some(a => a.correta)).length;
+            document.getElementById("stat-total").innerText       = questoesFiltradas.length;
             document.getElementById("stat-sem-correta").innerText = semCorreta;
+            document.getElementById("stat-categorias").innerText  = Math.max(0, categoriasCache.length - 1);
 
-            if (questoes.length === 0) {
+            if (questoesFiltradas.length === 0) {
+                if (questoesCache.length === 0) {
+                    lista.innerHTML = `
+                        <div class="estado-vazio">
+                            <p>Nenhuma questão cadastrada ainda.</p>
+                            <button onclick="abrirModal()" class="btn-primario">Criar primeira questão</button>
+                        </div>`;
+                    return;
+                }
                 lista.innerHTML = `
                     <div class="estado-vazio">
-                        <p>Nenhuma questão cadastrada ainda.</p>
-                        <button onclick="abrirModal()" class="btn-primario">Criar primeira questão</button>
+                        <p>Nenhuma questão encontrada para a categoria selecionada.</p>
                     </div>`;
                 return;
             }
 
-            lista.innerHTML = questoes.map((q, idx) => {
+            const totalPaginas = Math.max(1, Math.ceil(questoesFiltradas.length / itensPorPagina));
+            if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+            if (paginaAtual < 1) paginaAtual = 1;
+
+            const inicio = (paginaAtual - 1) * itensPorPagina;
+            const fim = inicio + itensPorPagina;
+            const questoesPagina = questoesFiltradas.slice(inicio, fim);
+
+            lista.innerHTML = questoesPagina.map((q, idx) => {
                 const correta = q.alternativas.find(a => a.correta);
                 const alts    = q.alternativas.map(a => `
                     <span class="alt-badge ${a.correta ? 'alt-correta' : ''}">
@@ -145,7 +196,8 @@
                 return `
                 <div class="questao-card">
                     <div class="questao-card-header">
-                        <span class="questao-numero">Q${idx + 1}</span>
+                        <span class="questao-numero">Q${inicio + idx + 1}</span>
+                        <span class="questao-categoria">${q.categoria || "Informática Básica"}</span>
                         <div class="questao-acoes">
                             <button onclick="abrirModalEdicao(${q.id})" class="btn-outline-sm">Editar</button>
                             <button onclick="confirmarExclusao(${q.id})" class="btn-perigo-sm">Excluir</button>
@@ -156,6 +208,67 @@
                     ${!correta ? '<p class="alerta-sem-correta">⚠ Nenhuma alternativa marcada como correta</p>' : ''}
                 </div>`;
             }).join("");
+
+            renderizarPaginacao(questoesFiltradas.length, totalPaginas, inicio);
+        }
+
+        function renderizarPaginacao(totalItens, totalPaginas, inicio) {
+            const navegacao = document.getElementById("navegacao-paginas");
+            if (!navegacao || totalItens === 0) {
+                if (navegacao) navegacao.innerHTML = "";
+                return;
+            }
+
+            const fim = Math.min(inicio + itensPorPagina, totalItens);
+            const botoesPaginas = [];
+            const criarBotaoPagina = (numero) => `
+                <button
+                    type="button"
+                    class="btn-pagina ${numero === paginaAtual ? "ativa" : ""}"
+                    onclick="mudarPagina(${numero})"
+                >${numero}</button>
+            `;
+
+            if (totalPaginas <= 7) {
+                for (let i = 1; i <= totalPaginas; i++) {
+                    botoesPaginas.push(criarBotaoPagina(i));
+                }
+            } else {
+                const inicioJanela = Math.max(2, paginaAtual - 1);
+                const fimJanela = Math.min(totalPaginas - 1, paginaAtual + 1);
+
+                botoesPaginas.push(criarBotaoPagina(1));
+
+                if (inicioJanela > 2) {
+                    botoesPaginas.push('<span class="paginacao-reticencias">...</span>');
+                }
+
+                for (let i = inicioJanela; i <= fimJanela; i++) {
+                    botoesPaginas.push(criarBotaoPagina(i));
+                }
+
+                if (fimJanela < totalPaginas - 1) {
+                    botoesPaginas.push('<span class="paginacao-reticencias">...</span>');
+                }
+
+                botoesPaginas.push(criarBotaoPagina(totalPaginas));
+            }
+
+            navegacao.innerHTML = `
+                <div class="paginacao-resumo">Exibindo ${inicio + 1}-${fim} de ${totalItens} questões</div>
+                <div class="paginacao-botoes">
+                    <button type="button" class="btn-pagina" onclick="mudarPagina(${paginaAtual - 1})" ${paginaAtual === 1 ? "disabled" : ""}>Anterior</button>
+                    ${botoesPaginas.join("")}
+                    <button type="button" class="btn-pagina" onclick="mudarPagina(${paginaAtual + 1})" ${paginaAtual === totalPaginas ? "disabled" : ""}>Próxima</button>
+                </div>
+            `;
+        }
+
+        function mudarPagina(novaPagina) {
+            const totalItens = filtrarQuestoesPorCategoria(questoesCache, categoriaFiltro).length;
+            const totalPaginas = Math.max(1, Math.ceil(totalItens / itensPorPagina));
+            paginaAtual = Math.max(1, Math.min(novaPagina, totalPaginas));
+            renderizarLista();
         }
 
         // ── Modal ─────────────────────────────────────────────────────────────
@@ -164,9 +277,17 @@
             idEditando = questao ? questao.id : null;
             document.getElementById("modal-titulo").innerText =
                 questao ? "Editar Questão" : "Nova Questão";
+            preencherSelectCategorias(document.getElementById("lista-categorias"), categoriasCache);
+            preencherSelectCategorias(
+                document.getElementById("seletor-categoria-existente"),
+                categoriasCache.filter(categoria => categoria !== "Todas"),
+                ""
+            );
+            document.getElementById("campo-categoria").value = questao ? (questao.categoria || "") : "";
             document.getElementById("campo-texto").value =
                 questao ? questao.texto : "";
             document.getElementById("erro-modal").style.display = "none";
+            document.getElementById("seletor-categoria-existente").value = questao ? (questao.categoria || "") : "";
 
             // Monta os 4 campos de alternativas
             const alts = questao ? questao.alternativas : [
@@ -201,6 +322,7 @@
         function fecharModal() {
             document.getElementById("modal-overlay").style.display = "none";
             idEditando = null;
+            document.getElementById("seletor-categoria-existente").value = "";
         }
 
         function fecharModalFora(event) {
@@ -208,9 +330,15 @@
         }
 
         async function salvarQuestaoModal() {
+            const categoria = document.getElementById("campo-categoria").value.trim();
             const texto = document.getElementById("campo-texto").value.trim();
             const erro  = document.getElementById("erro-modal");
             const btn   = document.getElementById("btn-salvar-modal");
+
+            if (!categoria) {
+                erro.innerText = "A categoria da questão não pode ficar vazia.";
+                erro.style.display = "block"; return;
+            }
 
             if (!texto) {
                 erro.innerText = "O enunciado da questão não pode estar vazio.";
@@ -232,7 +360,7 @@
             btn.innerText = "Salvando...";
 
             try {
-                const questao = { texto, alternativas };
+                const questao = { categoria, texto, alternativas };
                 if (idEditando !== null) {
                     questao.id = idEditando;
                     await atualizarQuestao(questao);
@@ -265,10 +393,31 @@
             }
         }
 
-        async function restaurarERenderizar() {
-            if (!confirm('Restaurar as questões padrão? Todas as questões atuais serão substituídas.')) return;
-            try { await restaurarPadrao(); await renderizarLista(); }
-            catch { alert('Erro ao restaurar. Verifique o servidor.'); }
+        function atualizarFiltroCategoria() {
+            categoriaFiltro = document.getElementById("filtro-categoria")?.value || "Todas";
+            paginaAtual = 1;
+            renderizarLista();
+        }
+
+        function limparFiltroCategoria() {
+            categoriaFiltro = "Todas";
+            paginaAtual = 1;
+            renderizarLista();
+        }
+
+        function usarCategoriaExistente() {
+            const seletor = document.getElementById("seletor-categoria-existente");
+            const campoCategoria = document.getElementById("campo-categoria");
+            if (!seletor || !campoCategoria) return;
+            if (seletor.value) {
+                campoCategoria.value = seletor.value;
+            }
+        }
+
+        function atualizarItensPorPagina() {
+            itensPorPagina = parseInt(document.getElementById("itens-por-pagina")?.value, 10) || 5;
+            paginaAtual = 1;
+            renderizarLista();
         }
 
         // ── Inicialização ─────────────────────────────────────────────────────

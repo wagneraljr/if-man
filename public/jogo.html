@@ -89,6 +89,7 @@
                 const dados = await res.json();
 
                 if (dados.fase === "rodando") {
+                    sessionStorage.setItem("categoria_competicao", dados.categoria || "Todas");
                     document.getElementById("timer-competicao").style.display = "flex";
                     atualizarTimerVisual(dados.restante);
 
@@ -172,16 +173,8 @@
         // Executa ao carregar e ao redimensionar
         window.addEventListener("load",   ajustarEscala);
         window.addEventListener("resize", ajustarEscala);
+
     </script>
-
-
-<div id="modal-feedback" class="modal-oculto">
-    <div class="feedback-card" id="feedback-card">
-        <h2 id="feedback-titulo">Correto!</h2>
-        <p id="feedback-mensagem">+100 Pontos</p>
-        <button id="feedback-ok" class="feedback-ok" type="button">OK</button>
-    </div>
-</div>
 
 </body>
 </html>

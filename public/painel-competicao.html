@@ -57,6 +57,12 @@
                     </div>
                 </div>
 
+                <div class="campo-grupo">
+                    <label for="categoria-competicao">Categoria das questões</label>
+                    <select id="categoria-competicao" class="input-selecao"></select>
+                    <span class="hint">Selecione uma categoria específica ou Todas para usar o banco inteiro.</span>
+                </div>
+
                 <div class="alunos-aguardando">
                     <p class="campo-grupo-label">Alunos na sala de espera</p>
                     <div id="lista-alunos-espera" class="chips-alunos">
@@ -113,11 +119,13 @@
 
     </main>
 
+    <script src="questoes-storage.js"></script>
     <script>
         let duracaoSelecionada = 5 * 60; // segundos
         let intervaloPolling   = null;
         let faseAtual          = "aguardando";
         let rankingAtual       = []; // cache do ranking para exportação
+        let categoriaSelecionada = "Todas";
 
         // ── Duração ────────────────────────────────────────────────────────────
 
@@ -134,16 +142,26 @@
             if (val > 0) duracaoSelecionada = val * 60;
         }
 
+        async function carregarCategoriasCompeticao() {
+            try {
+                const categorias = await obterCategoriasQuestoes();
+                preencherSelectCategorias(document.getElementById("categoria-competicao"), categorias, categoriaSelecionada);
+            } catch {
+                preencherSelectCategorias(document.getElementById("categoria-competicao"), ["Todas", "Informática Básica"], categoriaSelecionada);
+            }
+        }
+
         // ── Iniciar ────────────────────────────────────────────────────────────
 
         async function iniciarCompeticao() {
-            if (!confirm(`Iniciar competição de ${Math.round(duracaoSelecionada/60)} minutos?\n\nTodos os alunos na sala de espera entrarão no jogo automaticamente.`)) return;
+            categoriaSelecionada = document.getElementById("categoria-competicao")?.value || "Todas";
+            if (!confirm(`Iniciar competição de ${Math.round(duracaoSelecionada/60)} minutos na categoria ${categoriaSelecionada}?\n\nTodos os alunos na sala de espera entrarão no jogo automaticamente.`)) return;
 
             try {
                 await fetch("/api/iniciar", {
                     method:  "POST",
                     headers: { "Content-Type": "application/json" },
-                    body:    JSON.stringify({ duracaoSeg: duracaoSelecionada })
+                    body:    JSON.stringify({ duracaoSeg: duracaoSelecionada, categoria: categoriaSelecionada })
                 });
                 mudarFase("rodando");
             } catch {
@@ -406,12 +424,14 @@
             try {
                 const res   = await fetch("/api/estado");
                 const dados = await res.json();
+                categoriaSelecionada = dados.categoria || "Todas";
                 mudarFase(dados.fase);
                 if (dados.fase === "encerrada") carregarResultadoFinal();
             } catch {
                 // Servidor fora: fica na tela de configuração
                 mudarFase("aguardando");
             }
+            await carregarCategoriasCompeticao();
         }
 
         setInterval(atualizarAlunosEspera, 3000);

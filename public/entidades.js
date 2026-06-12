@@ -259,15 +259,19 @@ function verificarColisaoComMonstro() {
             } else {
                 emColisao = true;
                 vidas--;
+                acertosConsecutivos = 0;
                 atualizarPlacar();
-                desenharFeedback("Você foi capturado!", `Vidas restantes: ${vidas}`, "vermelho");
-                setTimeout(() => {
+                atualizarCombo(0);
+                pausarRodada();
+                desenharFeedback("Você foi capturado!", `Combo zerado | Vidas restantes: ${vidas}`, "vermelho", () => {
                     jogador.coluna = 9;
                     jogador.linha  = 5;
                     resetarMonstros();
+                    emColisao = false;
                     if (vidas > 0) atualizarTela();
+                    if (vidas > 0) iniciarRodada();
                     verificarDerrota();
-                }, 1800);
+                });
                 return;
             }
         }

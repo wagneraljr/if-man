@@ -1,6 +1,7 @@
 [
   {
     "id": 1,
+    "categoria": "Informática Básica",
     "texto": "Qual componente age como o 'cérebro' que pensa e resolve os problemas?",
     "alternativas": [
       {
@@ -23,6 +24,7 @@
   },
   {
     "id": 2,
+    "categoria": "Informática Básica",
     "texto": "Qual destes dispositivos é classificado APENAS como unidade de entrada?",
     "alternativas": [
       {
@@ -45,6 +47,7 @@
   },
   {
     "texto": "Qual dispositivo é mais indicado para alta velocidade de inicialização do Sistema Operacional?",
+    "categoria": "Informática Básica",
     "alternativas": [
       {
         "texto": "SSD",
@@ -67,6 +70,7 @@
   },
   {
     "texto": "Qual tecla é usada para digital letras maiúsculas automaticamente?",
+    "categoria": "Informática Básica",
     "alternativas": [
       {
         "texto": "Shift",
@@ -89,6 +93,7 @@
   },
   {
     "texto": "Qual dessas é uma tecla de função legada?",
+    "categoria": "Informática Básica",
     "alternativas": [
       {
         "texto": "Backspace",
@@ -111,6 +116,7 @@
   },
   {
     "texto": "Qual desses é um dispositivo volátil?",
+    "categoria": "Informática Básica",
     "alternativas": [
       {
         "texto": "HD",
@@ -130,5 +136,810 @@
       }
     ],
     "id": 6
+  },
+  {
+    "categoria": "Informática Básica",
+    "texto": "O que representa a parte física do computador?",
+    "alternativas": [
+      {
+        "texto": "Software",
+        "correta": false
+      },
+      {
+        "texto": "Hardware",
+        "correta": true
+      },
+      {
+        "texto": "Sistema Operacional",
+        "correta": false
+      },
+      {
+        "texto": "Nuvem",
+        "correta": false
+      }
+    ],
+    "id": 7
+  },
+  {
+    "categoria": "Informática Básica",
+    "texto": "Qual das seguintes opções é um software?",
+    "alternativas": [
+      {
+        "texto": "Monitor",
+        "correta": false
+      },
+      {
+        "texto": "Memória RAM",
+        "correta": false
+      },
+      {
+        "texto": "Navegador de Internet",
+        "correta": true
+      },
+      {
+        "texto": "Teclado",
+        "correta": false
+      }
+    ],
+    "id": 8
+  },
+  {
+    "categoria": "Informática Básica",
+    "texto": "Quantos bits agrupados formam 1 Byte?",
+    "alternativas": [
+      {
+        "texto": "2 bits",
+        "correta": false
+      },
+      {
+        "texto": "4 bits",
+        "correta": false
+      },
+      {
+        "texto": "8 bits",
+        "correta": true
+      },
+      {
+        "texto": "16 bits",
+        "correta": false
+      }
+    ],
+    "id": 9
+  },
+  {
+    "categoria": "Informática Básica",
+    "texto": "Qual das unidades de medida representa o maior volume de armazenamento de dados?",
+    "alternativas": [
+      {
+        "texto": "Kilobyte",
+        "correta": false
+      },
+      {
+        "texto": "Megabyte",
+        "correta": false
+      },
+      {
+        "texto": "Gigabyte",
+        "correta": false
+      },
+      {
+        "texto": "Terabyte",
+        "correta": true
+      }
+    ],
+    "id": 10
+  },
+  {
+    "categoria": "Informática Básica",
+    "texto": "Qual tecla é universalmente conhecida por ativar a função de Ajuda nos programas?",
+    "alternativas": [
+      {
+        "texto": "F1",
+        "correta": true
+      },
+      {
+        "texto": "F5",
+        "correta": false
+      },
+      {
+        "texto": "Esc",
+        "correta": false
+      },
+      {
+        "texto": "Enter",
+        "correta": false
+      }
+    ],
+    "id": 11
+  },
+  {
+    "categoria": "Informática Básica",
+    "texto": "Qual tecla permite tirar fotos ou gravar vídeos da tela?",
+    "alternativas": [
+      {
+        "texto": "Print Screen",
+        "correta": true
+      },
+      {
+        "texto": "Scroll Lock",
+        "correta": false
+      },
+      {
+        "texto": "Insert",
+        "correta": false
+      },
+      {
+        "texto": "Home",
+        "correta": false
+      }
+    ],
+    "id": 12
+  },
+  {
+    "categoria": "Informática Básica",
+    "texto": "Qual é o primeiro programa que inicia ao ligar o computador?",
+    "alternativas": [
+      {
+        "texto": "Google Chrome",
+        "correta": false
+      },
+      {
+        "texto": "Microsoft Word",
+        "correta": false
+      },
+      {
+        "texto": "Antivírus",
+        "correta": false
+      },
+      {
+        "texto": "Sistema Operacional",
+        "correta": true
+      }
+    ],
+    "id": 13
+  },
+  {
+    "categoria": "Informática Básica",
+    "texto": "Qual é o nome da parte central do Sistema Operacional?",
+    "alternativas": [
+      {
+        "texto": "Shell",
+        "correta": false
+      },
+      {
+        "texto": "Bash",
+        "correta": false
+      },
+      {
+        "texto": "Kernel (Núcleo)",
+        "correta": true
+      },
+      {
+        "texto": "Driver",
+        "correta": false
+      }
+    ],
+    "id": 14
+  },
+  {
+    "categoria": "Informática Básica",
+    "texto": "Qual atalho de teclado é utilizado para renomear um arquivo ou pasta selecionada?",
+    "alternativas": [
+      {
+        "texto": "F5",
+        "correta": false
+      },
+      {
+        "texto": "F1",
+        "correta": false
+      },
+      {
+        "texto": "F2",
+        "correta": true
+      },
+      {
+        "texto": "F11",
+        "correta": false
+      }
+    ],
+    "id": 15
+  },
+  {
+    "categoria": "Informática Básica",
+    "texto": "Qual comando deve ser usado se você deseja copiar um arquivo?",
+    "alternativas": [
+      {
+        "texto": "Ctrl + X",
+        "correta": false
+      },
+      {
+        "texto": "Ctrl + C",
+        "correta": true
+      },
+      {
+        "texto": "Ctrl + A",
+        "correta": false
+      },
+      {
+        "texto": "Ctrl + R",
+        "correta": false
+      }
+    ],
+    "id": 16
+  },
+  {
+    "categoria": "Informática Básica",
+    "texto": "Quanto espaço de armazenamento gratuito o Google Drive oferece por padrão em uma conta comum?",
+    "alternativas": [
+      {
+        "texto": "5 GB",
+        "correta": false
+      },
+      {
+        "texto": "10 GB",
+        "correta": false
+      },
+      {
+        "texto": "15 GB",
+        "correta": true
+      },
+      {
+        "texto": "50 GB",
+        "correta": false
+      }
+    ],
+    "id": 17
+  },
+  {
+    "categoria": "Informática Básica",
+    "texto": "Para avançar o cursor para o próximo parágrafo ou confirmar uma linha ao digitar um texto, qual tecla deve ser pressionada?",
+    "alternativas": [
+      {
+        "texto": "Tab",
+        "correta": false
+      },
+      {
+        "texto": "Espaço",
+        "correta": false
+      },
+      {
+        "texto": "Esc",
+        "correta": false
+      },
+      {
+        "texto": "Enter",
+        "correta": true
+      }
+    ],
+    "id": 18
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual ferramenta quantitativa é baseada no princípio de que cerca de 80% dos problemas vêm de 20% das causas?",
+    "alternativas": [
+      {
+        "texto": "Diagrama de Pareto",
+        "correta": true
+      },
+      {
+        "texto": "Carta de Controle",
+        "correta": false
+      },
+      {
+        "texto": "Lista de Verificação",
+        "correta": false
+      },
+      {
+        "texto": "Gráfico de Dispersão",
+        "correta": false
+      }
+    ],
+    "id": 19
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual fator de qualidade indica o esforço necessário para modificar um programa em operação?",
+    "alternativas": [
+      {
+        "texto": "Portabilidade",
+        "correta": false
+      },
+      {
+        "texto": "Flexibilidade",
+        "correta": true
+      },
+      {
+        "texto": "Interoperabilidade",
+        "correta": false
+      },
+      {
+        "texto": "Reusabilidade",
+        "correta": false
+      }
+    ],
+    "id": 20
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "De acordo com a interpretação da métrica de Complexidade Ciclomática, qual intervalo é considerado ideal?",
+    "alternativas": [
+      {
+        "texto": "1 a 20",
+        "correta": true
+      },
+      {
+        "texto": "11 a 20",
+        "correta": false
+      },
+      {
+        "texto": "21 a 50",
+        "correta": false
+      },
+      {
+        "texto": "Acima de 50",
+        "correta": false
+      }
+    ],
+    "id": 21
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Identificar se um projeto de software é viável técnica, econômica, legal e operacionalmente faz parte de qual etapa do ciclo de vida?",
+    "alternativas": [
+      {
+        "texto": "Análise de Sistemas",
+        "correta": false
+      },
+      {
+        "texto": "Implementação",
+        "correta": false
+      },
+      {
+        "texto": "Estudo de Viabilidade",
+        "correta": true
+      },
+      {
+        "texto": "Manutenção e Suporte",
+        "correta": false
+      }
+    ],
+    "id": 22
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "O uso de padrões de nomenclatura como nomeCompleto para variáveis e calcularTotal() para métodos é chamado de:",
+    "alternativas": [
+      {
+        "texto": "Snake_case",
+        "correta": false
+      },
+      {
+        "texto": "UPPER_CASE",
+        "correta": false
+      },
+      {
+        "texto": "camelCase",
+        "correta": true
+      },
+      {
+        "texto": "Kebab-case",
+        "correta": false
+      }
+    ],
+    "id": 23
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "No Scrum, quem é o responsável por representar os interesses do cliente e gerenciar o Backlog do Produto?",
+    "alternativas": [
+      {
+        "texto": "Scrum Master",
+        "correta": false
+      },
+      {
+        "texto": "Time de Desenvolvimento",
+        "correta": false
+      },
+      {
+        "texto": "Product Owner",
+        "correta": true
+      },
+      {
+        "texto": "Gerente de Linha",
+        "correta": false
+      }
+    ],
+    "id": 24
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Se uma função possui dois caminhos possíveis (um caminho base e uma estrutura de decisão if/else), qual é a sua complexidade ciclomática?",
+    "alternativas": [
+      {
+        "texto": "1",
+        "correta": false
+      },
+      {
+        "texto": "2",
+        "correta": true
+      },
+      {
+        "texto": "3",
+        "correta": false
+      },
+      {
+        "texto": "4",
+        "correta": false
+      }
+    ],
+    "id": 25
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Que tipo de lógica permite quantificar características qualitativas vagas (como \"muito frio\" ou \"um pouco alto\"), usando valores entre 0 e 1?",
+    "alternativas": [
+      {
+        "texto": "Booleana",
+        "correta": false
+      },
+      {
+        "texto": "Fuzzy",
+        "correta": true
+      },
+      {
+        "texto": "Binária",
+        "correta": false
+      },
+      {
+        "texto": "Predicados",
+        "correta": false
+      }
+    ],
+    "id": 26
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual norma internacional trata especificamente dos \"Processos de ciclo de vida de software\"?",
+    "alternativas": [
+      {
+        "texto": "ISO 12207",
+        "correta": true
+      },
+      {
+        "texto": "ISO 9126-1",
+        "correta": false
+      },
+      {
+        "texto": "NBR ISO/IEC 25000",
+        "correta": false
+      },
+      {
+        "texto": "ISO/IEC 14598-1",
+        "correta": false
+      }
+    ],
+    "id": 27
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Na história da padronização, qual sistema internacional de medidas foi criado para substituir o confuso Sistema Imperial (que usava léguas, jardas e polegadas)?",
+    "alternativas": [
+      {
+        "texto": "Americano Padrão",
+        "correta": false
+      },
+      {
+        "texto": "Métrico Decimal",
+        "correta": true
+      },
+      {
+        "texto": "ISO Geral",
+        "correta": false
+      },
+      {
+        "texto": "Medidas Binárias",
+        "correta": false
+      }
+    ],
+    "id": 28
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual metodologia ágil tem como foco principal a eficiência do fluxo, a previsibilidade e a visualização de tarefas em um quadro sem papéis prescritos?",
+    "alternativas": [
+      {
+        "texto": "Scrum",
+        "correta": false
+      },
+      {
+        "texto": "XP",
+        "correta": false
+      },
+      {
+        "texto": "Kanban",
+        "correta": true
+      },
+      {
+        "texto": "Cascata",
+        "correta": false
+      }
+    ],
+    "id": 29
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual das seguintes alternativas apresenta uma prática ou conceito obrigatório e central na metodologia Extreme Programming (XP)?",
+    "alternativas": [
+      {
+        "texto": "WIP",
+        "correta": false
+      },
+      {
+        "texto": "TDD",
+        "correta": true
+      },
+      {
+        "texto": "Backlog",
+        "correta": false
+      },
+      {
+        "texto": "Sprint",
+        "correta": false
+      }
+    ],
+    "id": 30
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual modelo de desenvolvimento é fortemente focado na gestão e análise eficaz de riscos em projetos de alto custo?",
+    "alternativas": [
+      {
+        "texto": "Cascata",
+        "correta": false
+      },
+      {
+        "texto": "Ágil",
+        "correta": false
+      },
+      {
+        "texto": "Espiral",
+        "correta": true
+      },
+      {
+        "texto": "Iterativo",
+        "correta": false
+      }
+    ],
+    "id": 31
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual modelo de desenvolvimento é caracterizado por um planejamento e controle rígidos, sendo mais indicado para escopos estáveis e documentados, mas com difícil adaptação a mudanças?",
+    "alternativas": [
+      {
+        "texto": "Ágil",
+        "correta": false
+      },
+      {
+        "texto": "Cascata",
+        "correta": true
+      },
+      {
+        "texto": "Espiral",
+        "correta": false
+      },
+      {
+        "texto": "Iterativo",
+        "correta": false
+      }
+    ],
+    "id": 32
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Se você faz uma compra online, o sistema cobra o valor, mas não finaliza o pedido nem gera o comprovante, quais propriedades fundamentais (ACID) falharam?",
+    "alternativas": [
+      {
+        "texto": "Consistência e Isolamento",
+        "correta": false
+      },
+      {
+        "texto": "Atomicidade e Durabilidade",
+        "correta": true
+      },
+      {
+        "texto": "Abstração e Independência",
+        "correta": false
+      },
+      {
+        "texto": "Redundância e Sincronização",
+        "correta": false
+      }
+    ],
+    "id": 33
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Qual nível de modelagem foca no \"o que\" armazenar e não no \"como\"?",
+    "alternativas": [
+      {
+        "texto": "Modelo Físico",
+        "correta": false
+      },
+      {
+        "texto": "Modelo Lógico",
+        "correta": false
+      },
+      {
+        "texto": "Modelo Conceitual",
+        "correta": true
+      },
+      {
+        "texto": "Modelo de Código",
+        "correta": false
+      }
+    ],
+    "id": 34
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Como chamamos o atributo que identifica de forma única e exclusiva cada objeto dentro de uma entidade?",
+    "alternativas": [
+      {
+        "texto": "Atributo Composto",
+        "correta": false
+      },
+      {
+        "texto": "Chave Estrangeira",
+        "correta": false
+      },
+      {
+        "texto": "Chave Primária",
+        "correta": true
+      },
+      {
+        "texto": "Atributo Nulo",
+        "correta": false
+      }
+    ],
+    "id": 35
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Se em um diagrama temos as entidades \"Aluno\" e \"Responsável\", e o Responsável só existe no sistema associado a um Aluno, a entidade Responsável é uma:",
+    "alternativas": [
+      {
+        "texto": "Entidade Forte",
+        "correta": false
+      },
+      {
+        "texto": "Chave Primária",
+        "correta": false
+      },
+      {
+        "texto": "Entidade Fraca",
+        "correta": true
+      },
+      {
+        "texto": "Atributo Composto",
+        "correta": false
+      }
+    ],
+    "id": 36
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Se um cliente pode fazer várias encomendas, mas cada encomenda pertence a apenas um cliente, qual é a cardinalidade máxima desse relacionamento de Cliente para Encomenda?",
+    "alternativas": [
+      {
+        "texto": "1 para 1 (1:1)",
+        "correta": false
+      },
+      {
+        "texto": "1 para Muitos (1:N)",
+        "correta": true
+      },
+      {
+        "texto": "Muitos para Muitos (N:N)",
+        "correta": false
+      },
+      {
+        "texto": "Zero para Zero (0:0)",
+        "correta": false
+      }
+    ],
+    "id": 37
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Em uma escola onde os professores ensinam mais de uma disciplina e uma mesma disciplina pode ser dividida entre vários professores, o relacionamento entre Professor e Disciplina é de:",
+    "alternativas": [
+      {
+        "texto": "1 para 1 (1:1)",
+        "correta": false
+      },
+      {
+        "texto": "1 para Muitos (1:N)",
+        "correta": false
+      },
+      {
+        "texto": "Muitos para Muitos (N:N)",
+        "correta": true
+      },
+      {
+        "texto": "Zero para Zero (0:0)",
+        "correta": false
+      }
+    ],
+    "id": 38
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "No contexto do sistema acadêmico SIGAA, quais itens seriam considerados Entidades válidas?",
+    "alternativas": [
+      {
+        "texto": "Salvar, Excluir e Alterar",
+        "correta": false
+      },
+      {
+        "texto": "Professor, Aluno e Disciplina",
+        "correta": true
+      },
+      {
+        "texto": "O cabo HDMI e o mousepad",
+        "correta": false
+      },
+      {
+        "texto": "O número 15 e a letra A",
+        "correta": false
+      }
+    ],
+    "id": 39
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "O que indica a Cardinalidade?",
+    "alternativas": [
+      {
+        "texto": "Quantidade de ocorrências associadas",
+        "correta": true
+      },
+      {
+        "texto": "Limite de caracteres permitidos",
+        "correta": false
+      },
+      {
+        "texto": "Megabytes ocupados no disco",
+        "correta": false
+      },
+      {
+        "texto": "Usuários conectados",
+        "correta": false
+      }
+    ],
+    "id": 40
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Como representamos a cardinalidade no curso?",
+    "alternativas": [
+      {
+        "texto": "Cores diferentes nas tabelas",
+        "correta": false
+      },
+      {
+        "texto": "Número máximo de ocorrências",
+        "correta": true
+      },
+      {
+        "texto": "Linhas tracejadas sem números",
+        "correta": false
+      },
+      {
+        "texto": "Setas apontando chaves primárias",
+        "correta": false
+      }
+    ],
+    "id": 41
   }
 ]

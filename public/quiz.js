@@ -2,10 +2,45 @@ let bancoDeQuestoes     = [];
 let indicePerguntaAtual = 0;
 let acertosConsecutivos = 0;  // combo de acertos seguidos
 let acaoAposFeedback    = null;
+let feedbackAtivo       = false;
+let feedbackBotaoArea   = null;
+
+function atualizarFeedbackCanvasClick() {
+    const canvas = document.getElementById("telaJogo");
+    if (!canvas || canvas.dataset.feedbackClickBind === "1") return;
+
+    canvas.addEventListener("click", (event) => {
+        if (!feedbackAtivo || !feedbackBotaoArea) return;
+
+        const ret = canvas.getBoundingClientRect();
+        const escalaX = canvas.width / ret.width;
+        const escalaY = canvas.height / ret.height;
+        const x = (event.clientX - ret.left) * escalaX;
+        const y = (event.clientY - ret.top) * escalaY;
+
+        const dentroBotao = x >= feedbackBotaoArea.x && x <= feedbackBotaoArea.x + feedbackBotaoArea.w &&
+            y >= feedbackBotaoArea.y && y <= feedbackBotaoArea.y + feedbackBotaoArea.h;
+
+        if (dentroBotao) confirmarFeedbackVisual();
+    });
+
+    canvas.dataset.feedbackClickBind = "1";
+}
+
+atualizarFeedbackCanvasClick();
+
+function obterCategoriaRodada() {
+    const modo = sessionStorage.getItem("modo") || "livre";
+    if (modo === "competicao") {
+        return sessionStorage.getItem("categoria_competicao") || "Todas";
+    }
+    return sessionStorage.getItem("categoria_modo_livre") || "Todas";
+}
 
 async function carregarBancoDeQuestoes() {
     try {
-        bancoDeQuestoes = await obterQuestoes();
+        const todasQuestoes = await obterQuestoes();
+        bancoDeQuestoes = filtrarQuestoesPorCategoria(todasQuestoes, obterCategoriaRodada());
     } catch {
         // Mostra erro no canvas em vez de alert bloqueante
         desenharTelaErro(
@@ -18,8 +53,8 @@ async function carregarBancoDeQuestoes() {
     if (bancoDeQuestoes.length === 0) {
         // Mostra tela de erro amigável no canvas
         desenharTelaErro(
-            "Nenhuma questão cadastrada",
-            "Aguarde o professor cadastrar perguntas no painel e recarregue a página."
+            "Nenhuma questão disponível",
+            "Não há questões nessa categoria. Volte e escolha outra categoria ou cadastre mais perguntas."
         );
         return;
     }
@@ -213,24 +248,23 @@ function verificarColisaoComResposta() {
 // ── Feedback visual no canvas (acerto / erro) ─────────────────────────────────
 
 function ocultarFeedbackVisual() {
-    const modal = document.getElementById("modal-feedback");
-    if (!modal) return;
-
-    modal.classList.remove("modal-visivel");
-    modal.classList.add("modal-oculto");
+    feedbackAtivo = false;
+    feedbackBotaoArea = null;
 }
 
 function desenharFeedbackNoCanvas(titulo, subtitulo, tipo) {
     const ctx = contexto;
+    const telaCanvas = document.getElementById("telaJogo");
+    if (!ctx || !telaCanvas) return;
     const corFaixa = tipo === "verde" ? "#2F9E41" : "#CD191E";
 
     // Overlay leve
     ctx.fillStyle = "rgba(0,0,10,0.55)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    let bw = 460, bh = 120;
-    let bx = (canvas.width  - bw) / 2;
-    let by = (canvas.height - bh) / 2;
+    let bw = 460, bh = 150;
+    let bx = (telaCanvas.width  - bw) / 2;
+    let by = (telaCanvas.height - bh) / 2;
 
     // Sombra
     ctx.fillStyle = "rgba(0,0,0,0.3)";
@@ -250,12 +284,30 @@ function desenharFeedbackNoCanvas(titulo, subtitulo, tipo) {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.shadowBlur = 0;
-    ctx.fillText(titulo, canvas.width / 2, by + 19);
+    ctx.fillText(titulo, telaCanvas.width / 2, by + 19);
 
     // Subtítulo
     ctx.fillStyle = "#2D3436";
     ctx.font = "13px 'Open Sans', sans-serif";
-    ctx.fillText(subtitulo, canvas.width / 2, by + 78);
+    ctx.fillText(subtitulo, telaCanvas.width / 2, by + 78);
+
+    // Botão OK desenhado no próprio canvas
+    const btnW = 82;
+    const btnH = 30;
+    const btnX = telaCanvas.width / 2 - btnW / 2;
+    const btnY = by + 100;
+
+    ctx.fillStyle = corFaixa;
+    ctx.beginPath();
+    ctx.roundRect(btnX, btnY, btnW, btnH, 8);
+    ctx.fill();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 13px 'Open Sans', sans-serif";
+    ctx.fillText("OK", telaCanvas.width / 2, btnY + btnH / 2 + 1);
+
+    feedbackBotaoArea = { x: btnX, y: btnY, w: btnW, h: btnH };
+    feedbackAtivo = true;
 
     // Linha decorativa na base
     ctx.strokeStyle = corFaixa;
@@ -279,38 +331,5 @@ function desenharFeedback(titulo, subtitulo, tipo, onConfirm = null) {
     // qualquer problema visual/empilhamento com o modal HTML.
     desenharFeedbackNoCanvas(titulo, subtitulo, tipo);
 
-    const modal = document.getElementById("modal-feedback");
-    const card = document.getElementById("feedback-card");
-    const tituloEl = document.getElementById("feedback-titulo");
-    const mensagemEl = document.getElementById("feedback-mensagem");
-
-    if (!modal || !card || !tituloEl || !mensagemEl) {
-        if (typeof onConfirm === "function") onConfirm();
-        return;
-    }
-
     acaoAposFeedback = typeof onConfirm === "function" ? onConfirm : null;
-
-    tituloEl.innerText = titulo;
-    mensagemEl.innerText = subtitulo;
-
-    // Reinicia a animação em toda resposta (mesmo repetindo o mesmo tipo)
-    card.classList.remove("acerto", "erro", "animar-feedback");
-    void card.offsetWidth;
-
-    if (tipo === "vermelho") {
-        card.classList.add("erro");
-    } else {
-        card.classList.add("acerto");
-    }
-    card.classList.add("animar-feedback");
-
-    modal.classList.remove("modal-oculto");
-    modal.classList.add("modal-visivel");
-
-    const btnOk = document.getElementById("feedback-ok");
-    if (btnOk && btnOk.dataset.feedbackBind !== "1") {
-        btnOk.addEventListener("click", confirmarFeedbackVisual);
-        btnOk.dataset.feedbackBind = "1";
-    }
 }

@@ -44,6 +44,12 @@
 
                 <div class="selecao-modo">
 
+                    <div class="campo-grupo" style="margin-bottom: 8px;">
+                        <label for="categoria-modo-livre">Categoria do modo livre</label>
+                        <select id="categoria-modo-livre" class="input-selecao"></select>
+                        <span class="hint">Todas usa questões de todas as categorias.</span>
+                    </div>
+
                     <button onclick="entrarModoLivre()" class="card-modo">
                         <span class="modo-icone">🕹️</span>
                         <span class="modo-titulo">Modo Livre</span>
@@ -89,10 +95,20 @@
         </div>
     </div>
 
+    <script src="questoes-storage.js"></script>
     <script>
         let intervaloVerificacao = null;
 
         // ── Passo 1 → 2 ───────────────────────────────────────────────────────
+
+            async function carregarCategoriasModoLivre() {
+                try {
+                    const categorias = await obterCategoriasQuestoes();
+                    preencherSelectCategorias(document.getElementById("categoria-modo-livre"), categorias, sessionStorage.getItem("categoria_modo_livre") || "Todas");
+                } catch {
+                    preencherSelectCategorias(document.getElementById("categoria-modo-livre"), ["Todas", "Informática Básica"], sessionStorage.getItem("categoria_modo_livre") || "Todas");
+                }
+            }
 
         function confirmarNome() {
             const nome = document.getElementById("campo-nome").value.trim();
@@ -114,6 +130,8 @@
 
         function entrarModoLivre() {
             sessionStorage.setItem("modo", "livre");
+                const categoria = document.getElementById("categoria-modo-livre")?.value || "Todas";
+                sessionStorage.setItem("categoria_modo_livre", categoria);
             window.location.href = "jogo.html";
         }
 
@@ -144,6 +162,7 @@
 
                 if (dados.fase === "rodando") {
                     sessionStorage.setItem("modo", "competicao");
+                        sessionStorage.setItem("categoria_competicao", dados.categoria || "Todas");
                     window.location.href = "jogo.html";
                     return;
                 }
@@ -194,6 +213,7 @@
                     if (dados.fase === "rodando") {
                         clearInterval(intervaloVerificacao);
                         clearInterval(intervaloHeartbeat);
+                        sessionStorage.setItem("categoria_competicao", dados.categoria || "Todas");
                         window.location.href = "jogo.html";
                     } else if (dados.fase === "encerrada") {
                         clearInterval(intervaloVerificacao);
@@ -238,6 +258,8 @@
             document.getElementById("saudacao-modo").innerText = "Olá, " + nomeSalvo + "! 👋";
             mostrarPasso("passo-modo");
         }
+
+            carregarCategoriasModoLivre();
     </script>
 
 </body>

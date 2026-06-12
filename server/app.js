@@ -22,11 +22,25 @@ const ARQUIVO_CONFIG = path.join(DATA_DIR, "config.json");
 const ARQUIVO_QUEST  = path.join(DATA_DIR, "questoes.json");
 const ARQUIVO_HIST   = path.join(DATA_DIR, "historico.json");
 
+const CATEGORIA_PADRAO = "Informática Básica";
+
+function normalizarQuestao(questao = {}) {
+    return {
+        ...questao,
+        categoria: (questao.categoria || "").trim() || CATEGORIA_PADRAO
+    };
+}
+
+function normalizarListaQuestoes(questoes = []) {
+    return questoes.map(normalizarQuestao);
+}
+
 // ── Questões padrão (usadas se questoes.json não existir) ─────────────────────
 
 const QUESTOES_PADRAO = [
     {
         id: 1,
+        categoria: CATEGORIA_PADRAO,
         texto: "Qual componente age como o 'cérebro' que pensa e resolve os problemas?",
         alternativas: [
             { texto: "CPU",     correta: true  },
@@ -37,6 +51,7 @@ const QUESTOES_PADRAO = [
     },
     {
         id: 2,
+        categoria: CATEGORIA_PADRAO,
         texto: "Qual destes dispositivos é classificado APENAS como unidade de entrada?",
         alternativas: [
             { texto: "Teclado",      correta: true  },
@@ -47,6 +62,7 @@ const QUESTOES_PADRAO = [
     },
     {
         id: 3,
+        categoria: CATEGORIA_PADRAO,
         texto: "Entre HD e SSD, qual é mais indicado para alta velocidade de inicialização?",
         alternativas: [
             { texto: "SSD",       correta: true  },
@@ -91,6 +107,13 @@ if (!config.senhaHash) {
 if (!fs.existsSync(ARQUIVO_QUEST)) {
     salvarJSON(ARQUIVO_QUEST, QUESTOES_PADRAO);
     console.log("  questoes.json criado com questões padrão.");
+} else {
+    const questoesPersistidas = lerJSON(ARQUIVO_QUEST, []);
+    const normalizadas = normalizarListaQuestoes(questoesPersistidas);
+    if (JSON.stringify(questoesPersistidas) !== JSON.stringify(normalizadas)) {
+        salvarJSON(ARQUIVO_QUEST, normalizadas);
+        console.log("  questoes.json normalizado com categorias.");
+    }
 }
 
 
@@ -131,6 +154,7 @@ let estado = {
     fase:       "aguardando",
     duracaoSeg: 600,
     inicioMs:   null,
+    categoria:  "Todas",
     alunos:     {},
     espera:     []
 };
@@ -215,15 +239,15 @@ const servidor = http.createServer(async (req, res) => {
 
     // GET /api/questoes — retorna todas as questões
     if (metodo === "GET" && url === "/api/questoes") {
-        const questoes = lerJSON(ARQUIVO_QUEST, []);
+        const questoes = normalizarListaQuestoes(lerJSON(ARQUIVO_QUEST, []));
         responderJSON(res, 200, questoes);
         return;
     }
 
     // POST /api/questoes — adiciona nova questão
     if (metodo === "POST" && url === "/api/questoes") {
-        const questoes = lerJSON(ARQUIVO_QUEST, []);
-        const nova     = await lerCorpo(req);
+        const questoes = normalizarListaQuestoes(lerJSON(ARQUIVO_QUEST, []));
+        const nova     = normalizarQuestao(await lerCorpo(req));
         const maiorId  = questoes.reduce((max, q) => Math.max(max, q.id || 0), 0);
         nova.id = maiorId + 1;
         questoes.push(nova);
@@ -236,10 +260,10 @@ const servidor = http.createServer(async (req, res) => {
     // PUT /api/questoes/:id — atualiza questão existente
     if (metodo === "PUT" && url.startsWith("/api/questoes/")) {
         const id      = parseInt(url.split("/")[3]);
-        const questoes = lerJSON(ARQUIVO_QUEST, []);
+        const questoes = normalizarListaQuestoes(lerJSON(ARQUIVO_QUEST, []));
         const idx     = questoes.findIndex(q => q.id === id);
         if (idx === -1) { responderJSON(res, 404, { erro: "Questão não encontrada." }); return; }
-        const atualizada = await lerCorpo(req);
+        const atualizada = normalizarQuestao(await lerCorpo(req));
         atualizada.id    = id;
         questoes[idx]    = atualizada;
         salvarJSON(ARQUIVO_QUEST, questoes);
@@ -250,20 +274,12 @@ const servidor = http.createServer(async (req, res) => {
     // DELETE /api/questoes/:id — remove questão
     if (metodo === "DELETE" && url.startsWith("/api/questoes/")) {
         const id       = parseInt(url.split("/")[3]);
-        let questoes   = lerJSON(ARQUIVO_QUEST, []);
+        let questoes   = normalizarListaQuestoes(lerJSON(ARQUIVO_QUEST, []));
         const tamanhoAntes = questoes.length;
         questoes = questoes.filter(q => q.id !== id);
         if (questoes.length === tamanhoAntes) { responderJSON(res, 404, { erro: "Questão não encontrada." }); return; }
         salvarJSON(ARQUIVO_QUEST, questoes);
         console.log(`[${new Date().toLocaleTimeString()}] Questão ${id} removida.`);
-        responderJSON(res, 200, { ok: true });
-        return;
-    }
-
-    // POST /api/questoes/restaurar — volta às questões padrão
-    if (metodo === "POST" && url === "/api/questoes/restaurar") {
-        salvarJSON(ARQUIVO_QUEST, QUESTOES_PADRAO);
-        console.log(`[${new Date().toLocaleTimeString()}] Questões restauradas ao padrão.`);
         responderJSON(res, 200, { ok: true });
         return;
     }
@@ -279,7 +295,7 @@ const servidor = http.createServer(async (req, res) => {
             estado.fase = "encerrada";
             salvarHistorico("tempo");
         }
-        responderJSON(res, 200, { fase: estado.fase, restante, duracao: estado.duracaoSeg });
+        responderJSON(res, 200, { fase: estado.fase, restante, duracao: estado.duracaoSeg, categoria: estado.categoria || "Todas" });
         return;
     }
 
@@ -289,8 +305,9 @@ const servidor = http.createServer(async (req, res) => {
         estado.fase       = "rodando";
         estado.duracaoSeg = parseInt(corpo.duracaoSeg) || 600;
         estado.inicioMs   = Date.now();
+        estado.categoria  = (corpo.categoria || "Todas").trim() || "Todas";
         estado.alunos     = {};
-        console.log(`[${new Date().toLocaleTimeString()}] Competição iniciada — ${estado.duracaoSeg}s`);
+        console.log(`[${new Date().toLocaleTimeString()}] Competição iniciada — ${estado.duracaoSeg}s | categoria: ${estado.categoria}`);
         responderJSON(res, 200, { ok: true });
         return;
     }
@@ -307,7 +324,7 @@ const servidor = http.createServer(async (req, res) => {
     // POST /api/resetar
     if (metodo === "POST" && url === "/api/resetar") {
         if (estado.fase === "encerrada") salvarHistorico("manual"); // garante salvamento se não havia sido salvo
-        estado = { fase: "aguardando", duracaoSeg: 600, inicioMs: null, alunos: {}, espera: [] };
+        estado = { fase: "aguardando", duracaoSeg: 600, inicioMs: null, categoria: "Todas", alunos: {}, espera: [] };
         console.log(`[${new Date().toLocaleTimeString()}] Estado resetado`);
         responderJSON(res, 200, { ok: true });
         return;
