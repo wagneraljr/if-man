@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cadastro do Aluno - IF-Man</title>
+    <link rel="stylesheet" href="estilo.css">
+</head>
+<body class="pagina-login">
+
+    <div class="login-wrapper">
+        <div class="login-card">
+
+            <div class="login-header">
+                <img src="logo_if.png" alt="Logo IF Sudeste MG" class="login-logo">
+                <h1>Cadastrar Aluno</h1>
+                <p class="login-subtitulo">Crie sua conta para jogar competição e salvar seu histórico.</p>
+            </div>
+
+            <div class="login-form">
+                <div class="campo-grupo">
+                    <label for="nome-completo">Nome completo</label>
+                    <input type="text" id="nome-completo" placeholder="Ex: Maria Silva Ferreira" autofocus>
+                </div>
+
+                <div class="campo-grupo">
+                    <label for="apelido">Apelido</label>
+                    <input type="text" id="apelido" placeholder="Ex: MariaF">
+                </div>
+
+                <div class="campo-grupo">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" placeholder="Mínimo 4 caracteres">
+                </div>
+
+                <div class="campo-grupo">
+                    <label for="senha-conf">Confirmar senha</label>
+                    <input type="password" id="senha-conf" placeholder="Repita a senha">
+                </div>
+
+                <span id="erro-cadastro" class="erro-msg" style="display:none"></span>
+                <span id="ok-cadastro" style="display:none; color:var(--if-verde); font-size:.9rem; font-weight:600">
+                    ✓ Cadastro criado. Você será redirecionado para o login.
+                </span>
+
+                <button onclick="cadastrarAluno()" id="btn-cadastro" class="btn-entrar">
+                    Cadastrar
+                </button>
+            </div>
+
+            <div style="display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:10px;">
+                <a href="aluno-login.html" class="btn-nav-outline" style="text-decoration:none;">Já tenho conta</a>
+                <button type="button" onclick="sairContaAluno()" class="btn-perigo-sm">Sair da conta</button>
+                <a href="index.html" class="link-voltar">← Voltar para o início</a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function sairContaAluno() {
+            sessionStorage.removeItem("aluno_logado");
+            sessionStorage.removeItem("aluno_id");
+            sessionStorage.removeItem("aluno_apelido");
+            sessionStorage.removeItem("aluno_nome_completo");
+            sessionStorage.removeItem("aluno_nome");
+            window.location.href = "index.html";
+        }
+
+        async function cadastrarAluno() {
+            const nomeCompleto = document.getElementById("nome-completo").value.trim();
+            const apelido      = document.getElementById("apelido").value.trim();
+            const senha        = document.getElementById("senha").value.trim();
+            const conf         = document.getElementById("senha-conf").value.trim();
+            const erro         = document.getElementById("erro-cadastro");
+            const ok           = document.getElementById("ok-cadastro");
+            const btn          = document.getElementById("btn-cadastro");
+
+            erro.style.display = "none";
+            ok.style.display = "none";
+
+            if (!nomeCompleto || !apelido || !senha || !conf) {
+                erro.innerText = "Preencha todos os campos.";
+                erro.style.display = "block";
+                return;
+            }
+            if (senha !== conf) {
+                erro.innerText = "Senha e confirmação não conferem.";
+                erro.style.display = "block";
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Cadastrando...";
+
+            try {
+                const res = await fetch("/api/alunos/cadastro", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nomeCompleto, apelido, senha })
+                });
+                const dados = await res.json();
+
+                if (!res.ok) {
+                    erro.innerText = dados.erro || "Erro ao cadastrar aluno.";
+                    erro.style.display = "block";
+                    return;
+                }
+
+                ok.style.display = "block";
+                setTimeout(() => {
+                    window.location.href = "aluno-login.html";
+                }, 800);
+            } catch {
+                erro.innerText = "Erro de conexão com o servidor.";
+                erro.style.display = "block";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Cadastrar";
+            }
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") cadastrarAluno();
+        });
+    </script>
+
+</body>
+</html>

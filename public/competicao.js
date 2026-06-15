@@ -2,7 +2,8 @@
    competicao.js — Módulo de estado da competição (cliente)
    ============================================================================= */
 
-const NOME_ALUNO = sessionStorage.getItem("aluno_nome") || "Anônimo";
+const ALUNO_ID = sessionStorage.getItem("aluno_id") || "";
+const NOME_ALUNO = sessionStorage.getItem("aluno_apelido") || sessionStorage.getItem("aluno_nome") || "Anônimo";
 
 let intervaloPolling   = null;
 let intervaloEnvio     = null;
@@ -54,12 +55,15 @@ function pararPolling() {
 // ── Envio de pontuação ────────────────────────────────────────────────────────
 
 function iniciarEnvioPontuacao(getPontuacao, getVidas) {
+    if (!ALUNO_ID) return;
+
     const enviar = async () => {
         try {
             await fetch("/api/pontuacao", {
                 method:  "POST",
                 headers: { "Content-Type": "application/json" },
                 body:    JSON.stringify({
+                    alunoId:   ALUNO_ID,
                     nome:      NOME_ALUNO,
                     pontuacao: getPontuacao(),
                     vidas:     getVidas()

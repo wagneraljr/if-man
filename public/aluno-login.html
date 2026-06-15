@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login do Aluno - IF-Man</title>
+    <link rel="stylesheet" href="estilo.css">
+</head>
+<body class="pagina-login">
+
+    <div class="login-wrapper">
+        <div class="login-card">
+
+            <div class="login-header">
+                <img src="logo_if.png" alt="Logo IF Sudeste MG" class="login-logo">
+                <h1>Conta do Aluno</h1>
+                <p class="login-subtitulo">Faça login para jogar no modo competitivo.</p>
+            </div>
+
+            <div class="login-form">
+                <div class="campo-grupo">
+                    <label for="apelido">Apelido</label>
+                    <input type="text" id="apelido" placeholder="Seu nome de exibição" autofocus>
+                </div>
+
+                <div class="campo-grupo">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" placeholder="Digite sua senha">
+                </div>
+
+                <span id="erro-login" class="erro-msg" style="display:none"></span>
+
+                <button onclick="fazerLoginAluno()" id="btn-login" class="btn-entrar">
+                    Entrar
+                </button>
+            </div>
+
+            <div style="display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:4px; padding:0 20px 14px;">
+                <p class="conta-pergunta">Ainda não é cadastrado?</p>
+                <div class="conta-acoes-login">
+                    <a href="aluno-cadastro.html" class="btn-nav-outline" style="text-decoration:none;">Cadastre-se</a>
+                    <button type="button" onclick="acessoSemLogin()" class="btn-secundario">Acesso sem Login</button>
+                </div>
+                <a href="index.html" class="link-voltar">← Voltar para o início</a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function salvarSessaoAluno(aluno) {
+            sessionStorage.setItem("aluno_logado", "true");
+            sessionStorage.setItem("aluno_id", aluno.id);
+            sessionStorage.setItem("aluno_apelido", aluno.apelido);
+            sessionStorage.setItem("aluno_nome_completo", aluno.nomeCompleto);
+            sessionStorage.setItem("aluno_nome", aluno.apelido);
+        }
+
+        function limparSessaoAluno() {
+            sessionStorage.removeItem("aluno_logado");
+            sessionStorage.removeItem("aluno_id");
+            sessionStorage.removeItem("aluno_apelido");
+            sessionStorage.removeItem("aluno_nome_completo");
+            sessionStorage.removeItem("aluno_nome");
+        }
+
+        function acessoSemLogin() {
+            limparSessaoAluno();
+            window.location.href = "sala-espera.html";
+        }
+
+        async function fazerLoginAluno() {
+            const apelido = document.getElementById("apelido").value.trim();
+            const senha   = document.getElementById("senha").value.trim();
+            const erro    = document.getElementById("erro-login");
+            const btn     = document.getElementById("btn-login");
+
+            erro.style.display = "none";
+
+            if (!apelido || !senha) {
+                erro.innerText = "Preencha apelido e senha.";
+                erro.style.display = "block";
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Entrando...";
+
+            try {
+                const res = await fetch("/api/alunos/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ apelido, senha })
+                });
+                const dados = await res.json();
+
+                if (!res.ok) {
+                    erro.innerText = dados.erro || "Não foi possível entrar.";
+                    erro.style.display = "block";
+                    return;
+                }
+
+                salvarSessaoAluno(dados.aluno);
+                window.location.href = "sala-espera.html";
+            } catch {
+                erro.innerText = "Erro de conexão com o servidor.";
+                erro.style.display = "block";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Entrar";
+            }
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") fazerLoginAluno();
+        });
+    </script>
+
+</body>
+</html>

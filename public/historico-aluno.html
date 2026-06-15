@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Meu Histórico - IF-Man</title>
+    <link rel="stylesheet" href="estilo.css">
+    <style>body { display:none; }</style>
+    <script>
+        if (sessionStorage.getItem("aluno_logado") !== "true" || !sessionStorage.getItem("aluno_id")) {
+            window.location.replace("aluno-login.html");
+        } else {
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.style.display = "block";
+            });
+        }
+    </script>
+</head>
+<body>
+
+    <nav class="barra-topo">
+        <img src="logo_if.png" alt="Logo IF Sudeste MG" class="logo-nav">
+        <span class="nav-titulo">Meu Histórico Competitivo</span>
+        <div class="nav-acoes">
+            <a href="aluno-conta.html" class="btn-nav-outline">👤 Minha Conta</a>
+            <a href="sala-espera.html" class="btn-nav-outline">Jogar</a>
+            <a href="index.html" class="btn-nav-sair">Início</a>
+        </div>
+    </nav>
+
+    <main class="painel-wrapper">
+
+        <div class="painel-cabecalho">
+            <div>
+                <h2 id="titulo-aluno">Meu Histórico</h2>
+                <p class="texto-secundario">Aqui ficam suas pontuações do modo competição.</p>
+            </div>
+        </div>
+
+        <div id="lista-historico-aluno"></div>
+
+    </main>
+
+    <script>
+        const ALUNO_ID = sessionStorage.getItem("aluno_id") || "";
+        const APELIDO = sessionStorage.getItem("aluno_apelido") || "Aluno";
+
+        async function carregarHistoricoAluno() {
+            const lista = document.getElementById("lista-historico-aluno");
+            document.getElementById("titulo-aluno").innerText = `Histórico de ${APELIDO}`;
+            lista.innerHTML = `<div class="estado-vazio"><p>Carregando...</p></div>`;
+
+            try {
+                const res = await fetch(`/api/alunos/${encodeURIComponent(ALUNO_ID)}/historico`);
+                const dados = await res.json();
+                if (!res.ok) throw new Error();
+
+                const historico = dados.historico || [];
+                if (historico.length === 0) {
+                    lista.innerHTML = `
+                        <div class="estado-vazio">
+                            <p>Você ainda não possui resultados no modo competição.</p>
+                            <p class="texto-secundario" style="margin-top:8px; font-size:.85rem">
+                                Jogue uma competição logado para começar seu histórico.
+                            </p>
+                        </div>`;
+                    return;
+                }
+
+                lista.innerHTML = historico.map((item) => `
+                    <div class="questao-card hist-card">
+                        <div class="questao-card-header">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <span class="questao-numero">🏁</span>
+                                <div>
+                                    <strong>${item.data} às ${item.hora}</strong>
+                                    <span class="hist-badge ${item.motivo === "tempo" ? "" : "hist-badge-manual"}">
+                                        ${item.motivo === "tempo" ? "⏱ Tempo esgotado" : "■ Encerrada manualmente"}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="hist-meta">
+                            <span>🏆 ${item.posicao}º de ${item.totalParticipantes}</span>
+                            <span>⭐ ${item.pontuacao} pts</span>
+                            <span>❤ ${item.vidas}</span>
+                            <span>⏱ ${Math.round(item.duracaoSeg / 60)} min</span>
+                        </div>
+                    </div>`).join("");
+
+            } catch {
+                lista.innerHTML = `<div class="estado-vazio"><p>Erro ao carregar histórico. Verifique o servidor.</p></div>`;
+            }
+        }
+
+        carregarHistoricoAluno();
+    </script>
+
+    <style>
+        .hist-card {
+            border-left: 4px solid var(--if-verde);
+        }
+        .hist-meta {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 0.88rem;
+            color: var(--cor-texto-claro);
+            margin-top: 8px;
+        }
+        .hist-badge {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: var(--if-verde-claro);
+            color: var(--if-verde-escuro);
+            margin-left: 8px;
+            font-weight: 600;
+        }
+        .hist-badge-manual {
+            background: #FAEEDA;
+            color: #633806;
+        }
+    </style>
+
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Configurações do Aluno - IF-Man</title>
+    <link rel="stylesheet" href="estilo.css">
+    <style>body { display:none; }</style>
+    <script>
+        if (sessionStorage.getItem("aluno_logado") !== "true" || !sessionStorage.getItem("aluno_id")) {
+            window.location.replace("aluno-login.html");
+        } else {
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.style.display = "block";
+            });
+        }
+    </script>
+</head>
+<body class="setup-pagina">
+
+    <nav class="barra-topo">
+        <img src="logo_if.png" alt="Logo IF Sudeste MG" class="logo-nav">
+        <span class="nav-titulo">Configurações do Aluno</span>
+        <div class="nav-acoes">
+            <a href="aluno-conta.html" class="btn-nav-outline">👤 Minha Conta</a>
+            <a href="historico-aluno.html" class="btn-nav-outline">Meu histórico</a>
+            <a href="index.html" class="btn-nav-sair">Início</a>
+        </div>
+    </nav>
+
+    <div class="setup-wrapper">
+        <div class="login-card" style="max-width:480px; width:100%;">
+
+            <div class="login-header">
+                <img src="logo_if.png" alt="Logo IF Sudeste MG" class="login-logo">
+                <h1>Minha Conta</h1>
+                <p class="login-subtitulo">Atualize nome completo, apelido e senha.</p>
+            </div>
+
+            <div class="login-form">
+                <div class="campo-grupo">
+                    <label for="nome-completo">Nome completo</label>
+                    <input type="text" id="nome-completo" placeholder="Seu nome completo" autofocus>
+                </div>
+
+                <div class="campo-grupo">
+                    <label for="apelido">Apelido</label>
+                    <input type="text" id="apelido" placeholder="Seu apelido">
+                </div>
+
+                <div class="campo-grupo">
+                    <label for="senha-atual">Senha atual (obrigatória)</label>
+                    <input type="password" id="senha-atual" placeholder="Digite sua senha atual">
+                </div>
+
+                <div class="campo-grupo">
+                    <label for="senha-nova">Nova senha (opcional)</label>
+                    <input type="password" id="senha-nova" placeholder="Deixe em branco para manter">
+                </div>
+
+                <div class="campo-grupo">
+                    <label for="senha-conf">Confirmar nova senha</label>
+                    <input type="password" id="senha-conf" placeholder="Repita a nova senha">
+                </div>
+
+                <span id="erro-config" class="erro-msg" style="display:none"></span>
+                <span id="ok-config" style="display:none; color:var(--if-verde); font-size:.9rem; font-weight:600">
+                    ✓ Dados atualizados com sucesso!
+                </span>
+
+                <button onclick="salvarConfiguracoesAluno()" id="btn-salvar" class="btn-entrar">
+                    Salvar alterações
+                </button>
+            </div>
+
+            <a href="sala-espera.html" class="link-voltar">← Voltar para jogar</a>
+
+        </div>
+    </div>
+
+    <script>
+        const ALUNO_ID = sessionStorage.getItem("aluno_id") || "";
+
+        async function carregarDadosAluno() {
+            try {
+                const res = await fetch(`/api/alunos/${encodeURIComponent(ALUNO_ID)}`);
+                const dados = await res.json();
+                if (!res.ok || !dados.aluno) throw new Error();
+
+                document.getElementById("nome-completo").value = dados.aluno.nomeCompleto || "";
+                document.getElementById("apelido").value = dados.aluno.apelido || "";
+            } catch {
+                const erro = document.getElementById("erro-config");
+                erro.innerText = "Não foi possível carregar seus dados.";
+                erro.style.display = "block";
+            }
+        }
+
+        async function salvarConfiguracoesAluno() {
+            const nomeCompleto = document.getElementById("nome-completo").value.trim();
+            const apelido = document.getElementById("apelido").value.trim();
+            const senhaAtual = document.getElementById("senha-atual").value.trim();
+            const senhaNova = document.getElementById("senha-nova").value.trim();
+            const senhaConf = document.getElementById("senha-conf").value.trim();
+            const erro = document.getElementById("erro-config");
+            const ok = document.getElementById("ok-config");
+            const btn = document.getElementById("btn-salvar");
+
+            erro.style.display = "none";
+            ok.style.display = "none";
+
+            if (!nomeCompleto || !apelido || !senhaAtual) {
+                erro.innerText = "Nome completo, apelido e senha atual são obrigatórios.";
+                erro.style.display = "block";
+                return;
+            }
+            if (senhaNova || senhaConf) {
+                if (senhaNova !== senhaConf) {
+                    erro.innerText = "Nova senha e confirmação não conferem.";
+                    erro.style.display = "block";
+                    return;
+                }
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Salvando...";
+
+            try {
+                const res = await fetch("/api/alunos/atualizar-perfil", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        alunoId: ALUNO_ID,
+                        nomeCompleto,
+                        apelido,
+                        senhaAtual,
+                        senhaNova
+                    })
+                });
+
+                const dados = await res.json();
+                if (!res.ok) {
+                    erro.innerText = dados.erro || "Não foi possível atualizar seus dados.";
+                    erro.style.display = "block";
+                    return;
+                }
+
+                sessionStorage.setItem("aluno_apelido", dados.aluno.apelido);
+                sessionStorage.setItem("aluno_nome_completo", dados.aluno.nomeCompleto);
+                sessionStorage.setItem("aluno_nome", dados.aluno.apelido);
+                document.getElementById("senha-atual").value = "";
+                document.getElementById("senha-nova").value = "";
+                document.getElementById("senha-conf").value = "";
+                ok.style.display = "block";
+            } catch {
+                erro.innerText = "Erro de conexão com o servidor.";
+                erro.style.display = "block";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Salvar alterações";
+            }
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") salvarConfiguracoesAluno();
+        });
+
+        carregarDadosAluno();
+    </script>
+
+</body>
+</html>

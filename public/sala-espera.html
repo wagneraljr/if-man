@@ -8,6 +8,10 @@
 </head>
 <body class="pagina-login">
 
+    <a href="aluno-conta.html" id="atalho-minha-conta" class="atalho-conta-topo" title="Minha conta" style="display:none;">
+        <span class="atalho-conta-icone" id="atalho-conta-icone">👤</span>
+    </a>
+
     <div class="login-wrapper" style="max-width: 480px;">
         <div class="login-card">
 
@@ -38,6 +42,7 @@
             <div id="passo-modo" style="display:none; padding: 24px 28px 28px;">
 
                 <p class="saudacao-modo" id="saudacao-modo"></p>
+
                 <p class="campo-grupo-label" style="margin-bottom: 14px;">
                     Como você quer jogar?
                 </p>
@@ -98,6 +103,35 @@
     <script src="questoes-storage.js"></script>
     <script>
         let intervaloVerificacao = null;
+        const alunoLogado = sessionStorage.getItem("aluno_logado") === "true";
+        const alunoId = sessionStorage.getItem("aluno_id") || "";
+        const alunoApelido = sessionStorage.getItem("aluno_apelido") || "";
+
+        function sairContaAluno() {
+            sessionStorage.removeItem("aluno_logado");
+            sessionStorage.removeItem("aluno_id");
+            sessionStorage.removeItem("aluno_apelido");
+            sessionStorage.removeItem("aluno_nome_completo");
+            const aviso = document.getElementById("aviso-duplicata");
+            if (aviso) {
+                aviso.style.display = "block";
+                aviso.innerText = "Sessão de aluno encerrada.";
+            }
+            setTimeout(() => window.location.reload(), 400);
+        }
+
+        function atualizarStatusConta() {
+            if (alunoLogado && alunoId) {
+                const atalho = document.getElementById("atalho-minha-conta");
+                if (atalho) atalho.style.display = "inline-flex";
+                const inicial = (alunoApelido || "").trim().charAt(0).toUpperCase();
+                const icone = document.getElementById("atalho-conta-icone");
+                if (icone && inicial) icone.innerText = inicial;
+            } else {
+                const atalho = document.getElementById("atalho-minha-conta");
+                if (atalho) atalho.style.display = "none";
+            }
+        }
 
         // ── Passo 1 → 2 ───────────────────────────────────────────────────────
 
@@ -136,32 +170,24 @@
         }
 
         async function entrarCompeticao() {
-            const nome = sessionStorage.getItem("aluno_nome");
-            const erro = document.getElementById("erro-duplicata");
-            if (erro) erro.style.display = "none";
+            const nome = sessionStorage.getItem("aluno_nome") || alunoApelido;
+            const avisoEl = document.getElementById("aviso-duplicata");
+            avisoEl.style.display = "none";
+
+            if (!(alunoLogado && alunoId)) {
+                avisoEl.style.display = "block";
+                avisoEl.innerHTML = '⚠ Para entrar na competição, faça login na sua conta de aluno. <a href="aluno-login.html">Entrar agora</a>';
+                return;
+            }
 
             try {
-                // 1. Verifica duplicata de nome na sala
-                const resSala = await fetch("/api/sala");
-                const dadosSala = await resSala.json();
-                const jaExiste = dadosSala.alunos.some(
-                    a => a.nome.toLowerCase() === nome.toLowerCase()
-                );
-
-                if (jaExiste) {
-                    // Mostra aviso de nome duplicado no passo de modo
-                    const avisoEl = document.getElementById("aviso-duplicata");
-                    avisoEl.style.display = "block";
-                    avisoEl.innerText = `⚠ O nome "${nome}" já está em uso na sala. Troque seu nome ou aguarde o outro jogador sair.`;
-                    return;
-                }
-
-                // 2. Verifica estado da competição
+                // Verifica estado da competição
                 const res   = await fetch("/api/estado");
                 const dados = await res.json();
 
                 if (dados.fase === "rodando") {
                     sessionStorage.setItem("modo", "competicao");
+                    sessionStorage.setItem("aluno_nome", alunoApelido || nome);
                         sessionStorage.setItem("categoria_competicao", dados.categoria || "Todas");
                     window.location.href = "jogo.html";
                     return;
@@ -178,6 +204,7 @@
             }
 
             sessionStorage.setItem("modo", "competicao");
+            sessionStorage.setItem("aluno_nome", alunoApelido || nome);
             document.getElementById("saudacao-espera").innerText = "Olá, " + nome + "!";
             mostrarPasso("passo-espera");
             iniciarPollingEspera();
@@ -192,7 +219,7 @@
                 await fetch("/api/entrar-sala", {
                     method:  "POST",
                     headers: { "Content-Type": "application/json" },
-                    body:    JSON.stringify({ nome: sessionStorage.getItem("aluno_nome") })
+                    body:    JSON.stringify({ alunoId: sessionStorage.getItem("aluno_id") })
                 });
             } catch { /* silencioso */ }
         }
@@ -253,6 +280,11 @@
 
         // Se o aluno já tinha nome salvo na sessão, pula para o passo 2
         const nomeSalvo = sessionStorage.getItem("aluno_nome");
+        if (alunoLogado && alunoApelido && !nomeSalvo) {
+            sessionStorage.setItem("aluno_nome", alunoApelido);
+            document.getElementById("campo-nome").value = alunoApelido;
+        }
+
         if (nomeSalvo) {
             document.getElementById("campo-nome").value = nomeSalvo;
             document.getElementById("saudacao-modo").innerText = "Olá, " + nomeSalvo + "! 👋";
@@ -260,6 +292,7 @@
         }
 
             carregarCategoriasModoLivre();
+            atualizarStatusConta();
     </script>
 
 </body>

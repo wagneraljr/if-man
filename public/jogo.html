@@ -55,6 +55,10 @@
                     ✕ Sair
                 </a>
 
+                <a href="aluno-conta.html" id="btn-conta-flutuante" class="flutuante flutuante-conta" style="display:none" title="Minha conta">
+                    <span id="conta-avatar-texto" class="atalho-conta-icone">👤</span>
+                </a>
+
                 <!-- Nome do aluno flutuante (canto inferior esquerdo) -->
                 <div id="nome-flutuante" class="flutuante flutuante-nome" style="display:none"></div>
             </div>
@@ -74,6 +78,12 @@
             window.location.replace("sala-espera.html");
         }
 
+        // Competição exige aluno logado.
+        const modoAtual = sessionStorage.getItem("modo") || "livre";
+        if (modoAtual === "competicao" && (!sessionStorage.getItem("aluno_id") || sessionStorage.getItem("aluno_logado") !== "true")) {
+            window.location.replace("aluno-login.html");
+        }
+
         // Exibe nome do aluno flutuante
         const nomeAluno = sessionStorage.getItem("aluno_nome");
         if (nomeAluno) {
@@ -82,8 +92,18 @@
             elNome.style.display = "block";
         }
 
+        if (sessionStorage.getItem("aluno_logado") === "true" && sessionStorage.getItem("aluno_id")) {
+            const conta = document.getElementById("btn-conta-flutuante");
+            if (conta) conta.style.display = "inline-flex";
+            const inicial = (sessionStorage.getItem("aluno_apelido") || sessionStorage.getItem("aluno_nome") || "").trim().charAt(0).toUpperCase();
+            const avatar = document.getElementById("conta-avatar-texto");
+            if (avatar && inicial) avatar.innerText = inicial;
+        }
+
         // Integra competição ao motor do jogo
         (async function configurarCompeticao() {
+            if ((sessionStorage.getItem("modo") || "livre") !== "competicao") return;
+
             try {
                 const res   = await fetch("/api/estado");
                 const dados = await res.json();
@@ -115,7 +135,8 @@
                     method:  "POST",
                     headers: { "Content-Type": "application/json" },
                     body:    JSON.stringify({
-                        nome:      sessionStorage.getItem("aluno_nome") || "Anônimo",
+                        alunoId:   sessionStorage.getItem("aluno_id") || "",
+                        nome:      sessionStorage.getItem("aluno_apelido") || sessionStorage.getItem("aluno_nome") || "Anônimo",
                         pontuacao: pontuacao,
                         vidas:     vidas
                     })

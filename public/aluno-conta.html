@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Minha Conta - IF-Man</title>
+    <link rel="stylesheet" href="estilo.css">
+    <style>body { display:none; }</style>
+    <script>
+        if (sessionStorage.getItem("aluno_logado") !== "true" || !sessionStorage.getItem("aluno_id")) {
+            window.location.replace("aluno-login.html");
+        } else {
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.style.display = "flex";
+            });
+        }
+    </script>
+</head>
+<body class="pagina-login">
+
+    <div class="login-wrapper" style="max-width: 480px;">
+        <div class="login-card">
+            <div class="login-header">
+                <img src="logo_if.png" alt="Logo IF Sudeste MG" class="login-logo">
+                <h1>Minha Conta</h1>
+                <p class="login-subtitulo" id="subtitulo-conta">Gerencie seus dados e seu histórico competitivo.</p>
+            </div>
+
+            <div style="padding: 24px 28px 28px;">
+                <div class="selecao-modo" style="margin-bottom: 14px;">
+                <a href="historico-aluno.html" class="card-modo" style="text-decoration:none;">
+                    <span class="modo-icone">📊</span>
+                    <span class="modo-titulo">Meu Histórico</span>
+                    <span class="modo-desc">Veja suas pontuações registradas no modo competição.</span>
+                </a>
+
+                <a href="aluno-config.html" class="card-modo" style="text-decoration:none;">
+                    <span class="modo-icone">⚙️</span>
+                    <span class="modo-titulo">Configurações da Conta</span>
+                    <span class="modo-desc">Altere nome completo, apelido e senha.</span>
+                </a>
+                </div>
+
+                <button type="button" class="btn-perigo-sm" onclick="sairContaAluno()" style="width:100%; padding:10px;">
+                    Sair da conta
+                </button>
+            </div>
+
+            <a href="sala-espera.html" class="link-voltar">← Voltar para sala de espera</a>
+        </div>
+    </div>
+
+    <script>
+        const apelido = sessionStorage.getItem("aluno_apelido") || "Aluno";
+        document.getElementById("subtitulo-conta").innerText = `Conectado como ${apelido}.`;
+
+        function sairContaAluno() {
+            sessionStorage.removeItem("aluno_logado");
+            sessionStorage.removeItem("aluno_id");
+            sessionStorage.removeItem("aluno_apelido");
+            sessionStorage.removeItem("aluno_nome_completo");
+            sessionStorage.removeItem("aluno_nome");
+            window.location.href = "index.html";
+        }
+    </script>
+
+</body>
+</html>

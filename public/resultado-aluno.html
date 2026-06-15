@@ -8,6 +8,10 @@
 </head>
 <body class="pagina-login">
 
+    <a href="aluno-conta.html" id="atalho-minha-conta" class="atalho-conta-topo" title="Minha conta" style="display:none;">
+        <span class="atalho-conta-icone" id="atalho-conta-icone">👤</span>
+    </a>
+
     <div class="login-wrapper" style="max-width: 520px;">
         <div class="login-card">
 
@@ -84,7 +88,8 @@
     </div>
 
     <script>
-        const NOME  = sessionStorage.getItem("aluno_nome") || "";
+        const ALUNO_ID = sessionStorage.getItem("aluno_id") || "";
+        const NOME  = sessionStorage.getItem("aluno_apelido") || sessionStorage.getItem("aluno_nome") || "";
         let rankingAberto = false;
         let intervaloEspera = null;
 
@@ -92,9 +97,24 @@
         const COR_TOP   = ["#FEF9E7", "#F8F9FA", "#FDF3EC"];
         const COR_BORDA = ["#F1C40F", "#95A5A6", "#CD6133"];
 
+        if (sessionStorage.getItem("aluno_logado") === "true" && ALUNO_ID) {
+            const atalho = document.getElementById("atalho-minha-conta");
+            if (atalho) atalho.style.display = "inline-flex";
+            const inicial = (NOME || "").trim().charAt(0).toUpperCase();
+            const icone = document.getElementById("atalho-conta-icone");
+            if (icone && inicial) icone.innerText = inicial;
+        }
+
         async function carregarResultado() {
+            if (!ALUNO_ID) {
+                document.getElementById("resultado-titulo").innerText = "Login necessário";
+                document.getElementById("resultado-subtitulo").innerText = "Faça login para ver o resultado competitivo.";
+                mostrarEstado("resultado");
+                return;
+            }
+
             try {
-                const res   = await fetch(`/api/resultado-aluno?nome=${encodeURIComponent(NOME)}`);
+                const res   = await fetch(`/api/resultado-aluno?alunoId=${encodeURIComponent(ALUNO_ID)}`);
                 const dados = await res.json();
 
                 if (dados.fase === "rodando") {
@@ -119,7 +139,7 @@
         }
 
         function mostrarResultado(dados) {
-            const { posicao, total, pontuacao, vidas, top3, ranking } = dados;
+            const { posicao, total, pontuacao, vidas, top3, ranking, nome } = dados;
 
             // Header dinâmico com ícone e mensagem conforme posição
             let icone, mensagem;
@@ -151,7 +171,7 @@
             }
             document.getElementById("posicao-num").innerText  =
                 posicao ? (posicao <= 3 ? MEDALHAS[posicao - 1] : posicao + "º") : "—";
-            document.getElementById("resultado-nome").innerText   = NOME || "Anônimo";
+            document.getElementById("resultado-nome").innerText   = nome || NOME || "Anônimo";
             document.getElementById("resultado-pontos").innerText = pontuacao + " pontos";
             document.getElementById("resultado-vidas").innerText  =
                 "❤".repeat(Math.max(0, vidas));

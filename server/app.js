@@ -21,6 +21,7 @@ const PUBLIC_DIR     = path.join(ROOT_DIR, "public");
 const ARQUIVO_CONFIG = path.join(DATA_DIR, "config.json");
 const ARQUIVO_QUEST  = path.join(DATA_DIR, "questoes.json");
 const ARQUIVO_HIST   = path.join(DATA_DIR, "historico.json");
+const ARQUIVO_ALUNOS = path.join(DATA_DIR, "alunos.json");
 
 const CATEGORIA_PADRAO = "Informática Básica";
 
@@ -91,9 +92,35 @@ function hash(texto) {
     return crypto.createHash("sha256").update(texto).digest("hex");
 }
 
+function normalizarApelido(apelido = "") {
+    return String(apelido).trim().toLowerCase();
+}
+
+function sanitizarAluno(aluno) {
+    return {
+        id: aluno.id,
+        nomeCompleto: aluno.nomeCompleto,
+        apelido: aluno.apelido
+    };
+}
+
+function obterAlunoPorId(alunoId) {
+    return alunos.find(aluno => aluno.id === alunoId) || null;
+}
+
+function obterAlunoPorApelido(apelido) {
+    const apelidoNorm = normalizarApelido(apelido);
+    return alunos.find(aluno => normalizarApelido(aluno.apelido) === apelidoNorm) || null;
+}
+
 // ── Carregamento inicial ───────────────────────────────────────────────────────
 
 let config = lerJSON(ARQUIVO_CONFIG, { senhaHash: null });
+let alunos = lerJSON(ARQUIVO_ALUNOS, []);
+
+if (!Array.isArray(alunos)) {
+    alunos = [];
+}
 
 // Se não há senha configurada, define a padrão e salva
 if (!config.senhaHash) {
@@ -116,14 +143,24 @@ if (!fs.existsSync(ARQUIVO_QUEST)) {
     }
 }
 
+if (!fs.existsSync(ARQUIVO_ALUNOS)) {
+    salvarJSON(ARQUIVO_ALUNOS, alunos);
+    console.log("  alunos.json criado.");
+}
+
 
 // ── Salva snapshot da competição encerrada no histórico ───────────────────────
 
 function salvarHistorico(motivo) {
-    if (!estado.inicioMs) return; // competição nunca iniciou
+    if (!estado.inicioMs || estado.historicoSalvo) return; // competição nunca iniciou ou já foi salva
 
-    const ranking = Object.entries(estado.alunos)
-        .map(([nome, d]) => ({ nome, pontuacao: d.pontuacao, vidas: d.vidas }))
+    const ranking = Object.values(estado.alunos)
+        .map((d) => ({
+            alunoId: d.alunoId,
+            nome: d.nome,
+            pontuacao: d.pontuacao,
+            vidas: d.vidas
+        }))
         .sort((a, b) => b.pontuacao - a.pontuacao);
 
     if (ranking.length === 0) return; // ninguém jogou
@@ -131,7 +168,7 @@ function salvarHistorico(motivo) {
     const historico = lerJSON(ARQUIVO_HIST, []);
     const agora     = new Date();
 
-    historico.unshift({
+    const registro = {
         id:           Date.now(),
         data:         agora.toLocaleDateString("pt-BR"),
         hora:         agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
@@ -139,12 +176,44 @@ function salvarHistorico(motivo) {
         motivo,       // "tempo" | "manual"
         participantes: ranking.length,
         ranking
-    });
+    };
+
+    historico.unshift(registro);
 
     // Mantém no máximo 50 competições no histórico
     if (historico.length > 50) historico.splice(50);
 
     salvarJSON(ARQUIVO_HIST, historico);
+
+    // Também salva o histórico por aluno para consulta individual.
+    ranking.forEach((item, idx) => {
+        if (!item.alunoId) return;
+        const aluno = obterAlunoPorId(item.alunoId);
+        if (!aluno) return;
+
+        if (!Array.isArray(aluno.historicoCompeticao)) {
+            aluno.historicoCompeticao = [];
+        }
+
+        aluno.historicoCompeticao.unshift({
+            competicaoId: registro.id,
+            data: registro.data,
+            hora: registro.hora,
+            motivo: registro.motivo,
+            duracaoSeg: registro.duracaoSeg,
+            pontuacao: item.pontuacao,
+            vidas: item.vidas,
+            posicao: idx + 1,
+            totalParticipantes: ranking.length
+        });
+
+        if (aluno.historicoCompeticao.length > 100) {
+            aluno.historicoCompeticao.splice(100);
+        }
+    });
+
+    salvarJSON(ARQUIVO_ALUNOS, alunos);
+    estado.historicoSalvo = true;
     console.log(`[${new Date().toLocaleTimeString()}] Histórico salvo (${ranking.length} participantes)`);
 }
 
@@ -156,7 +225,8 @@ let estado = {
     inicioMs:   null,
     categoria:  "Todas",
     alunos:     {},
-    espera:     []
+    espera:     [],
+    historicoSalvo: false
 };
 
 // ── Utilitários HTTP ──────────────────────────────────────────────────────────
@@ -235,6 +305,151 @@ const servidor = http.createServer(async (req, res) => {
         return;
     }
 
+    // ══ ALUNOS ═══════════════════════════════════════════════════════════════
+
+    // POST /api/alunos/cadastro
+    if (metodo === "POST" && url === "/api/alunos/cadastro") {
+        const corpo = await lerCorpo(req);
+        const nomeCompleto = (corpo.nomeCompleto || "").trim();
+        const apelido = (corpo.apelido || "").trim();
+        const senha = (corpo.senha || "").trim();
+        const apelidoNorm = normalizarApelido(apelido);
+
+        if (!nomeCompleto || !apelido || !senha) {
+            responderJSON(res, 400, { ok: false, erro: "Preencha nome completo, apelido e senha." });
+            return;
+        }
+        if (nomeCompleto.length < 3) {
+            responderJSON(res, 400, { ok: false, erro: "O nome completo deve ter ao menos 3 caracteres." });
+            return;
+        }
+        if (apelido.length < 2) {
+            responderJSON(res, 400, { ok: false, erro: "O apelido deve ter ao menos 2 caracteres." });
+            return;
+        }
+        if (senha.length < 4) {
+            responderJSON(res, 400, { ok: false, erro: "A senha deve ter ao menos 4 caracteres." });
+            return;
+        }
+        if (obterAlunoPorApelido(apelidoNorm)) {
+            responderJSON(res, 409, { ok: false, erro: "Este apelido já está em uso." });
+            return;
+        }
+
+        const agoraIso = new Date().toISOString();
+        const novoAluno = {
+            id: `aluno_${Date.now()}_${Math.floor(Math.random() * 100000)}`,
+            nomeCompleto,
+            apelido,
+            senhaHash: hash(senha),
+            historicoCompeticao: [],
+            criadoEm: agoraIso,
+            atualizadoEm: agoraIso
+        };
+
+        alunos.push(novoAluno);
+        salvarJSON(ARQUIVO_ALUNOS, alunos);
+        responderJSON(res, 201, { ok: true, aluno: sanitizarAluno(novoAluno) });
+        return;
+    }
+
+    // POST /api/alunos/login
+    if (metodo === "POST" && url === "/api/alunos/login") {
+        const corpo = await lerCorpo(req);
+        const apelido = (corpo.apelido || "").trim();
+        const senha = (corpo.senha || "").trim();
+
+        const aluno = obterAlunoPorApelido(apelido);
+        if (!aluno || aluno.senhaHash !== hash(senha)) {
+            responderJSON(res, 401, { ok: false, erro: "Apelido ou senha inválidos." });
+            return;
+        }
+
+        responderJSON(res, 200, { ok: true, aluno: sanitizarAluno(aluno) });
+        return;
+    }
+
+    // GET /api/alunos/:id
+    if (metodo === "GET" && url.startsWith("/api/alunos/") && url.split("/").length === 4) {
+        const alunoId = decodeURIComponent(url.split("/")[3]);
+        const aluno = obterAlunoPorId(alunoId);
+        if (!aluno) {
+            responderJSON(res, 404, { ok: false, erro: "Aluno não encontrado." });
+            return;
+        }
+
+        responderJSON(res, 200, { ok: true, aluno: sanitizarAluno(aluno) });
+        return;
+    }
+
+    // GET /api/alunos/:id/historico
+    if (metodo === "GET" && url.startsWith("/api/alunos/") && url.endsWith("/historico")) {
+        const partes = url.split("/");
+        const alunoId = decodeURIComponent(partes[3] || "");
+        const aluno = obterAlunoPorId(alunoId);
+        if (!aluno) {
+            responderJSON(res, 404, { ok: false, erro: "Aluno não encontrado." });
+            return;
+        }
+
+        responderJSON(res, 200, { ok: true, historico: aluno.historicoCompeticao || [] });
+        return;
+    }
+
+    // POST /api/alunos/atualizar-perfil
+    if (metodo === "POST" && url === "/api/alunos/atualizar-perfil") {
+        const corpo = await lerCorpo(req);
+        const alunoId = (corpo.alunoId || "").trim();
+        const nomeCompleto = (corpo.nomeCompleto || "").trim();
+        const apelido = (corpo.apelido || "").trim();
+        const senhaAtual = (corpo.senhaAtual || "").trim();
+        const senhaNova = (corpo.senhaNova || "").trim();
+
+        const aluno = obterAlunoPorId(alunoId);
+        if (!aluno) {
+            responderJSON(res, 404, { ok: false, erro: "Aluno não encontrado." });
+            return;
+        }
+        if (hash(senhaAtual) !== aluno.senhaHash) {
+            responderJSON(res, 401, { ok: false, erro: "Senha atual incorreta." });
+            return;
+        }
+        if (!nomeCompleto || nomeCompleto.length < 3) {
+            responderJSON(res, 400, { ok: false, erro: "Informe um nome completo válido." });
+            return;
+        }
+        if (!apelido || apelido.length < 2) {
+            responderJSON(res, 400, { ok: false, erro: "Informe um apelido válido." });
+            return;
+        }
+
+        const conflito = alunos.find(a => a.id !== aluno.id && normalizarApelido(a.apelido) === normalizarApelido(apelido));
+        if (conflito) {
+            responderJSON(res, 409, { ok: false, erro: "Este apelido já está em uso por outro aluno." });
+            return;
+        }
+
+        aluno.nomeCompleto = nomeCompleto;
+        aluno.apelido = apelido;
+        if (senhaNova) {
+            if (senhaNova.length < 4) {
+                responderJSON(res, 400, { ok: false, erro: "A nova senha deve ter ao menos 4 caracteres." });
+                return;
+            }
+            aluno.senhaHash = hash(senhaNova);
+        }
+        aluno.atualizadoEm = new Date().toISOString();
+
+        // Atualiza nome exibido no ranking em memória durante competição.
+        if (estado.alunos[aluno.id]) {
+            estado.alunos[aluno.id].nome = aluno.apelido;
+        }
+
+        salvarJSON(ARQUIVO_ALUNOS, alunos);
+        responderJSON(res, 200, { ok: true, aluno: sanitizarAluno(aluno) });
+        return;
+    }
+
     // ══ QUESTÕES ══════════════════════════════════════════════════════════════
 
     // GET /api/questoes — retorna todas as questões
@@ -307,6 +522,8 @@ const servidor = http.createServer(async (req, res) => {
         estado.inicioMs   = Date.now();
         estado.categoria  = (corpo.categoria || "Todas").trim() || "Todas";
         estado.alunos     = {};
+        estado.espera     = [];
+        estado.historicoSalvo = false;
         console.log(`[${new Date().toLocaleTimeString()}] Competição iniciada — ${estado.duracaoSeg}s | categoria: ${estado.categoria}`);
         responderJSON(res, 200, { ok: true });
         return;
@@ -324,7 +541,7 @@ const servidor = http.createServer(async (req, res) => {
     // POST /api/resetar
     if (metodo === "POST" && url === "/api/resetar") {
         if (estado.fase === "encerrada") salvarHistorico("manual"); // garante salvamento se não havia sido salvo
-        estado = { fase: "aguardando", duracaoSeg: 600, inicioMs: null, categoria: "Todas", alunos: {}, espera: [] };
+        estado = { fase: "aguardando", duracaoSeg: 600, inicioMs: null, categoria: "Todas", alunos: {}, espera: [], historicoSalvo: false };
         console.log(`[${new Date().toLocaleTimeString()}] Estado resetado`);
         responderJSON(res, 200, { ok: true });
         return;
@@ -333,9 +550,18 @@ const servidor = http.createServer(async (req, res) => {
     // POST /api/pontuacao
     if (metodo === "POST" && url === "/api/pontuacao") {
         const corpo = await lerCorpo(req);
-        const nome  = (corpo.nome || "").trim();
-        if (nome && estado.fase === "rodando") {
-            estado.alunos[nome] = {
+        const alunoId = (corpo.alunoId || "").trim();
+        const aluno = obterAlunoPorId(alunoId);
+
+        if (!aluno) {
+            responderJSON(res, 401, { ok: false, erro: "Aluno não autenticado para competição." });
+            return;
+        }
+
+        if (estado.fase === "rodando") {
+            estado.alunos[aluno.id] = {
+                alunoId: aluno.id,
+                nome: aluno.apelido,
                 pontuacao: corpo.pontuacao || 0,
                 vidas:     corpo.vidas     || 0,
                 ultimaAtualizacao: Date.now()
@@ -348,11 +574,20 @@ const servidor = http.createServer(async (req, res) => {
     // POST /api/pontuacao-final
     if (metodo === "POST" && url === "/api/pontuacao-final") {
         const corpo = await lerCorpo(req);
-        const nome  = (corpo.nome || "").trim();
-        if (nome && (estado.fase === "rodando" || estado.fase === "encerrada")) {
-            const atual = estado.alunos[nome];
+        const alunoId = (corpo.alunoId || "").trim();
+        const aluno = obterAlunoPorId(alunoId);
+
+        if (!aluno) {
+            responderJSON(res, 401, { ok: false, erro: "Aluno não autenticado para competição." });
+            return;
+        }
+
+        if (estado.fase === "rodando" || estado.fase === "encerrada") {
+            const atual = estado.alunos[aluno.id];
             if (!atual || corpo.pontuacao >= atual.pontuacao) {
-                estado.alunos[nome] = {
+                estado.alunos[aluno.id] = {
+                    alunoId: aluno.id,
+                    nome: aluno.apelido,
                     pontuacao: corpo.pontuacao || 0,
                     vidas:     corpo.vidas     || 0,
                     ultimaAtualizacao: Date.now()
@@ -365,26 +600,27 @@ const servidor = http.createServer(async (req, res) => {
 
     // GET /api/placar
     if (metodo === "GET" && url === "/api/placar") {
-        const ranking = Object.entries(estado.alunos)
-            .map(([nome, d]) => ({ nome, ...d }))
+        const ranking = Object.values(estado.alunos)
+            .map((d) => ({ ...d }))
             .sort((a, b) => b.pontuacao - a.pontuacao);
         responderJSON(res, 200, { fase: estado.fase, ranking });
         return;
     }
 
-    // GET /api/resultado-aluno?nome=X
+    // GET /api/resultado-aluno?alunoId=X
     if (metodo === "GET" && url.startsWith("/api/resultado-aluno")) {
         const params    = new URLSearchParams(req.url.split("?")[1] || "");
-        const nome      = (params.get("nome") || "").trim();
-        const ranking   = Object.entries(estado.alunos)
-            .map(([n, d]) => ({ nome: n, ...d }))
+        const alunoId   = (params.get("alunoId") || "").trim();
+        const ranking   = Object.values(estado.alunos)
+            .map((d) => ({ ...d }))
             .sort((a, b) => b.pontuacao - a.pontuacao);
-        const posicao   = ranking.findIndex(a => a.nome === nome) + 1;
-        const meusDados = estado.alunos[nome] || { pontuacao: 0, vidas: 0 };
+        const posicao   = ranking.findIndex(a => a.alunoId === alunoId) + 1;
+        const meusDados = estado.alunos[alunoId] || { pontuacao: 0, vidas: 0, nome: "Aluno" };
         responderJSON(res, 200, {
             fase: estado.fase,
             posicao: posicao || null,
             total: ranking.length,
+            nome: meusDados.nome,
             pontuacao: meusDados.pontuacao,
             vidas: meusDados.vidas,
             top3: ranking.slice(0, 3),
@@ -396,14 +632,21 @@ const servidor = http.createServer(async (req, res) => {
     // POST /api/entrar-sala
     if (metodo === "POST" && url === "/api/entrar-sala") {
         const corpo = await lerCorpo(req);
-        const nome  = (corpo.nome || "").trim();
-        if (nome) {
-            const idx = estado.espera.findIndex(a => a.nome === nome);
+        const alunoId = (corpo.alunoId || "").trim();
+        const aluno = obterAlunoPorId(alunoId);
+
+        if (!aluno) {
+            responderJSON(res, 401, { ok: false, erro: "Aluno não autenticado para entrar na competição." });
+            return;
+        }
+
+        if (aluno) {
+            const idx = estado.espera.findIndex(a => a.alunoId === aluno.id);
             if (idx !== -1) {
                 estado.espera[idx].entradaMs = Date.now();
             } else {
-                estado.espera.push({ nome, entradaMs: Date.now() });
-                console.log(`[${new Date().toLocaleTimeString()}] Aluno na sala: ${nome} (total: ${estado.espera.length})`);
+                estado.espera.push({ alunoId: aluno.id, nome: aluno.apelido, entradaMs: Date.now() });
+                console.log(`[${new Date().toLocaleTimeString()}] Aluno na sala: ${aluno.apelido} (total: ${estado.espera.length})`);
             }
         }
         responderJSON(res, 200, { ok: true, total: estado.espera.length });
