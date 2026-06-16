@@ -63,6 +63,7 @@ function iniciarPiscaPoder() {
     intervaloPiscaPoder = setInterval(() => {
         if (!poderAtivo) return;
         if (!poderPertoDoFim()) return;
+        if (typeof feedbackAtivo !== "undefined" && feedbackAtivo) return;
         if (typeof atualizarTela === "function") atualizarTela();
     }, 120);
 }
@@ -315,17 +316,21 @@ function verificarColisaoComMonstro() {
                 acertosConsecutivos = 0;
                 atualizarPlacar();
                 atualizarCombo(0);
-                pausarRodada();
+                pausarRodada(false);
                 desenharFeedback("Você foi capturado!", `Combo zerado | Vidas restantes: ${vidas}`, "vermelho", () => {
+                    verificarDerrota();
+                    if (vidas <= 0) {
+                        emColisao = false;
+                        return;
+                    }
+
                     jogador.coluna = 9;
                     jogador.linha  = 5;
                     resetarMonstros();
                     emColisao = false;
-                    if (vidas > 0) {
-                        atualizarTela();
-                        desenharTelaEspera();
-                    }
-                    verificarDerrota();
+                    atualizarTela();
+                    desenharTelaEspera();
+                    document.getElementById("btn-iniciar")?.classList.remove("oculto");
                 });
                 return;
             }
@@ -526,6 +531,8 @@ function moverMonstros() {
 // ─── Movimento do jogador ─────────────────────────────────────────────────────
 
 function moverJogador(evento) {
+    if (!jogoAtivo || vidas <= 0 || emColisao) return;
+
     let tecla = evento.key;
     let proximaColuna = jogador.coluna;
     let proximaLinha  = jogador.linha;

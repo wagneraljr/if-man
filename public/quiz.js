@@ -3,6 +3,7 @@ let indicePerguntaAtual = 0;
 let acertosConsecutivos = 0;  // combo de acertos seguidos
 let acaoAposFeedback    = null;
 let feedbackAtivo       = false;
+let feedbackVisualAtual = null;
 
 function obterBotaoFeedbackHtml() {
     return document.getElementById("btn-feedback-canvas");
@@ -176,7 +177,7 @@ function verificarColisaoComResposta() {
 
     if (tocouEmAlguma) {
         // Pausa o jogo imediatamente para exibir feedback
-        pausarRodada();
+        pausarRodada(false);
 
         if (acertou) {
             acertosConsecutivos++;
@@ -240,6 +241,7 @@ function verificarColisaoComResposta() {
 
 function ocultarFeedbackVisual() {
     feedbackAtivo = false;
+    feedbackVisualAtual = null;
 
     const botaoFeedback = obterBotaoFeedbackHtml();
     if (botaoFeedback) {
@@ -306,6 +308,15 @@ function desenharFeedbackNoCanvas(titulo, subtitulo, tipo) {
     ctx.stroke();
 }
 
+function redesenharFeedbackAtivo() {
+    if (!feedbackAtivo || !feedbackVisualAtual) return;
+    desenharFeedbackNoCanvas(
+        feedbackVisualAtual.titulo,
+        feedbackVisualAtual.subtitulo,
+        feedbackVisualAtual.tipo
+    );
+}
+
 function confirmarFeedbackVisual() {
     ocultarFeedbackVisual();
 
@@ -315,6 +326,8 @@ function confirmarFeedbackVisual() {
 }
 
 function desenharFeedback(titulo, subtitulo, tipo, onConfirm = null) {
+    feedbackVisualAtual = { titulo, subtitulo, tipo };
+
     // Sempre desenha no canvas para garantir feedback mesmo se houver
     // qualquer problema visual/empilhamento com o modal HTML.
     desenharFeedbackNoCanvas(titulo, subtitulo, tipo);

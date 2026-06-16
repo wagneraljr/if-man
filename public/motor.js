@@ -41,6 +41,10 @@ function atualizarCombo(consecutivos) {
     if (wrapper) wrapper.style.display = "flex";
 }
 
+function feedbackEstaAtivo() {
+    return typeof feedbackAtivo !== "undefined" && feedbackAtivo;
+}
+
 function verificarDerrota() {
     if (vidas <= 0) {
         // Para os monstros imediatamente antes de exibir game over
@@ -76,6 +80,9 @@ function atualizarTela() {
     desenharAlternativas(contexto);
     desenharJogador(contexto);
     desenharMonstros(contexto);
+    if (typeof redesenharFeedbackAtivo === "function") {
+        redesenharFeedbackAtivo();
+    }
 }
 
 // ── Tela de espera desenhada sobre o canvas ───────────────────────────────────
@@ -184,19 +191,29 @@ function desenharTelaErro(titulo, subtitulo) {
 }
 
 // ── Controle de pausa/início ──────────────────────────────────────────────────
-function pausarRodada() {
+function pausarRodada(exibirBotaoIniciar = true) {
     jogoAtivo = false;
     if (intervaloMonstros) {
         clearInterval(intervaloMonstros);
         intervaloMonstros = null;
     }
     window.removeEventListener("keydown", moverJogador);
-    document.getElementById("btn-iniciar").classList.remove("oculto");
+    const botaoIniciar = document.getElementById("btn-iniciar");
+    if (!botaoIniciar) return;
+
+    if (exibirBotaoIniciar) {
+        botaoIniciar.classList.remove("oculto");
+    } else {
+        botaoIniciar.classList.add("oculto");
+    }
 }
 
 // Chamada pelo onclick do botão no HTML
 function iniciarRodada() {
     if (jogoAtivo) return;
+    if (vidas <= 0) return;
+    if (feedbackEstaAtivo()) return;
+
     jogoAtivo = true;
     document.getElementById("btn-iniciar").classList.add("oculto");
     // Redesenha sem o overlay
@@ -208,6 +225,8 @@ function iniciarRodada() {
 
 // Wrapper do intervalo: respeita o estado de colisão
 function tickMonstros() {
+    if (!jogoAtivo || vidas <= 0 || feedbackEstaAtivo()) return;
+
     moverMonstros();
     // Só redesenha se não houver feedback/colisão em andamento
     if (!emColisao) {
