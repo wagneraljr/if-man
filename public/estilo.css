@@ -298,6 +298,31 @@ canvas {
     border-radius: var(--raio);
 }
 
+.feedback-canvas-btn {
+    position: absolute;
+    left: 50%;
+    top: 67%;
+    transform: translate(-50%, -50%);
+    z-index: 40;
+    min-width: 82px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    background: #2f9e41;
+    color: #ffffff;
+    font: 700 13px 'Open Sans', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.24);
+}
+
+.feedback-canvas-btn.feedback-erro {
+    background: #cd191e;
+}
+
+.feedback-canvas-btn:hover {
+    filter: brightness(1.05);
+}
+
 
 /* =============================================================================
    9. PÁGINA DE LOGIN E SELEÇÃO DE PERFIL

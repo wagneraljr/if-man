@@ -3,7 +3,10 @@ let indicePerguntaAtual = 0;
 let acertosConsecutivos = 0;  // combo de acertos seguidos
 let acaoAposFeedback    = null;
 let feedbackAtivo       = false;
-let feedbackBotaoArea   = null;
+
+function obterBotaoFeedbackHtml() {
+    return document.getElementById("btn-feedback-canvas");
+}
 
 function embaralharBancoQuestoes() {
     for (let i = bancoDeQuestoes.length - 1; i > 0; i--) {
@@ -13,25 +16,23 @@ function embaralharBancoQuestoes() {
 }
 
 function atualizarFeedbackCanvasClick() {
-    const canvas = document.getElementById("telaJogo");
-    if (!canvas || canvas.dataset.feedbackClickBind === "1") return;
+    const botaoFeedback = obterBotaoFeedbackHtml();
+    if (botaoFeedback && botaoFeedback.dataset.feedbackClickBind !== "1") {
+        botaoFeedback.addEventListener("click", confirmarFeedbackVisual);
+        botaoFeedback.dataset.feedbackClickBind = "1";
+    }
 
-    canvas.addEventListener("click", (event) => {
-        if (!feedbackAtivo || !feedbackBotaoArea) return;
-
-        const ret = canvas.getBoundingClientRect();
-        const escalaX = canvas.width / ret.width;
-        const escalaY = canvas.height / ret.height;
-        const x = (event.clientX - ret.left) * escalaX;
-        const y = (event.clientY - ret.top) * escalaY;
-
-        const dentroBotao = x >= feedbackBotaoArea.x && x <= feedbackBotaoArea.x + feedbackBotaoArea.w &&
-            y >= feedbackBotaoArea.y && y <= feedbackBotaoArea.y + feedbackBotaoArea.h;
-
-        if (dentroBotao) confirmarFeedbackVisual();
-    });
-
-    canvas.dataset.feedbackClickBind = "1";
+    const corpo = document.body;
+    if (corpo && corpo.dataset.feedbackKeyBind !== "1") {
+        window.addEventListener("keydown", (event) => {
+            if (!feedbackAtivo) return;
+            if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
+                event.preventDefault();
+                confirmarFeedbackVisual();
+            }
+        });
+        corpo.dataset.feedbackKeyBind = "1";
+    }
 }
 
 atualizarFeedbackCanvasClick();
@@ -239,7 +240,12 @@ function verificarColisaoComResposta() {
 
 function ocultarFeedbackVisual() {
     feedbackAtivo = false;
-    feedbackBotaoArea = null;
+
+    const botaoFeedback = obterBotaoFeedbackHtml();
+    if (botaoFeedback) {
+        botaoFeedback.style.display = "none";
+        botaoFeedback.classList.remove("feedback-erro");
+    }
 }
 
 function desenharFeedbackNoCanvas(titulo, subtitulo, tipo) {
@@ -280,24 +286,16 @@ function desenharFeedbackNoCanvas(titulo, subtitulo, tipo) {
     ctx.fillStyle = "#2D3436";
     ctx.font = "13px 'Open Sans', sans-serif";
     ctx.fillText(subtitulo, telaCanvas.width / 2, by + 78);
-
-    // Botão OK desenhado no próprio canvas
-    const btnW = 82;
-    const btnH = 30;
-    const btnX = telaCanvas.width / 2 - btnW / 2;
-    const btnY = by + 100;
-
-    ctx.fillStyle = corFaixa;
-    ctx.beginPath();
-    ctx.roundRect(btnX, btnY, btnW, btnH, 8);
-    ctx.fill();
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 13px 'Open Sans', sans-serif";
-    ctx.fillText("OK", telaCanvas.width / 2, btnY + btnH / 2 + 1);
-
-    feedbackBotaoArea = { x: btnX, y: btnY, w: btnW, h: btnH };
     feedbackAtivo = true;
+
+    const botaoFeedback = obterBotaoFeedbackHtml();
+    if (botaoFeedback) {
+        botaoFeedback.style.display = "inline-flex";
+        botaoFeedback.style.alignItems = "center";
+        botaoFeedback.style.justifyContent = "center";
+        botaoFeedback.classList.toggle("feedback-erro", tipo !== "verde");
+        botaoFeedback.focus();
+    }
 
     // Linha decorativa na base
     ctx.strokeStyle = corFaixa;
