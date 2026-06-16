@@ -941,5 +941,120 @@
       }
     ],
     "id": 41
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Qual característica ou propriedade do SGBD garante que operações simultâneas não interfiram negativamente umas nas outras?",
+    "alternativas": [
+      {
+        "texto": "Abstração",
+        "correta": false
+      },
+      {
+        "texto": "Isolamento",
+        "correta": true
+      },
+      {
+        "texto": "Autodescrição",
+        "correta": false
+      },
+      {
+        "texto": "Redundância",
+        "correta": false
+      }
+    ],
+    "id": 42
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Se um aluno pode ter vários e-mails diferentes em um BD, o e-mail é um atributo:",
+    "alternativas": [
+      {
+        "texto": "Chave",
+        "correta": false
+      },
+      {
+        "texto": "Composto",
+        "correta": false
+      },
+      {
+        "texto": "Derivado",
+        "correta": false
+      },
+      {
+        "texto": "Multivalorado",
+        "correta": true
+      }
+    ],
+    "id": 43
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Qual propriedade do SGBD permite que o usuário ou uma aplicação interaja com os dados de forma simplificada, escondendo os detalhes técnicos de onde e como eles estão armazenados?",
+    "alternativas": [
+      {
+        "texto": "Abstração",
+        "correta": true
+      },
+      {
+        "texto": "Isolamento",
+        "correta": false
+      },
+      {
+        "texto": "Atomicidade",
+        "correta": false
+      },
+      {
+        "texto": "Durabilidade",
+        "correta": false
+      }
+    ],
+    "id": 44
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Qual das alternativas representa um exemplo de atributo derivado?",
+    "alternativas": [
+      {
+        "texto": "CPF",
+        "correta": false
+      },
+      {
+        "texto": "Valor total de compra",
+        "correta": true
+      },
+      {
+        "texto": "Endereço",
+        "correta": false
+      },
+      {
+        "texto": "Telefone",
+        "correta": false
+      }
+    ],
+    "id": 45
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Qual desses não é um requisito de uma chave primária?",
+    "alternativas": [
+      {
+        "texto": "Única",
+        "correta": false
+      },
+      {
+        "texto": "Não nula",
+        "correta": false
+      },
+      {
+        "texto": "Não se repete",
+        "correta": false
+      },
+      {
+        "texto": "Deve ser Numérica",
+        "correta": true
+      }
+    ],
+    "id": 46
   }
 ]

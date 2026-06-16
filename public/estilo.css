@@ -98,14 +98,11 @@ h3 { font-size: 1.1rem;  color: var(--if-verde); font-weight: 600; }
     color: #fff;
     border: none;
     padding: 7px 16px;
-    border-radius: var(--raio);
     font-size: 0.9rem;
     font-weight: 600;
-    cursor: pointer;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    transition: background 0.2s, transform 0.1s;
 }
 
 .btn-nav-sair:hover {
@@ -394,10 +391,8 @@ canvas {
     color: #fff;
     border: none;
     padding: 12px;
-    border-radius: var(--raio);
     font-size: 1rem;
     font-weight: 700;
-    cursor: pointer;
     width: 100%;
     transition: background 0.2s, transform 0.1s;
 }
@@ -607,10 +602,8 @@ canvas {
     color: var(--if-verde-escuro);
     border: 1px solid #BDC3C7;
     padding: 6px 10px;
-    border-radius: var(--raio);
     font-size: 0.82rem;
     font-weight: 600;
-    cursor: pointer;
     min-width: 38px;
 }
 
@@ -740,16 +733,38 @@ canvas {
 }
 
 /* Botões variantes */
+.btn-entrar,
+.btn-primario,
+.btn-secundario,
+.btn-nav-sair,
+.btn-nav-outline,
+.btn-nav-outline-verde,
+.btn-outline-sm,
+.btn-perigo-sm,
+.btn-perigo-outline,
+.btn-pagina {
+    border-radius: var(--raio);
+    cursor: pointer;
+}
+
+.btn-primario,
+.btn-secundario,
+.btn-nav-sair,
+.btn-nav-outline,
+.btn-nav-outline-verde,
+.btn-outline-sm,
+.btn-perigo-sm,
+.btn-perigo-outline,
+.btn-pagina {
+    font-weight: 600;
+}
+
 .btn-primario {
     background-color: var(--if-verde);
     color: #fff;
     border: none;
     padding: 10px 20px;
-    border-radius: var(--raio);
     font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
 }
 
 .btn-primario:hover {
@@ -762,11 +777,7 @@ canvas {
     color: var(--cor-texto-claro);
     border: 1px solid #BDC3C7;
     padding: 10px 20px;
-    border-radius: var(--raio);
     font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
 }
 
 .btn-secundario:hover { background-color: var(--cor-fundo); }
@@ -786,18 +797,8 @@ canvas {
 
 
 .btn-nav-outline {
-    background-color: transparent;
     color: var(--if-vermelho);
     border: 1.5px solid var(--if-vermelho);
-    padding: 7px 16px;
-    border-radius: var(--raio);
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    transition: background 0.2s, color 0.2s;
 }
 
 .btn-nav-outline:hover {
@@ -805,16 +806,73 @@ canvas {
     color: #fff;
 }
 
-.btn-outline-sm {
-    background-color: transparent;
+.btn-nav-outline-verde {
+    background-color: #fff;
     color: var(--if-verde);
     border: 1.5px solid var(--if-verde);
-    padding: 5px 12px;
-    border-radius: var(--raio);
-    font-size: 0.82rem;
-    font-weight: 600;
-    cursor: pointer;
+}
+
+.btn-nav-outline-verde:hover {
+    background-color: var(--if-verde);
+    color: #fff;
+    border-color: var(--if-verde);
+}
+
+.btn-nav-outline,
+.btn-nav-outline-verde,
+.btn-outline-sm,
+.btn-perigo-sm,
+.btn-perigo-outline {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-entrar,
+.btn-primario,
+.btn-nav-sair {
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-secundario,
+.btn-nav-outline,
+.btn-outline-sm,
+.btn-perigo-sm,
+.btn-perigo-outline {
     transition: background 0.2s, color 0.2s;
+}
+
+.btn-nav-outline-verde {
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.btn-nav-outline,
+.btn-outline-sm,
+.btn-perigo-sm,
+.btn-perigo-outline {
+    background-color: transparent;
+}
+
+.btn-nav-outline,
+.btn-nav-outline-verde {
+    padding: 7px 16px;
+    font-size: 0.9rem;
+}
+
+.btn-outline-sm,
+.btn-perigo-sm {
+    padding: 5px 12px;
+    font-size: 0.82rem;
+}
+
+.btn-perigo-outline {
+    padding: 8px 18px;
+    font-size: 0.88rem;
+}
+
+.btn-outline-sm {
+    color: var(--if-verde);
+    border: 1.5px solid var(--if-verde);
 }
 
 .btn-outline-sm:hover {
@@ -823,15 +881,8 @@ canvas {
 }
 
 .btn-perigo-sm {
-    background-color: transparent;
     color: var(--if-vermelho);
     border: 1.5px solid var(--if-vermelho);
-    padding: 5px 12px;
-    border-radius: var(--raio);
-    font-size: 0.82rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
 }
 
 .btn-perigo-sm:hover {
@@ -840,15 +891,8 @@ canvas {
 }
 
 .btn-perigo-outline {
-    background-color: transparent;
     color: var(--if-vermelho);
     border: 1.5px solid var(--if-vermelho);
-    padding: 8px 18px;
-    border-radius: var(--raio);
-    font-size: 0.88rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
 }
 
 .btn-perigo-outline:hover {
