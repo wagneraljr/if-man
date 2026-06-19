@@ -9,11 +9,20 @@
     <script>
         if (sessionStorage.getItem("professor_autenticado") !== "true") {
             window.location.replace("login.html");
-        } else {
-            document.addEventListener("DOMContentLoaded", () => {
-                document.body.style.display = "block";
-            });
         }
+
+        async function validarSessaoProfessorSetup() {
+            try {
+                const res = await fetch("/api/admin/sessao");
+                if (!res.ok) throw new Error();
+                document.body.style.display = "block";
+            } catch {
+                sessionStorage.removeItem("professor_autenticado");
+                window.location.replace("login.html");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", validarSessaoProfessorSetup);
     </script>
 </head>
 <body class="setup-pagina">
@@ -23,7 +32,7 @@
         <span class="nav-titulo">Configurações</span>
         <div class="nav-acoes">
             <a href="painel-professor.html" class="btn-nav-outline">&larr; Voltar ao painel</a>
-            <a href="index.html" class="btn-nav-sair" onclick="sessionStorage.clear()">Sair</a>
+            <a href="index.html" class="btn-nav-sair" onclick="sairProfessor(event)">Sair</a>
         </div>
     </nav>
 
@@ -67,6 +76,17 @@
     </div>
 
     <script>
+        async function sairProfessor(event) {
+            if (event) event.preventDefault();
+            try {
+                await fetch("/api/logout", { method: "POST" });
+            } catch {
+                // segue para limpar sessão local
+            }
+            sessionStorage.removeItem("professor_autenticado");
+            window.location.href = "index.html";
+        }
+
         async function alterarSenha() {
             const atual  = document.getElementById("senha-atual").value.trim();
             const nova   = document.getElementById("senha-nova").value.trim();

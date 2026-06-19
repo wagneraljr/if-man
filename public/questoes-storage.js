@@ -61,13 +61,32 @@ async function obterCategoriasQuestoes() {
     return listarCategoriasQuestoes(await obterQuestoes());
 }
 
+async function tratarRespostaAdmin(res, erroPadrao) {
+    if (res.status === 401) {
+        sessionStorage.removeItem("professor_autenticado");
+        window.location.replace("login.html");
+        throw new Error("Sessão expirada");
+    }
+
+    if (!res.ok) {
+        let mensagem = erroPadrao;
+        try {
+            const dados = await res.json();
+            mensagem = dados.erro || mensagem;
+        } catch {
+            // mantém mensagem padrão
+        }
+        throw new Error(mensagem);
+    }
+}
+
 async function adicionarQuestao(questao) {
     const res = await fetch("/api/questoes", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify(normalizarQuestao(questao))
     });
-    if (!res.ok) throw new Error("Erro ao adicionar questão");
+    await tratarRespostaAdmin(res, "Erro ao adicionar questão");
     return res.json();
 }
 
@@ -77,11 +96,11 @@ async function atualizarQuestao(questao) {
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify(normalizarQuestao(questao))
     });
-    if (!res.ok) throw new Error("Erro ao atualizar questão");
+    await tratarRespostaAdmin(res, "Erro ao atualizar questão");
     return res.json();
 }
 
 async function excluirQuestao(id) {
     const res = await fetch(`/api/questoes/${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("Erro ao excluir questão");
+    await tratarRespostaAdmin(res, "Erro ao excluir questão");
 }

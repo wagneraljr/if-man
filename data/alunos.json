@@ -1,47 +1,5 @@
 [
   {
-    "id": "aluno_1781282925061_99144",
-    "nomeCompleto": "Aluno Teste Automatizado",
-    "apelido": "teste_1781282922",
-    "senhaHash": "e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae",
-    "historicoCompeticao": [
-      {
-        "competicaoId": 1781282925285,
-        "data": "12/06/2026",
-        "hora": "13:48",
-        "motivo": "manual",
-        "duracaoSeg": 120,
-        "pontuacao": 2000,
-        "vidas": 1,
-        "posicao": 1,
-        "totalParticipantes": 1
-      }
-    ],
-    "criadoEm": "2026-06-12T16:48:45.060Z",
-    "atualizadoEm": "2026-06-12T16:48:45.060Z"
-  },
-  {
-    "id": "aluno_1781282945573_47390",
-    "nomeCompleto": "Aluno Teste Automatizado",
-    "apelido": "teste_1781282945",
-    "senhaHash": "e9cee71ab932fde863338d08be4de9dfe39ea049bdafb342ce659ec5450b69ae",
-    "historicoCompeticao": [
-      {
-        "competicaoId": 1781282945578,
-        "data": "12/06/2026",
-        "hora": "13:49",
-        "motivo": "manual",
-        "duracaoSeg": 120,
-        "pontuacao": 2000,
-        "vidas": 1,
-        "posicao": 1,
-        "totalParticipantes": 1
-      }
-    ],
-    "criadoEm": "2026-06-12T16:49:05.573Z",
-    "atualizadoEm": "2026-06-12T16:49:05.573Z"
-  },
-  {
     "id": "aluno_1781283675740_25409",
     "nomeCompleto": "Wagner",
     "apelido": "Wagner",

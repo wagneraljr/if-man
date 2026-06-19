@@ -229,7 +229,14 @@ function verificarColisaoComResposta() {
             atualizarCombo(0);
             desenharFeedback("✗ Resposta incorreta", "Combo zerado  |  você perdeu 1 vida.", "vermelho", () => {
                 verificarDerrota();
-                if (vidas > 0) prepararNovaRodada();
+                if (vidas <= 0) return;
+
+                jogador.coluna = 9;
+                jogador.linha  = 5;
+                resetarMonstros();
+                atualizarTela();
+                desenharTelaEspera();
+                document.getElementById("btn-iniciar")?.classList.remove("oculto");
             });
         }
     }

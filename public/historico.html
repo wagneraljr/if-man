@@ -9,11 +9,20 @@
     <script>
         if (sessionStorage.getItem("professor_autenticado") !== "true") {
             window.location.replace("login.html");
-        } else {
-            document.addEventListener("DOMContentLoaded", () => {
-                document.body.style.display = "block";
-            });
         }
+
+        async function validarSessaoProfessorHistorico() {
+            try {
+                const res = await fetch("/api/admin/sessao");
+                if (!res.ok) throw new Error();
+                document.body.style.display = "block";
+            } catch {
+                sessionStorage.removeItem("professor_autenticado");
+                window.location.replace("login.html");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", validarSessaoProfessorHistorico);
     </script>
 </head>
 <body>
@@ -24,7 +33,7 @@
         <div class="nav-acoes">
             <a href="painel-competicao.html" class="btn-nav-outline">Competição 🏆</a>
             <a href="painel-professor.html"  class="btn-nav-outline">Questões</a>
-            <a href="index.html" class="btn-nav-sair" onclick="sessionStorage.clear()">Sair</a>
+            <a href="index.html" class="btn-nav-sair" onclick="sairProfessor(event)">Sair</a>
         </div>
     </nav>
 
@@ -68,6 +77,17 @@
         const MEDALHAS  = ["🥇","🥈","🥉"];
         const COR_BORDA = ["#F1C40F","#95A5A6","#CD6133"];
         const COR_FUNDO = ["#FFFDE7","#F8F9FA","#FDF3EC"];
+
+        async function sairProfessor(event) {
+            if (event) event.preventDefault();
+            try {
+                await fetch("/api/logout", { method: "POST" });
+            } catch {
+                // segue para limpar sessão local
+            }
+            sessionStorage.removeItem("professor_autenticado");
+            window.location.href = "index.html";
+        }
 
         // ── Listagem ──────────────────────────────────────────────────────────────
 

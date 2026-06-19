@@ -22,6 +22,8 @@ const ARQUIVO_CONFIG = path.join(DATA_DIR, "config.json");
 const ARQUIVO_QUEST  = path.join(DATA_DIR, "questoes.json");
 const ARQUIVO_HIST   = path.join(DATA_DIR, "historico.json");
 const ARQUIVO_ALUNOS = path.join(DATA_DIR, "alunos.json");
+const ADMIN_COOKIE_NOME = "ifman_admin_session";
+const ADMIN_SESSAO_MAX_AGE_SEG = 60 * 60 * 12; // 12 horas
 
 const CATEGORIA_PADRAO = "Informática Básica";
 
@@ -92,6 +94,47 @@ function hash(texto) {
     return crypto.createHash("sha256").update(texto).digest("hex");
 }
 
+function parseCookies(req) {
+    const header = req.headers.cookie || "";
+    const pares = header.split(";");
+    const cookies = {};
+
+    for (const par of pares) {
+        const idx = par.indexOf("=");
+        if (idx === -1) continue;
+        const chave = par.slice(0, idx).trim();
+        const valor = par.slice(idx + 1).trim();
+        cookies[chave] = decodeURIComponent(valor);
+    }
+
+    return cookies;
+}
+
+function gerarTokenSessaoAdmin() {
+    return crypto.randomBytes(32).toString("hex");
+}
+
+function definirCookieSessaoAdmin(res, token) {
+    const cookie = `${ADMIN_COOKIE_NOME}=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${ADMIN_SESSAO_MAX_AGE_SEG}`;
+    res.setHeader("Set-Cookie", cookie);
+}
+
+function limparCookieSessaoAdmin(res) {
+    const cookie = `${ADMIN_COOKIE_NOME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`;
+    res.setHeader("Set-Cookie", cookie);
+}
+
+function sanitizarAlunoAdmin(aluno) {
+    return {
+        id: aluno.id,
+        nomeCompleto: aluno.nomeCompleto,
+        apelido: aluno.apelido,
+        criadoEm: aluno.criadoEm || null,
+        atualizadoEm: aluno.atualizadoEm || null,
+        totalHistorico: Array.isArray(aluno.historicoCompeticao) ? aluno.historicoCompeticao.length : 0
+    };
+}
+
 function normalizarApelido(apelido = "") {
     return String(apelido).trim().toLowerCase();
 }
@@ -117,6 +160,7 @@ function obterAlunoPorApelido(apelido) {
 
 let config = lerJSON(ARQUIVO_CONFIG, { senhaHash: null });
 let alunos = lerJSON(ARQUIVO_ALUNOS, []);
+let sessoesAdmin = new Map();
 
 if (!Array.isArray(alunos)) {
     alunos = [];
@@ -246,6 +290,33 @@ function responderJSON(res, status, dados) {
     res.end(JSON.stringify(dados));
 }
 
+function obterSessaoAdmin(req) {
+    const cookies = parseCookies(req);
+    const token = cookies[ADMIN_COOKIE_NOME];
+    if (!token) return null;
+
+    const sessao = sessoesAdmin.get(token);
+    if (!sessao) return null;
+
+    if (Date.now() > sessao.expiraEm) {
+        sessoesAdmin.delete(token);
+        return null;
+    }
+
+    return { token, sessao };
+}
+
+function exigirAdmin(req, res) {
+    const encontrado = obterSessaoAdmin(req);
+    if (!encontrado) {
+        responderJSON(res, 401, { ok: false, erro: "Sessão do professor inválida ou expirada." });
+        return null;
+    }
+
+    encontrado.sessao.expiraEm = Date.now() + ADMIN_SESSAO_MAX_AGE_SEG * 1000;
+    return encontrado;
+}
+
 function lerCorpo(req) {
     return new Promise((resolve) => {
         let corpo = "";
@@ -276,6 +347,12 @@ const servidor = http.createServer(async (req, res) => {
         const corpo = await lerCorpo(req);
         const senhaEnviada = (corpo.senha || "").trim();
         if (hash(senhaEnviada) === config.senhaHash) {
+            const token = gerarTokenSessaoAdmin();
+            sessoesAdmin.set(token, {
+                criadoEm: Date.now(),
+                expiraEm: Date.now() + ADMIN_SESSAO_MAX_AGE_SEG * 1000
+            });
+            definirCookieSessaoAdmin(res, token);
             responderJSON(res, 200, { ok: true });
         } else {
             responderJSON(res, 401, { ok: false, erro: "Senha incorreta." });
@@ -283,8 +360,32 @@ const servidor = http.createServer(async (req, res) => {
         return;
     }
 
+    // POST /api/logout — encerra sessão do professor
+    if (metodo === "POST" && url === "/api/logout") {
+        const sessao = obterSessaoAdmin(req);
+        if (sessao) {
+            sessoesAdmin.delete(sessao.token);
+        }
+        limparCookieSessaoAdmin(res);
+        responderJSON(res, 200, { ok: true });
+        return;
+    }
+
+    // GET /api/admin/sessao — valida sessão administrativa ativa
+    if (metodo === "GET" && url === "/api/admin/sessao") {
+        const sessao = exigirAdmin(req, res);
+        if (!sessao) return;
+        definirCookieSessaoAdmin(res, sessao.token);
+        responderJSON(res, 200, { ok: true });
+        return;
+    }
+
     // POST /api/alterar-senha — professor redefine a senha
     if (metodo === "POST" && url === "/api/alterar-senha") {
+        const sessao = exigirAdmin(req, res);
+        if (!sessao) return;
+        definirCookieSessaoAdmin(res, sessao.token);
+
         const corpo = await lerCorpo(req);
         const senhaAtual = (corpo.senhaAtual || "").trim();
         const senhaNova  = (corpo.senhaNova  || "").trim();
@@ -350,6 +451,150 @@ const servidor = http.createServer(async (req, res) => {
         alunos.push(novoAluno);
         salvarJSON(ARQUIVO_ALUNOS, alunos);
         responderJSON(res, 201, { ok: true, aluno: sanitizarAluno(novoAluno) });
+        return;
+    }
+
+    // GET /api/alunos — lista alunos (uso administrativo)
+    if (metodo === "GET" && url === "/api/alunos") {
+        const sessao = exigirAdmin(req, res);
+        if (!sessao) return;
+        definirCookieSessaoAdmin(res, sessao.token);
+
+        const lista = alunos
+            .map(sanitizarAlunoAdmin)
+            .sort((a, b) => (a.nomeCompleto || "").localeCompare(b.nomeCompleto || "", "pt-BR"));
+
+        responderJSON(res, 200, { ok: true, alunos: lista });
+        return;
+    }
+
+    // POST /api/alunos — cria aluno (uso administrativo)
+    if (metodo === "POST" && url === "/api/alunos") {
+        const sessao = exigirAdmin(req, res);
+        if (!sessao) return;
+        definirCookieSessaoAdmin(res, sessao.token);
+
+        const corpo = await lerCorpo(req);
+        const nomeCompleto = (corpo.nomeCompleto || "").trim();
+        const apelido = (corpo.apelido || "").trim();
+        const senha = (corpo.senha || "").trim();
+        const apelidoNorm = normalizarApelido(apelido);
+
+        if (!nomeCompleto || !apelido || !senha) {
+            responderJSON(res, 400, { ok: false, erro: "Preencha nome completo, apelido e senha." });
+            return;
+        }
+        if (nomeCompleto.length < 3) {
+            responderJSON(res, 400, { ok: false, erro: "O nome completo deve ter ao menos 3 caracteres." });
+            return;
+        }
+        if (apelido.length < 2) {
+            responderJSON(res, 400, { ok: false, erro: "O apelido deve ter ao menos 2 caracteres." });
+            return;
+        }
+        if (senha.length < 4) {
+            responderJSON(res, 400, { ok: false, erro: "A senha deve ter ao menos 4 caracteres." });
+            return;
+        }
+        if (obterAlunoPorApelido(apelidoNorm)) {
+            responderJSON(res, 409, { ok: false, erro: "Este apelido já está em uso." });
+            return;
+        }
+
+        const agoraIso = new Date().toISOString();
+        const novoAluno = {
+            id: `aluno_${Date.now()}_${Math.floor(Math.random() * 100000)}`,
+            nomeCompleto,
+            apelido,
+            senhaHash: hash(senha),
+            historicoCompeticao: [],
+            criadoEm: agoraIso,
+            atualizadoEm: agoraIso
+        };
+
+        alunos.push(novoAluno);
+        salvarJSON(ARQUIVO_ALUNOS, alunos);
+        responderJSON(res, 201, { ok: true, aluno: sanitizarAlunoAdmin(novoAluno) });
+        return;
+    }
+
+    // PUT /api/alunos/:id — atualiza aluno (uso administrativo)
+    if (metodo === "PUT" && url.startsWith("/api/alunos/") && url.split("/").length === 4) {
+        const sessao = exigirAdmin(req, res);
+        if (!sessao) return;
+        definirCookieSessaoAdmin(res, sessao.token);
+
+        const alunoId = decodeURIComponent(url.split("/")[3]);
+        const aluno = obterAlunoPorId(alunoId);
+        if (!aluno) {
+            responderJSON(res, 404, { ok: false, erro: "Aluno não encontrado." });
+            return;
+        }
+
+        const corpo = await lerCorpo(req);
+        const nomeCompleto = (corpo.nomeCompleto || "").trim();
+        const apelido = (corpo.apelido || "").trim();
+        const senhaNova = (corpo.senha || "").trim();
+
+        if (!nomeCompleto || nomeCompleto.length < 3) {
+            responderJSON(res, 400, { ok: false, erro: "Informe um nome completo válido." });
+            return;
+        }
+        if (!apelido || apelido.length < 2) {
+            responderJSON(res, 400, { ok: false, erro: "Informe um apelido válido." });
+            return;
+        }
+
+        const conflito = alunos.find(a => a.id !== aluno.id && normalizarApelido(a.apelido) === normalizarApelido(apelido));
+        if (conflito) {
+            responderJSON(res, 409, { ok: false, erro: "Este apelido já está em uso por outro aluno." });
+            return;
+        }
+
+        aluno.nomeCompleto = nomeCompleto;
+        aluno.apelido = apelido;
+        if (senhaNova) {
+            if (senhaNova.length < 4) {
+                responderJSON(res, 400, { ok: false, erro: "A nova senha deve ter ao menos 4 caracteres." });
+                return;
+            }
+            aluno.senhaHash = hash(senhaNova);
+        }
+        aluno.atualizadoEm = new Date().toISOString();
+
+        if (estado.alunos[aluno.id]) {
+            estado.alunos[aluno.id].nome = aluno.apelido;
+        }
+        for (let i = 0; i < estado.espera.length; i++) {
+            if (estado.espera[i].alunoId === aluno.id) {
+                estado.espera[i].nome = aluno.apelido;
+            }
+        }
+
+        salvarJSON(ARQUIVO_ALUNOS, alunos);
+        responderJSON(res, 200, { ok: true, aluno: sanitizarAlunoAdmin(aluno) });
+        return;
+    }
+
+    // DELETE /api/alunos/:id — exclui aluno (uso administrativo)
+    if (metodo === "DELETE" && url.startsWith("/api/alunos/") && url.split("/").length === 4) {
+        const sessao = exigirAdmin(req, res);
+        if (!sessao) return;
+        definirCookieSessaoAdmin(res, sessao.token);
+
+        const alunoId = decodeURIComponent(url.split("/")[3]);
+        const idx = alunos.findIndex(aluno => aluno.id === alunoId);
+        if (idx === -1) {
+            responderJSON(res, 404, { ok: false, erro: "Aluno não encontrado." });
+            return;
+        }
+
+        const [removido] = alunos.splice(idx, 1);
+        delete estado.alunos[alunoId];
+        estado.espera = estado.espera.filter((item) => item.alunoId !== alunoId);
+
+        salvarJSON(ARQUIVO_ALUNOS, alunos);
+        responderJSON(res, 200, { ok: true, aluno: sanitizarAlunoAdmin(removido) });
         return;
     }
 
@@ -461,6 +706,10 @@ const servidor = http.createServer(async (req, res) => {
 
     // POST /api/questoes — adiciona nova questão
     if (metodo === "POST" && url === "/api/questoes") {
+        const sessao = exigirAdmin(req, res);
+        if (!sessao) return;
+        definirCookieSessaoAdmin(res, sessao.token);
+
         const questoes = normalizarListaQuestoes(lerJSON(ARQUIVO_QUEST, []));
         const nova     = normalizarQuestao(await lerCorpo(req));
         const maiorId  = questoes.reduce((max, q) => Math.max(max, q.id || 0), 0);
@@ -474,6 +723,10 @@ const servidor = http.createServer(async (req, res) => {
 
     // PUT /api/questoes/:id — atualiza questão existente
     if (metodo === "PUT" && url.startsWith("/api/questoes/")) {
+        const sessao = exigirAdmin(req, res);
+        if (!sessao) return;
+        definirCookieSessaoAdmin(res, sessao.token);
+
         const id      = parseInt(url.split("/")[3]);
         const questoes = normalizarListaQuestoes(lerJSON(ARQUIVO_QUEST, []));
         const idx     = questoes.findIndex(q => q.id === id);
@@ -488,6 +741,10 @@ const servidor = http.createServer(async (req, res) => {
 
     // DELETE /api/questoes/:id — remove questão
     if (metodo === "DELETE" && url.startsWith("/api/questoes/")) {
+        const sessao = exigirAdmin(req, res);
+        if (!sessao) return;
+        definirCookieSessaoAdmin(res, sessao.token);
+
         const id       = parseInt(url.split("/")[3]);
         let questoes   = normalizarListaQuestoes(lerJSON(ARQUIVO_QUEST, []));
         const tamanhoAntes = questoes.length;
@@ -516,6 +773,10 @@ const servidor = http.createServer(async (req, res) => {
 
     // POST /api/iniciar
     if (metodo === "POST" && url === "/api/iniciar") {
+        const sessao = exigirAdmin(req, res);
+        if (!sessao) return;
+        definirCookieSessaoAdmin(res, sessao.token);
+
         const corpo = await lerCorpo(req);
         estado.fase       = "rodando";
         estado.duracaoSeg = parseInt(corpo.duracaoSeg) || 600;
@@ -531,6 +792,10 @@ const servidor = http.createServer(async (req, res) => {
 
     // POST /api/encerrar
     if (metodo === "POST" && url === "/api/encerrar") {
+        const sessao = exigirAdmin(req, res);
+        if (!sessao) return;
+        definirCookieSessaoAdmin(res, sessao.token);
+
         salvarHistorico("manual");
         estado.fase = "encerrada";
         console.log(`[${new Date().toLocaleTimeString()}] Competição encerrada pelo professor`);
@@ -540,6 +805,10 @@ const servidor = http.createServer(async (req, res) => {
 
     // POST /api/resetar
     if (metodo === "POST" && url === "/api/resetar") {
+        const sessao = exigirAdmin(req, res);
+        if (!sessao) return;
+        definirCookieSessaoAdmin(res, sessao.token);
+
         if (estado.fase === "encerrada") salvarHistorico("manual"); // garante salvamento se não havia sido salvo
         estado = { fase: "aguardando", duracaoSeg: 600, inicioMs: null, categoria: "Todas", alunos: {}, espera: [], historicoSalvo: false };
         console.log(`[${new Date().toLocaleTimeString()}] Estado resetado`);
@@ -666,6 +935,10 @@ const servidor = http.createServer(async (req, res) => {
 
     // GET /api/historico — lista todas as competições (resumo sem ranking completo)
     if (metodo === "GET" && url === "/api/historico") {
+        const sessao = exigirAdmin(req, res);
+        if (!sessao) return;
+        definirCookieSessaoAdmin(res, sessao.token);
+
         const historico = lerJSON(ARQUIVO_HIST, []);
         const resumo = historico.map(({ id, data, hora, duracaoSeg, motivo, participantes, ranking }) => ({
             id, data, hora, duracaoSeg, motivo, participantes,
@@ -677,6 +950,10 @@ const servidor = http.createServer(async (req, res) => {
 
     // GET /api/historico/:id — detalhes completos de uma competição
     if (metodo === "GET" && url.startsWith("/api/historico/") && url.split("/").length === 4) {
+        const sessao = exigirAdmin(req, res);
+        if (!sessao) return;
+        definirCookieSessaoAdmin(res, sessao.token);
+
         const id        = parseInt(url.split("/")[3]);
         const historico = lerJSON(ARQUIVO_HIST, []);
         const comp      = historico.find(h => h.id === id);
@@ -687,6 +964,10 @@ const servidor = http.createServer(async (req, res) => {
 
     // DELETE /api/historico/:id — remove uma competição do histórico
     if (metodo === "DELETE" && url.startsWith("/api/historico/")) {
+        const sessao = exigirAdmin(req, res);
+        if (!sessao) return;
+        definirCookieSessaoAdmin(res, sessao.token);
+
         const id  = parseInt(url.split("/")[3]);
         let hist  = lerJSON(ARQUIVO_HIST, []);
         hist      = hist.filter(h => h.id !== id);

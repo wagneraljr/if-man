@@ -11,11 +11,20 @@
     <script>
         if (sessionStorage.getItem("professor_autenticado") !== "true") {
             window.location.replace("login.html");
-        } else {
-            document.addEventListener("DOMContentLoaded", () => {
-                document.body.style.display = "block";
-            });
         }
+
+        async function validarSessaoProfessorCompeticao() {
+            try {
+                const res = await fetch("/api/admin/sessao");
+                if (!res.ok) throw new Error();
+                document.body.style.display = "block";
+            } catch {
+                sessionStorage.removeItem("professor_autenticado");
+                window.location.replace("login.html");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", validarSessaoProfessorCompeticao);
     </script>
 </head>
 <body>
@@ -26,7 +35,7 @@
         <div class="nav-acoes">
             <a href="painel-professor.html" class="btn-nav-outline">Questões</a>
             <a href="historico.html" class="btn-nav-outline">📋 Histórico</a>
-            <a href="index.html" class="btn-nav-sair" onclick="sessionStorage.clear()">Sair</a>
+            <a href="index.html" class="btn-nav-sair" onclick="sairProfessor(event)">Sair</a>
         </div>
     </nav>
 
@@ -126,6 +135,17 @@
         let faseAtual          = "aguardando";
         let rankingAtual       = []; // cache do ranking para exportação
         let categoriaSelecionada = "Todas";
+
+        async function sairProfessor(event) {
+            if (event) event.preventDefault();
+            try {
+                await fetch("/api/logout", { method: "POST" });
+            } catch {
+                // segue para limpar sessão local
+            }
+            sessionStorage.removeItem("professor_autenticado");
+            window.location.href = "index.html";
+        }
 
         // ── Duração ────────────────────────────────────────────────────────────
 
