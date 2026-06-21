@@ -1,6 +1,6 @@
 let bancoDeQuestoes     = [];
 let indicePerguntaAtual = 0;
-let acertosConsecutivos = 0;  // combo de acertos seguidos
+let acertosConsecutivos = 0;
 let acaoAposFeedback    = null;
 let feedbackAtivo       = false;
 let feedbackVisualAtual = null;
@@ -51,7 +51,6 @@ async function carregarBancoDeQuestoes() {
         const todasQuestoes = await obterQuestoes();
         bancoDeQuestoes = filtrarQuestoesPorCategoria(todasQuestoes, obterCategoriaRodada());
     } catch {
-        // Mostra erro no canvas em vez de alert bloqueante
         desenharTelaErro(
             "Erro ao carregar questões",
             "Verifique se o servidor está rodando e recarregue a página."
@@ -60,7 +59,6 @@ async function carregarBancoDeQuestoes() {
     }
 
     if (bancoDeQuestoes.length === 0) {
-        // Mostra tela de erro amigável no canvas
         desenharTelaErro(
             "Nenhuma questão disponível",
             "Não há questões nessa categoria. Volte e escolha outra categoria ou cadastre mais perguntas."
@@ -68,9 +66,7 @@ async function carregarBancoDeQuestoes() {
         return;
     }
 
-    // Embaralha a ordem das questões a cada partida
     embaralharBancoQuestoes();
-
     prepararRodadaInicial();
 }
 
@@ -79,14 +75,12 @@ function carregarPergunta() {
 }
 
 // ─── DESENHO DAS SALAS 3×2 ───────────────────────────────────────────────────
-// Cada sala ocupa LARGURA_SALA colunas × ALTURA_SALA linhas.
-// A posição registrada é o canto superior-esquerdo (coluna, linha).
 
 function desenharAlternativas(ctx) {
     let alternativas = bancoDeQuestoes[indicePerguntaAtual].alternativas;
     let bs = tamanhoBloco;
-    let sw = LARGURA_SALA * bs;   // largura total da sala em px
-    let sh = ALTURA_SALA  * bs;   // altura  total da sala em px
+    let sw = LARGURA_SALA * bs;
+    let sh = ALTURA_SALA  * bs;
 
     for (let i = 0; i < alternativas.length; i++) {
         let alt = alternativas[i];
@@ -94,7 +88,6 @@ function desenharAlternativas(ctx) {
         let x = pos.coluna * bs;
         let y = pos.linha  * bs;
 
-        // Fundo da sala
         ctx.save();
         ctx.shadowColor = "rgba(0,200,50,0.4)";
         ctx.shadowBlur = 6;
@@ -104,17 +97,14 @@ function desenharAlternativas(ctx) {
         ctx.fillStyle = grad;
         ctx.fillRect(x, y, sw, sh);
 
-        // Borda neon
         ctx.strokeStyle = "#00e040";
         ctx.lineWidth = 2;
         ctx.strokeRect(x + 1, y + 1, sw - 2, sh - 2);
 
-        // Reflexo superior
         ctx.fillStyle = "rgba(100,255,120,0.08)";
         ctx.fillRect(x + 2, y + 2, sw - 4, sh * 0.3);
         ctx.restore();
 
-        // ── Texto da alternativa centralizado na sala ──
         ctx.save();
         ctx.fillStyle = "#ffffff";
         ctx.font = `${bs * 0.37}px 'Courier New', monospace`;
@@ -125,8 +115,6 @@ function desenharAlternativas(ctx) {
         let linhas = quebrarTexto(ctx, alt.texto, maxW);
         let alturaLinha = bs * 0.4;
         let totalAltura = linhas.length * alturaLinha;
-
-        // Centraliza verticalmente na sala inteira
         let startY = y + (sh - totalAltura) / 2 + alturaLinha / 2;
 
         for (let l = 0; l < linhas.length; l++) {
@@ -162,9 +150,6 @@ function verificarColisaoComResposta() {
 
     for (let i = 0; i < alternativas.length; i++) {
         let pos = posicoesRespostasAtuais[i];
-
-        // Exige que o jogador chegue à coluna CENTRAL da sala (col+1 de 3)
-        // evitando disparar ao apenas roçar a borda da sala pelo corredor adjacente.
         let colunaConfirmacao = pos.coluna + 1;
         let dentroColuna = jogador.coluna === colunaConfirmacao;
         let dentroLinha  = jogador.linha >= pos.linha && jogador.linha < pos.linha + ALTURA_SALA;
@@ -176,18 +161,13 @@ function verificarColisaoComResposta() {
     }
 
     if (tocouEmAlguma) {
-        // Pausa o jogo imediatamente para exibir feedback
         pausarRodada(false);
 
         if (acertou) {
             acertosConsecutivos++;
 
-            // ── Bônus de exploração (pontinhos coletados na rodada) ───────────
-            // A cada 5 pontinhos coletados, ganha +100pts no prêmio da questão
             const bonusExplora = Math.min(20, Math.floor(pontinhosColecionados / 5)) * 100;
 
-            // ── Multiplicador de combo (acertos consecutivos) ─────────────────
-            // 1 acerto = ×1 | 2 = ×1.5 | 3 = ×2 | 4+ = ×3
             const multCombo = acertosConsecutivos >= 4 ? 3
                             : acertosConsecutivos === 3 ? 2
                             : acertosConsecutivos === 2 ? 1.5
@@ -198,11 +178,14 @@ function verificarColisaoComResposta() {
 
             pontuacao += totalAcerto;
             vidas++;
+
+            // ── Som de acerto ──
+            tocarSom("acerto");
+
             aumentarVelocidade();
             atualizarPlacar();
             atualizarCombo(acertosConsecutivos);
 
-            // Monta linha de detalhes do feedback
             let detalhes = `+${totalAcerto} pts`;
             if (multCombo > 1)    detalhes += `  |  combo ×${multCombo}`;
             if (bonusExplora > 0) detalhes += `  |  exploração +${bonusExplora}`;
@@ -214,8 +197,6 @@ function verificarColisaoComResposta() {
             if (ultimaQuestao) {
                 indicePerguntaAtual = 0;
                 embaralharBancoQuestoes();
-            } else {
-                // mantém o índice já avançado
             }
 
             desenharFeedback("✓ Resposta correta!", detalhes, "verde", () => {
@@ -223,8 +204,12 @@ function verificarColisaoComResposta() {
             });
 
         } else {
-            acertosConsecutivos = 0; // quebra o combo
+            acertosConsecutivos = 0;
             vidas--;
+
+            // ── Som de erro ──
+            tocarSom("erro");
+
             atualizarPlacar();
             atualizarCombo(0);
             desenharFeedback("✗ Resposta incorreta", "Combo zerado  |  você perdeu 1 vida.", "vermelho", () => {
@@ -244,7 +229,7 @@ function verificarColisaoComResposta() {
     return tocouEmAlguma;
 }
 
-// ── Feedback visual no canvas (acerto / erro) ─────────────────────────────────
+// ── Feedback visual no canvas ─────────────────────────────────────────────────
 
 function ocultarFeedbackVisual() {
     feedbackAtivo = false;
@@ -263,7 +248,6 @@ function desenharFeedbackNoCanvas(titulo, subtitulo, tipo) {
     if (!ctx || !telaCanvas) return;
     const corFaixa = tipo === "verde" ? "#2F9E41" : "#CD191E";
 
-    // Overlay leve
     ctx.fillStyle = "rgba(0,0,10,0.55)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -271,19 +255,15 @@ function desenharFeedbackNoCanvas(titulo, subtitulo, tipo) {
     let bx = (telaCanvas.width  - bw) / 2;
     let by = (telaCanvas.height - bh) / 2;
 
-    // Sombra
     ctx.fillStyle = "rgba(0,0,0,0.3)";
     ctx.beginPath(); ctx.roundRect(bx+4, by+4, bw, bh, 8); ctx.fill();
 
-    // Fundo branco
     ctx.fillStyle = "#ffffff";
     ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 8); ctx.fill();
 
-    // Faixa colorida no topo
     ctx.fillStyle = corFaixa;
     ctx.beginPath(); ctx.roundRect(bx, by, bw, 38, [8, 8, 0, 0]); ctx.fill();
 
-    // Título
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 15px 'Open Sans', sans-serif";
     ctx.textAlign = "center";
@@ -291,7 +271,6 @@ function desenharFeedbackNoCanvas(titulo, subtitulo, tipo) {
     ctx.shadowBlur = 0;
     ctx.fillText(titulo, telaCanvas.width / 2, by + 19);
 
-    // Subtítulo
     ctx.fillStyle = "#2D3436";
     ctx.font = "13px 'Open Sans', sans-serif";
     ctx.fillText(subtitulo, telaCanvas.width / 2, by + 78);
@@ -306,7 +285,6 @@ function desenharFeedbackNoCanvas(titulo, subtitulo, tipo) {
         botaoFeedback.focus();
     }
 
-    // Linha decorativa na base
     ctx.strokeStyle = corFaixa;
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -326,7 +304,6 @@ function redesenharFeedbackAtivo() {
 
 function confirmarFeedbackVisual() {
     ocultarFeedbackVisual();
-
     const acao = acaoAposFeedback;
     acaoAposFeedback = null;
     if (typeof acao === "function") acao();
@@ -334,10 +311,6 @@ function confirmarFeedbackVisual() {
 
 function desenharFeedback(titulo, subtitulo, tipo, onConfirm = null) {
     feedbackVisualAtual = { titulo, subtitulo, tipo };
-
-    // Sempre desenha no canvas para garantir feedback mesmo se houver
-    // qualquer problema visual/empilhamento com o modal HTML.
     desenharFeedbackNoCanvas(titulo, subtitulo, tipo);
-
     acaoAposFeedback = typeof onConfirm === "function" ? onConfirm : null;
 }

@@ -9,12 +9,6 @@ let jogador = {
 };
 
 // ─── Máquina de estados dos fantasmas ────────────────────────────────────────
-// Estados:
-//   "nacasa"     — dentro da casa, aguardando para sair
-//   "saindo"     — subindo pela coluna 9 até o portão (linha 5)
-//   "ativo"      — perseguindo ou fugindo normalmente no labirinto
-//   "retornando" — foi comido, volta como olhos até a entrada da casa
-
 const posicoesNaCasa = [
     { coluna: 8,  linha: 7 },
     { coluna: 9,  linha: 7 },
@@ -40,8 +34,8 @@ let tempoPoder;
 let fimDoPoderEm       = 0;
 let intervaloPiscaPoder = null;
 let bocaTick           = 0;
-let emColisao          = false; // guarda para evitar múltiplos triggers simultâneos
-let pontinhosColecionados = 0;  // pontinhos coletados nesta rodada (para o bônus)
+let emColisao          = false;
+let pontinhosColecionados = 0;
 
 // ─── Poder ────────────────────────────────────────────────────────────────────
 
@@ -104,7 +98,7 @@ function resetarMonstros() {
     }
 }
 
-// ─── Desenho do IF-Man (formando com capelo) ─────────────────────────────────
+// ─── Desenho do IF-Man ────────────────────────────────────────────────────────
 
 function desenharJogador(contexto) {
     bocaTick += 0.25;
@@ -126,8 +120,6 @@ function desenharJogador(contexto) {
     let anguloFim    = rotacao + (2 - abertura) * Math.PI;
 
     contexto.save();
-
-    // Corpo verde IF
     contexto.shadowColor = "rgba(47, 158, 65, 0.6)";
     contexto.shadowBlur  = 10;
     contexto.fillStyle   = "#2F9E41";
@@ -136,50 +128,6 @@ function desenharJogador(contexto) {
     contexto.arc(centroX, centroY, raio, anguloInicio, anguloFim);
     contexto.closePath();
     contexto.fill();
-
-    /* Olho
-    let olhoAngulo = rotacao - Math.PI / 4;
-    let olhoX = centroX + Math.cos(olhoAngulo) * raio * 0.48;
-    let olhoY = centroY + Math.sin(olhoAngulo) * raio * 0.48;
-    contexto.shadowBlur = 0;
-    contexto.fillStyle  = "white";
-    contexto.beginPath();
-    contexto.arc(olhoX, olhoY, 4, 0, Math.PI * 2);
-    contexto.fill();
-    contexto.fillStyle = "#000010";
-    contexto.beginPath();
-    contexto.arc(olhoX + Math.cos(rotacao) * 1.5, olhoY + Math.sin(rotacao) * 1.5, 2, 0, Math.PI * 2);
-    contexto.fill();
-
-    // Capelo — fixo no topo independente da direção
-    let topoY    = centroY - raio;
-    let abaLarg  = raio * 1.6;
-    let abaAltu  = raio * 0.22;
-    let caixaLarg = abaLarg * 0.45;
-    let caixaAltu = raio * 0.28;
-
-    contexto.fillStyle = "#1D6B2A";
-    contexto.fillRect(centroX - abaLarg / 2, topoY - abaAltu / 2, abaLarg, abaAltu);
-    contexto.fillRect(centroX - caixaLarg / 2, topoY - abaAltu / 2 - caixaAltu, caixaLarg, caixaAltu);
-
-    // Borla dourada
-    let borlaBaseX = centroX + abaLarg * 0.38;
-    let borlaBaseY = topoY;
-    let borlaCompr = raio * 0.55;
-
-    contexto.strokeStyle = "#F1C40F";
-    contexto.lineWidth   = 2;
-    contexto.lineCap     = "round";
-    contexto.beginPath();
-    contexto.moveTo(borlaBaseX, borlaBaseY);
-    contexto.lineTo(borlaBaseX + borlaCompr * 0.5, borlaBaseY + borlaCompr);
-    contexto.stroke();
-
-    contexto.fillStyle = "#F1C40F";
-    contexto.beginPath();
-    contexto.arc(borlaBaseX + borlaCompr * 0.5, borlaBaseY + borlaCompr + 3, 3.5, 0, Math.PI * 2);
-    contexto.fill();
-*/
     contexto.restore();
 }
 
@@ -310,12 +258,16 @@ function verificarColisaoComMonstro() {
                 m.estado = "retornando";
                 pontuacao += 200;
                 atualizarPlacar();
+                // ── Som: comeu fantasma ──
+                tocarSom("comer-fantasma");
             } else {
                 emColisao = true;
                 vidas--;
                 acertosConsecutivos = 0;
                 atualizarPlacar();
                 atualizarCombo(0);
+                // ── Som: capturado ──
+                tocarSom("captura");
                 pausarRodada(false);
                 desenharFeedback("Você foi capturado!", `Combo zerado | Vidas restantes: ${vidas}`, "vermelho", () => {
                     verificarDerrota();
@@ -338,7 +290,7 @@ function verificarColisaoComMonstro() {
     }
 }
 
-// ─── Verificação de colisão entre monstros ────────────────────────────────────
+// ─── Colisão entre monstros ───────────────────────────────────────────────────
 
 function temOutroMonstro(linhaTestada, colunaTestada, meuIndice) {
     for (let i = 0; i < monstros.length; i++) {
@@ -355,10 +307,8 @@ function temOutroMonstro(linhaTestada, colunaTestada, meuIndice) {
 function celulaEhAcessivelParaMonstro(linha, coluna, opcoes = {}) {
     const { permitirPortao = false } = opcoes;
     const celula = labirinto[linha]?.[coluna];
-
     if (celula === undefined || celula === 1 || celula === 5) return false;
     if (celula === 6) return permitirPortao;
-
     return true;
 }
 
@@ -374,7 +324,6 @@ function obterMovimentosValidosMonstro(monstro, indice, opcoes = {}) {
         { linha: monstro.linha,     coluna: monstro.coluna - 1 },
         { linha: monstro.linha,     coluna: monstro.coluna + 1 }
     ];
-
     return vizinhos.filter((vizinho) => {
         return celulaEhAcessivelParaMonstro(vizinho.linha, vizinho.coluna, opcoes) &&
             !temOutroMonstro(vizinho.linha, vizinho.coluna, indice);
@@ -406,7 +355,6 @@ function calcularMapaDistancias(alvos, opcoes = {}) {
             const vizinho = vizinhos[i];
             if (!celulaEhAcessivelParaMonstro(vizinho.linha, vizinho.coluna, opcoes)) continue;
             if (distancias[vizinho.linha][vizinho.coluna] <= distanciaAtual + 1) continue;
-
             distancias[vizinho.linha][vizinho.coluna] = distanciaAtual + 1;
             fila.push(vizinho);
         }
@@ -425,13 +373,9 @@ function escolherMovimentoPorDistancia(monstro, indice, mapaDistancias, estrateg
     for (let i = 0; i < movimentos.length; i++) {
         const movimento = movimentos[i];
         const distancia = mapaDistancias[movimento.linha]?.[movimento.coluna] ?? Infinity;
-        const valor = Number.isFinite(distancia)
-            ? distancia
-            : (estrategia === "fugir" ? 9999 : Infinity);
+        const valor = Number.isFinite(distancia) ? distancia : (estrategia === "fugir" ? 9999 : Infinity);
 
-        const ehMelhor = estrategia === "fugir"
-            ? valor > melhorValor
-            : valor < melhorValor;
+        const ehMelhor = estrategia === "fugir" ? valor > melhorValor : valor < melhorValor;
 
         if (ehMelhor) {
             melhorValor = valor;
@@ -458,7 +402,6 @@ function moverMonstros() {
     for (let i = 0; i < monstros.length; i++) {
         let m = monstros[i];
 
-        // ── Na casa: aguarda delay e verifica saída livre ─────────────────────
         if (m.estado === "nacasa") {
             if (agora >= m.tickSaida) {
                 if (!temOutroMonstro(m.linha, COLUNA_SAIDA, i) &&
@@ -472,7 +415,6 @@ function moverMonstros() {
             continue;
         }
 
-        // ── Saindo: sobe linha por linha até a linha livre ────────────────────
         if (m.estado === "saindo") {
             if (m.linha > LINHA_FORA) {
                 let linhaDestino = m.linha - 1;
@@ -486,7 +428,6 @@ function moverMonstros() {
             continue;
         }
 
-        // ── Retornando: volta ao portão sem atravessar paredes ────────────────
         if (m.estado === "retornando") {
             if (m.coluna === COLUNA_SAIDA && m.linha === LINHA_PORTAO) {
                 m.linha     = posicoesNaCasa[i].linha;
@@ -495,13 +436,8 @@ function moverMonstros() {
                 m.tickSaida = Date.now() + 3000;
             } else {
                 const proximoPasso = escolherMovimentoPorDistancia(
-                    m,
-                    i,
-                    distanciasAtePortao,
-                    "perseguir",
-                    { permitirPortao: true }
+                    m, i, distanciasAtePortao, "perseguir", { permitirPortao: true }
                 );
-
                 if (proximoPasso) {
                     m.coluna = proximoPasso.coluna;
                     m.linha  = proximoPasso.linha;
@@ -510,14 +446,10 @@ function moverMonstros() {
             continue;
         }
 
-        // ── Ativo: perseguição / fuga pela menor rota válida do labirinto ─────
         const melhorMovimento = escolherMovimentoPorDistancia(
-            m,
-            i,
-            distanciasAteJogador,
+            m, i, distanciasAteJogador,
             poderAtivo ? "fugir" : "perseguir"
         );
-
         if (melhorMovimento) {
             m.coluna = melhorMovimento.coluna;
             m.linha  = melhorMovimento.linha;
@@ -525,7 +457,6 @@ function moverMonstros() {
     }
 
     verificarColisaoComMonstro();
-    // atualizarTela() é chamado pelo tickMonstros em motor.js
 }
 
 // ─── Movimento do jogador ─────────────────────────────────────────────────────

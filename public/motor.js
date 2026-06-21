@@ -12,6 +12,208 @@ const VELOCIDADE_MINIMA  = 220;  // ms — teto máximo de velocidade
 const REDUCAO_POR_ACERTO = 40;   // ms reduzidos a cada questão correta
 let   velocidadeAtual    = VELOCIDADE_INICIAL;
 
+// ── Movimento contínuo ───────────────────────────────────────────────────────
+// O jogador continua se movendo na última direção pressionada.
+// A tecla pressionada é armazenada e aplicada a cada tick do loop.
+let direcaoAtual    = null; // "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight"
+let direcaoPendente = null; // próxima direção (fila de 1 input)
+let intervaloMovimento = null;
+const INTERVALO_MOVIMENTO_MS = 150; // ms entre cada passo do jogador
+
+const TECLAS_MOVIMENTO = new Set([
+    "ArrowUp","ArrowDown","ArrowLeft","ArrowRight",
+    "w","W","s","S","a","A","d","D"
+]);
+
+function normalizarTecla(tecla) {
+    const mapa = { w:"ArrowUp", W:"ArrowUp", s:"ArrowDown", S:"ArrowDown",
+                   a:"ArrowLeft", A:"ArrowLeft", d:"ArrowRight", D:"ArrowRight" };
+    return mapa[tecla] || tecla;
+}
+
+// Chamado pelo keydown — armazena direção pendente
+function registrarDirecao(evento) {
+    if (!jogoAtivo || vidas <= 0 || emColisao) return;
+    const tecla = evento.key;
+    if (!TECLAS_MOVIMENTO.has(tecla)) return;
+    evento.preventDefault();
+    direcaoPendente = normalizarTecla(tecla);
+}
+
+// Tenta aplicar a direção pendente; se não couber, mantém a atual
+function tentarMoverJogador() {
+    if (!jogoAtivo || vidas <= 0 || emColisao) return;
+    if (typeof feedbackAtivo !== "undefined" && feedbackAtivo) return;
+
+    // Tenta direção pendente primeiro
+    if (direcaoPendente) {
+        const moveu = aplicarMovimento(direcaoPendente);
+        if (moveu) {
+            direcaoAtual    = direcaoPendente;
+            direcaoPendente = null;
+            return;
+        }
+    }
+
+    // Mantém direção atual
+    if (direcaoAtual) {
+        aplicarMovimento(direcaoAtual);
+    }
+}
+
+// Executa um passo na direção indicada; retorna true se moveu
+function aplicarMovimento(tecla) {
+    let proximaColuna = jogador.coluna;
+    let proximaLinha  = jogador.linha;
+
+    if      (tecla === "ArrowUp")    { proximaLinha--;  jogador.direcao = "up";    }
+    else if (tecla === "ArrowDown")  { proximaLinha++;  jogador.direcao = "down";  }
+    else if (tecla === "ArrowLeft")  { proximaColuna--; jogador.direcao = "left";  }
+    else if (tecla === "ArrowRight") { proximaColuna++; jogador.direcao = "right"; }
+    else return false;
+
+    const cel = labirinto[proximaLinha]?.[proximaColuna];
+    if (cel === undefined || cel === 1 || cel === 5 || cel === 6) {
+        // Restaura direção visual (sem mover)
+        return false;
+    }
+
+    jogador.coluna = proximaColuna;
+    jogador.linha  = proximaLinha;
+
+    const item = labirinto[jogador.linha][jogador.coluna];
+    if (item === 2) {
+        labirinto[jogador.linha][jogador.coluna] = 0;
+        pontuacao += 50;
+        pontinhosColecionados++;
+        atualizarPlacar();
+        tocarSom("pontinho");
+    } else if (item === 3) {
+        labirinto[jogador.linha][jogador.coluna] = 0;
+        pontuacao += 200;
+        pontinhosColecionados += 4;
+        atualizarPlacar();
+        ativarPoder();
+        tocarSom("poder");
+    }
+
+    const respondeuQuestao = verificarColisaoComResposta();
+    if (!respondeuQuestao) {
+        verificarColisaoComMonstro();
+        atualizarTela();
+    }
+
+    return true;
+}
+
+// ── Sons sintéticos (Web Audio API) ─────────────────────────────────────────
+// Não usa arquivos externos. Gera sons proceduralmente.
+let audioCtx = null;
+
+function obterAudioCtx() {
+    if (!audioCtx) {
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch {
+            return null;
+        }
+    }
+    // Retoma se suspenso (política de autoplay do navegador)
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+}
+
+function tocarSom(tipo) {
+    const ctx = obterAudioCtx();
+    if (!ctx) return;
+
+    const agora = ctx.currentTime;
+
+    switch (tipo) {
+        case "pontinho": {
+            // Bipe curto e agudo
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.type = "square";
+            osc.frequency.setValueAtTime(880, agora);
+            osc.frequency.exponentialRampToValueAtTime(440, agora + 0.06);
+            gain.gain.setValueAtTime(0.08, agora);
+            gain.gain.exponentialRampToValueAtTime(0.001, agora + 0.07);
+            osc.start(agora); osc.stop(agora + 0.07);
+            break;
+        }
+        case "poder": {
+            // Glissando ascendente
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.type = "sawtooth";
+            osc.frequency.setValueAtTime(200, agora);
+            osc.frequency.exponentialRampToValueAtTime(800, agora + 0.3);
+            gain.gain.setValueAtTime(0.12, agora);
+            gain.gain.exponentialRampToValueAtTime(0.001, agora + 0.35);
+            osc.start(agora); osc.stop(agora + 0.35);
+            break;
+        }
+        case "acerto": {
+            // Dois bipes ascendentes — recompensa
+            [0, 0.12].forEach((offset, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.type = "triangle";
+                osc.frequency.setValueAtTime(i === 0 ? 523 : 784, agora + offset);
+                gain.gain.setValueAtTime(0.15, agora + offset);
+                gain.gain.exponentialRampToValueAtTime(0.001, agora + offset + 0.1);
+                osc.start(agora + offset); osc.stop(agora + offset + 0.1);
+            });
+            break;
+        }
+        case "erro": {
+            // Tom grave descendente — penalidade
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.type = "sawtooth";
+            osc.frequency.setValueAtTime(300, agora);
+            osc.frequency.exponentialRampToValueAtTime(80, agora + 0.35);
+            gain.gain.setValueAtTime(0.18, agora);
+            gain.gain.exponentialRampToValueAtTime(0.001, agora + 0.38);
+            osc.start(agora); osc.stop(agora + 0.38);
+            break;
+        }
+        case "captura": {
+            // Queda rápida — capturado por fantasma
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.type = "square";
+            osc.frequency.setValueAtTime(400, agora);
+            osc.frequency.exponentialRampToValueAtTime(50, agora + 0.5);
+            gain.gain.setValueAtTime(0.2, agora);
+            gain.gain.exponentialRampToValueAtTime(0.001, agora + 0.52);
+            osc.start(agora); osc.stop(agora + 0.52);
+            break;
+        }
+        case "comer-fantasma": {
+            // Bipe invertido — comeu um fantasma
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(150, agora);
+            osc.frequency.exponentialRampToValueAtTime(600, agora + 0.15);
+            gain.gain.setValueAtTime(0.2, agora);
+            gain.gain.exponentialRampToValueAtTime(0.001, agora + 0.18);
+            osc.start(agora); osc.stop(agora + 0.18);
+            break;
+        }
+    }
+}
+
+// ── Placar e HUD ─────────────────────────────────────────────────────────────
+
 function atualizarPlacar() {
     document.getElementById("pontos").innerText = pontuacao;
     let coracoes = "";
@@ -47,7 +249,6 @@ function feedbackEstaAtivo() {
 
 function verificarDerrota() {
     if (vidas <= 0) {
-        // Para os monstros imediatamente antes de exibir game over
         pausarRodada();
         desenharTelaErro(
             "Fim de Jogo!",
@@ -85,36 +286,30 @@ function atualizarTela() {
     }
 }
 
-// ── Tela de espera desenhada sobre o canvas ───────────────────────────────────
+// ── Tela de espera ────────────────────────────────────────────────────────────
 function desenharTelaEspera() {
-    // Overlay escuro semi-transparente
     contexto.fillStyle = "rgba(0, 0, 10, 0.75)";
     contexto.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Caixa central no estilo IF
     let bw = 440, bh = 120;
     let bx = (canvas.width  - bw) / 2;
     let by = (canvas.height - bh) / 2;
 
-    // Sombra da caixa
     contexto.fillStyle = "rgba(0,0,0,0.4)";
     contexto.beginPath();
     contexto.roundRect(bx + 4, by + 4, bw, bh, 8);
     contexto.fill();
 
-    // Fundo da caixa — branco institucional
     contexto.fillStyle = "#ffffff";
     contexto.beginPath();
     contexto.roundRect(bx, by, bw, bh, 8);
     contexto.fill();
 
-    // Faixa verde no topo da caixa (identidade IF)
     contexto.fillStyle = "#2F9E41";
     contexto.beginPath();
     contexto.roundRect(bx, by, bw, 36, [8, 8, 0, 0]);
     contexto.fill();
 
-    // Título na faixa verde
     contexto.fillStyle = "#ffffff";
     contexto.font = "bold 15px 'Open Sans', sans-serif";
     contexto.textAlign = "center";
@@ -122,12 +317,10 @@ function desenharTelaEspera() {
     contexto.shadowBlur = 0;
     contexto.fillText("Leia a pergunta com atenção", canvas.width / 2, by + 18);
 
-    // Subtexto no corpo branco
     contexto.fillStyle = "#2D3436";
     contexto.font = "13px 'Open Sans', sans-serif";
     contexto.fillText("Clique em  ▶ Iniciar Rodada  quando estiver pronto", canvas.width / 2, by + 72);
 
-    // Linha decorativa verde IF na base da caixa
     contexto.strokeStyle = "#2F9E41";
     contexto.lineWidth = 3;
     contexto.beginPath();
@@ -136,39 +329,32 @@ function desenharTelaEspera() {
     contexto.stroke();
 }
 
-
-// ── Tela de erro desenhada sobre o canvas ─────────────────────────────────────
+// ── Tela de erro ──────────────────────────────────────────────────────────────
 function desenharTelaErro(titulo, subtitulo) {
     contexto.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Fundo escuro
     contexto.fillStyle = "#000010";
     contexto.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Caixa central
     let bw = 500, bh = 150;
     let bx = (canvas.width  - bw) / 2;
     let by = (canvas.height - bh) / 2;
 
-    // Sombra
     contexto.fillStyle = "rgba(0,0,0,0.4)";
     contexto.beginPath();
     contexto.roundRect(bx + 4, by + 4, bw, bh, 8);
     contexto.fill();
 
-    // Fundo branco
     contexto.fillStyle = "#ffffff";
     contexto.beginPath();
     contexto.roundRect(bx, by, bw, bh, 8);
     contexto.fill();
 
-    // Faixa vermelha no topo
     contexto.fillStyle = "#CD191E";
     contexto.beginPath();
     contexto.roundRect(bx, by, bw, 40, [8, 8, 0, 0]);
     contexto.fill();
 
-    // Título na faixa vermelha
     contexto.fillStyle = "#ffffff";
     contexto.font = "bold 15px 'Open Sans', sans-serif";
     contexto.textAlign = "center";
@@ -176,12 +362,10 @@ function desenharTelaErro(titulo, subtitulo) {
     contexto.shadowBlur = 0;
     contexto.fillText(titulo, canvas.width / 2, by + 20);
 
-    // Subtítulo no corpo branco
     contexto.fillStyle = "#2D3436";
     contexto.font = "13px 'Open Sans', sans-serif";
     contexto.fillText(subtitulo, canvas.width / 2, by + 80);
 
-    // Linha decorativa vermelha na base
     contexto.strokeStyle = "#CD191E";
     contexto.lineWidth = 3;
     contexto.beginPath();
@@ -193,11 +377,17 @@ function desenharTelaErro(titulo, subtitulo) {
 // ── Controle de pausa/início ──────────────────────────────────────────────────
 function pausarRodada(exibirBotaoIniciar = true) {
     jogoAtivo = false;
+    direcaoAtual    = null;
+    direcaoPendente = null;
     if (intervaloMonstros) {
         clearInterval(intervaloMonstros);
         intervaloMonstros = null;
     }
-    window.removeEventListener("keydown", moverJogador);
+    if (intervaloMovimento) {
+        clearInterval(intervaloMovimento);
+        intervaloMovimento = null;
+    }
+    window.removeEventListener("keydown", registrarDirecao);
     const botaoIniciar = document.getElementById("btn-iniciar");
     if (!botaoIniciar) return;
 
@@ -214,26 +404,32 @@ function iniciarRodada() {
     if (vidas <= 0) return;
     if (feedbackEstaAtivo()) return;
 
+    // Retoma o AudioContext (necessário após gesto do usuário)
+    obterAudioCtx();
+
     jogoAtivo = true;
     document.getElementById("btn-iniciar").classList.add("oculto");
-    // Redesenha sem o overlay
     atualizarTela();
-    window.addEventListener("keydown", moverJogador);
+
+    window.addEventListener("keydown", registrarDirecao);
+
+    // Loop de movimento contínuo do jogador
+    intervaloMovimento = setInterval(() => {
+        if (!jogoAtivo || vidas <= 0 || feedbackEstaAtivo() || emColisao) return;
+        tentarMoverJogador();
+    }, INTERVALO_MOVIMENTO_MS);
+
     intervaloMonstros = setInterval(tickMonstros, velocidadeAtual);
 }
 
-
-// Wrapper do intervalo: respeita o estado de colisão
+// Wrapper do intervalo dos monstros
 function tickMonstros() {
     if (!jogoAtivo || vidas <= 0 || feedbackEstaAtivo()) return;
-
     moverMonstros();
-    // Só redesenha se não houver feedback/colisão em andamento
     if (!emColisao) {
         atualizarTela();
     }
 }
-
 
 // Chamada pelo quiz.js após cada resposta correta
 function aumentarVelocidade() {
@@ -241,26 +437,23 @@ function aumentarVelocidade() {
     atualizarIndicadorVelocidade();
 }
 
-// Reseta a velocidade ao reiniciar o jogo (game over ou fim de todas as questões)
 function resetarVelocidade() {
     velocidadeAtual = VELOCIDADE_INICIAL;
     atualizarIndicadorVelocidade();
 }
 
-// Atualiza o indicador visual de velocidade no HUD
 function atualizarIndicadorVelocidade() {
     const el = document.getElementById("indicador-velocidade");
     if (!el) return;
 
-    // Calcula nível de 1 a 5 baseado na velocidade atual
-    const range  = VELOCIDADE_INICIAL - VELOCIDADE_MINIMA;
-    const progresso = (VELOCIDADE_INICIAL - velocidadeAtual) / range; // 0.0 a 1.0
-    const nivel  = Math.floor(progresso * 4) + 1; // 1 a 5
+    const range    = VELOCIDADE_INICIAL - VELOCIDADE_MINIMA;
+    const progresso = (VELOCIDADE_INICIAL - velocidadeAtual) / range;
+    const nivel    = Math.floor(progresso * 4) + 1;
 
-    const nomes  = ["", "Fácil", "Médio", "Rápido", "Difícil", "Máximo"];
-    const cores  = ["", "#2F9E41", "#E67E22", "#E67E22", "#CD191E", "#CD191E"];
+    const nomes = ["", "Fácil", "Médio", "Rápido", "Difícil", "Máximo"];
+    const cores = ["", "#2F9E41", "#E67E22", "#E67E22", "#CD191E", "#CD191E"];
 
-    el.innerText  = `⚡ ${nomes[nivel]}`;
+    el.innerText         = `⚡ ${nomes[nivel]}`;
     el.style.color       = cores[nivel];
     el.style.borderColor = cores[nivel] + "88";
 }
@@ -270,7 +463,6 @@ function iniciarJogo() {
     carregarBancoDeQuestoes();
 }
 
-// Chamada pelo quiz.js após o JSON carregar
 function prepararRodadaInicial() {
     sortearMapaDaRodada();
     carregarPergunta();
@@ -280,28 +472,29 @@ function prepararRodadaInicial() {
     desenharTelaEspera();
 }
 
-// Chamada pelo quiz.js a cada nova pergunta (acerto ou erro com vidas restantes)
 function prepararNovaRodada() {
-    // Para o intervalo imediatamente — evita que tickMonstros dispare durante o setup
     jogoAtivo = false;
+    direcaoAtual    = null;
+    direcaoPendente = null;
     if (intervaloMonstros) {
         clearInterval(intervaloMonstros);
         intervaloMonstros = null;
     }
-    window.removeEventListener("keydown", moverJogador);
+    if (intervaloMovimento) {
+        clearInterval(intervaloMovimento);
+        intervaloMovimento = null;
+    }
+    window.removeEventListener("keydown", registrarDirecao);
 
-    // Configura o novo estado
     sortearMapaDaRodada();
     carregarPergunta();
     jogador.coluna = 9;
     jogador.linha  = 5;
     resetarMonstros();
 
-    // Desenha o novo mapa e exibe overlay de espera
     atualizarTela();
     desenharTelaEspera();
 
-    // Exibe o botão de iniciar
     document.getElementById("btn-iniciar").classList.remove("oculto");
 }
 

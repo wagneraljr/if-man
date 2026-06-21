@@ -5,6 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Quiz Pac-Man - IF Sudeste MG</title>
     <link rel="stylesheet" href="estilo.css">
+    <style>
+        /* ── D-pad touch ─────────────────────────────────────────────────── */
+        #dpad {
+            position: absolute;
+            bottom: 14px;
+            right: 14px;
+            width: 132px;
+            height: 132px;
+            display: none;          /* visível só em touch */
+            z-index: 20;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        .dpad-btn {
+            position: absolute;
+            width: 42px;
+            height: 42px;
+            background: rgba(47, 158, 65, 0.55);
+            border: 2px solid rgba(47, 158, 65, 0.85);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #fff;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            transition: background 0.08s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .dpad-btn:active,
+        .dpad-btn.pressionado {
+            background: rgba(47, 158, 65, 0.9);
+        }
+
+        /* Posições: cima centro, baixo centro, esq meio, dir meio */
+        #dpad-up    { top: 0;   left: 45px; }
+        #dpad-down  { bottom: 0; left: 45px; }
+        #dpad-left  { top: 45px; left: 0;   }
+        #dpad-right { top: 45px; right: 0;  }
+
+        /* Centro decorativo */
+        #dpad-center {
+            position: absolute;
+            top: 45px; left: 45px;
+            width: 42px; height: 42px;
+            background: rgba(0, 0, 16, 0.5);
+            border-radius: 6px;
+        }
+    </style>
 </head>
 <body class="jogo-pagina">
 
@@ -46,12 +99,12 @@
                 <canvas id="telaJogo" width="760" height="600"></canvas>
                 <button id="btn-feedback-canvas" type="button" class="feedback-canvas-btn" style="display:none">OK</button>
 
-                <!-- Timer flutuante (canto superior esquerdo, só em competição) -->
+                <!-- Timer flutuante -->
                 <div id="timer-competicao" class="flutuante flutuante-timer" style="display:none">
                     <span id="timer-texto">⏱ 00:00</span>
                 </div>
 
-                <!-- Botão Sair flutuante (canto superior direito, sempre visível) -->
+                <!-- Botão Sair flutuante -->
                 <a href="index.html" id="btn-sair-flutuante" class="flutuante flutuante-sair">
                     ✕ Sair
                 </a>
@@ -60,8 +113,17 @@
                     <span id="conta-avatar-texto" class="atalho-conta-icone">👤</span>
                 </a>
 
-                <!-- Nome do aluno flutuante (canto inferior esquerdo) -->
+                <!-- Nome do aluno flutuante -->
                 <div id="nome-flutuante" class="flutuante flutuante-nome" style="display:none"></div>
+
+                <!-- D-pad touch (visível apenas em dispositivos touch) -->
+                <div id="dpad" aria-label="Controle direcional">
+                    <button class="dpad-btn" id="dpad-up"    aria-label="Cima">▲</button>
+                    <button class="dpad-btn" id="dpad-down"  aria-label="Baixo">▼</button>
+                    <button class="dpad-btn" id="dpad-left"  aria-label="Esquerda">◀</button>
+                    <button class="dpad-btn" id="dpad-right" aria-label="Direita">▶</button>
+                    <div id="dpad-center"></div>
+                </div>
             </div>
 
         </div>
@@ -79,7 +141,7 @@
             window.location.replace("sala-espera.html");
         }
 
-        // Competição exige aluno logado.
+        // Competição exige aluno logado
         const modoAtual = sessionStorage.getItem("modo") || "livre";
         if (modoAtual === "competicao" && (!sessionStorage.getItem("aluno_id") || sessionStorage.getItem("aluno_logado") !== "true")) {
             window.location.replace("aluno-login.html");
@@ -101,7 +163,51 @@
             if (avatar && inicial) avatar.innerText = inicial;
         }
 
-        // Integra competição ao motor do jogo
+        // ── D-pad touch ───────────────────────────────────────────────────────
+        // Mostra o D-pad apenas se o dispositivo tem suporte a touch
+        (function configurarDpad() {
+            const dpad = document.getElementById("dpad");
+
+            // Detecta touch real (não apenas hover em desktop)
+            const temTouch = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
+            if (temTouch) dpad.style.display = "block";
+
+            // Mapeia cada botão para a tecla correspondente
+            const mapeamento = {
+                "dpad-up":    "ArrowUp",
+                "dpad-down":  "ArrowDown",
+                "dpad-left":  "ArrowLeft",
+                "dpad-right": "ArrowRight"
+            };
+
+            Object.entries(mapeamento).forEach(([id, tecla]) => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+
+                // Dispara movimento ao tocar (e mantém pressionado via touchmove dentro do botão)
+                function disparar(e) {
+                    e.preventDefault();
+                    btn.classList.add("pressionado");
+                    // Simula evento de teclado que o motor.js espera
+                    registrarDirecao({ key: tecla, preventDefault: () => {} });
+                }
+
+                function soltar() {
+                    btn.classList.remove("pressionado");
+                }
+
+                btn.addEventListener("touchstart",  disparar,  { passive: false });
+                btn.addEventListener("touchend",     soltar,    { passive: true  });
+                btn.addEventListener("touchcancel",  soltar,    { passive: true  });
+
+                // Suporte a mouse (para testes em desktop)
+                btn.addEventListener("mousedown",  disparar);
+                btn.addEventListener("mouseup",    soltar);
+                btn.addEventListener("mouseleave", soltar);
+            });
+        })();
+
+        // ── Competição ────────────────────────────────────────────────────────
         (async function configurarCompeticao() {
             if ((sessionStorage.getItem("modo") || "livre") !== "competicao") return;
 
@@ -130,7 +236,6 @@
         })();
 
         async function encerrarJogoCompeticao() {
-            // Envia pontuação final ao servidor (endpoint aceita mesmo após encerrada)
             try {
                 await fetch("/api/pontuacao-final", {
                     method:  "POST",
@@ -144,7 +249,6 @@
                 });
             } catch { /* silencioso */ }
 
-            // Redireciona para a tela de resultado do aluno após 1s
             setTimeout(() => {
                 window.location.href = "resultado-aluno.html";
             }, 800);
@@ -152,14 +256,10 @@
     </script>
 
     <script>
-        // ── Responsividade do canvas ──────────────────────────────────────────────
-        // O canvas tem dimensões fixas (760×600). Em vez de reescrever o jogo,
-        // escalamos o wrapper inteiro proporcionalmente à largura disponível.
-        // Os elementos flutuantes (timer, sair, nome) escalam junto.
-
+        // ── Responsividade do canvas ──────────────────────────────────────────
         const CANVAS_W = 760;
         const CANVAS_H = 600;
-        const MARGEM   = 32; // px de padding lateral total da página
+        const MARGEM   = 32;
 
         function ajustarEscala() {
             const wrapper    = document.getElementById("canvas-wrapper");
@@ -167,35 +267,27 @@
             const painel     = document.getElementById("painel");
             const btnWrapper = document.getElementById("btn-wrapper");
 
-            // Largura disponível descontando margens
             const largDisp = Math.min(
                 window.innerWidth - MARGEM,
                 container.clientWidth || window.innerWidth - MARGEM
             );
 
-            // Só escala se a tela for menor que o canvas
             const escala = largDisp < CANVAS_W ? largDisp / CANVAS_W : 1;
 
-            // Aplica escala no wrapper do canvas (afeta canvas + flutuantes)
             wrapper.style.transform       = `scale(${escala})`;
             wrapper.style.transformOrigin = "top center";
 
-            // Compensa o espaço que o canvas ocupa após o scale
-            // (o elemento continua ocupando 760px no layout, mas visualmente menor)
-            const alturaReal = CANVAS_H * escala;
-            const alturaOcupada = CANVAS_H; // altura original no fluxo
+            const alturaReal    = CANVAS_H * escala;
+            const alturaOcupada = CANVAS_H;
             wrapper.style.marginBottom = `${alturaReal - alturaOcupada}px`;
 
-            // Ajusta largura do painel e botão para acompanhar o canvas escalado
             const larguraEscalada = CANVAS_W * escala;
             painel.style.maxWidth     = larguraEscalada + "px";
             btnWrapper.style.maxWidth = larguraEscalada + "px";
         }
 
-        // Executa ao carregar e ao redimensionar
         window.addEventListener("load",   ajustarEscala);
         window.addEventListener("resize", ajustarEscala);
-
     </script>
 
 </body>
