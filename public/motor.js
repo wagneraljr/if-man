@@ -40,6 +40,27 @@ function registrarDirecao(evento) {
     direcaoPendente = normalizarTecla(tecla);
 }
 
+function tratarEnterAcao(evento) {
+    if (evento.defaultPrevented) return;
+    if (evento.key !== "Enter") return;
+
+    if (feedbackEstaAtivo()) {
+        evento.preventDefault();
+        if (typeof confirmarFeedbackVisual === "function") {
+            confirmarFeedbackVisual();
+        }
+        return;
+    }
+
+    if (jogoAtivo || vidas <= 0) return;
+
+    const botaoIniciar = document.getElementById("btn-iniciar");
+    if (!botaoIniciar || botaoIniciar.classList.contains("oculto")) return;
+
+    evento.preventDefault();
+    iniciarRodada();
+}
+
 // Tenta aplicar a direção pendente; se não couber, mantém a atual
 function tentarMoverJogador() {
     if (!jogoAtivo || vidas <= 0 || emColisao) return;
@@ -319,7 +340,7 @@ function desenharTelaEspera() {
 
     contexto.fillStyle = "#2D3436";
     contexto.font = "13px 'Open Sans', sans-serif";
-    contexto.fillText("Clique em  ▶ Iniciar Rodada  quando estiver pronto", canvas.width / 2, by + 72);
+    contexto.fillText("Clique em ▶ ou pressione Enter para Iniciar a Rodada", canvas.width / 2, by + 72);
 
     contexto.strokeStyle = "#2F9E41";
     contexto.lineWidth = 3;
@@ -460,6 +481,7 @@ function atualizarIndicadorVelocidade() {
 
 // ── Fluxo de inicialização ────────────────────────────────────────────────────
 function iniciarJogo() {
+    window.addEventListener("keydown", tratarEnterAcao);
     carregarBancoDeQuestoes();
 }
 

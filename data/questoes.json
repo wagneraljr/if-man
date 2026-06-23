@@ -1056,5 +1056,396 @@
       }
     ],
     "id": 46
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Um conjunto de objetos do mundo real sobre os quais se pretende armazenar dados é:",
+    "alternativas": [
+      {
+        "texto": "Banco de dados",
+        "correta": false
+      },
+      {
+        "texto": "Entidade",
+        "correta": true
+      },
+      {
+        "texto": "Relacionamento",
+        "correta": false
+      },
+      {
+        "texto": "SGBD",
+        "correta": false
+      }
+    ],
+    "id": 47
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Um conjunto de associações entre entre entidades é:",
+    "alternativas": [
+      {
+        "texto": "Relacionamento",
+        "correta": true
+      },
+      {
+        "texto": "Abstração",
+        "correta": false
+      },
+      {
+        "texto": "Atomicidade",
+        "correta": false
+      },
+      {
+        "texto": "SGBD",
+        "correta": false
+      }
+    ],
+    "id": 48
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Uma coleção organizada de dados é:",
+    "alternativas": [
+      {
+        "texto": "SGBD",
+        "correta": false
+      },
+      {
+        "texto": "Entidade",
+        "correta": false
+      },
+      {
+        "texto": "Relacionamento",
+        "correta": false
+      },
+      {
+        "texto": "Banco de Dados",
+        "correta": true
+      }
+    ],
+    "id": 49
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Quando uma determinada informação está armazenada no sistema várias vezes, temos:",
+    "alternativas": [
+      {
+        "texto": "Abstração",
+        "correta": false
+      },
+      {
+        "texto": "Redundância de Dados",
+        "correta": true
+      },
+      {
+        "texto": "SGBD",
+        "correta": false
+      },
+      {
+        "texto": "Isolamento",
+        "correta": false
+      }
+    ],
+    "id": 50
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Não é um problema de redundância de dados:",
+    "alternativas": [
+      {
+        "texto": "Retrabalho",
+        "correta": false
+      },
+      {
+        "texto": "Armazenamento",
+        "correta": false
+      },
+      {
+        "texto": "Inconsistência",
+        "correta": false
+      },
+      {
+        "texto": "Atomicidade",
+        "correta": true
+      }
+    ],
+    "id": 51
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Um programa de computador que ajuda a criar, organizar, manter e consultar bancos de dados é um:",
+    "alternativas": [
+      {
+        "texto": "SGBD",
+        "correta": true
+      },
+      {
+        "texto": "SIGAA",
+        "correta": false
+      },
+      {
+        "texto": "Driver",
+        "correta": false
+      },
+      {
+        "texto": "Browser",
+        "correta": false
+      }
+    ],
+    "id": 52
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Não é característica de um SGBD",
+    "alternativas": [
+      {
+        "texto": "Abstração",
+        "correta": false
+      },
+      {
+        "texto": "Autodescrição",
+        "correta": false
+      },
+      {
+        "texto": "Criptografia",
+        "correta": true
+      },
+      {
+        "texto": "Compartilhamento",
+        "correta": false
+      }
+    ],
+    "id": 53
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Não é uma das propriedades ACID:",
+    "alternativas": [
+      {
+        "texto": "Atomicidade",
+        "correta": false
+      },
+      {
+        "texto": "Coerência",
+        "correta": true
+      },
+      {
+        "texto": "Isolamento",
+        "correta": false
+      },
+      {
+        "texto": "Durabilidade",
+        "correta": false
+      }
+    ],
+    "id": 54
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Não é um exemplo de SGBD:",
+    "alternativas": [
+      {
+        "texto": "Chrome",
+        "correta": true
+      },
+      {
+        "texto": "MySQL",
+        "correta": false
+      },
+      {
+        "texto": "Oracle Database",
+        "correta": false
+      },
+      {
+        "texto": "PostgreSQL",
+        "correta": false
+      }
+    ],
+    "id": 55
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "A descrição formal da estrutura de um Banco de Dados é um:",
+    "alternativas": [
+      {
+        "texto": "Servidor",
+        "correta": false
+      },
+      {
+        "texto": "Modelo de Dados",
+        "correta": true
+      },
+      {
+        "texto": "SGBD",
+        "correta": false
+      },
+      {
+        "texto": "Sistema",
+        "correta": false
+      }
+    ],
+    "id": 56
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Qual não é um modelo de dados?",
+    "alternativas": [
+      {
+        "texto": "Abstrato",
+        "correta": true
+      },
+      {
+        "texto": "Físico",
+        "correta": false
+      },
+      {
+        "texto": "Conceitual",
+        "correta": false
+      },
+      {
+        "texto": "Lógico",
+        "correta": false
+      }
+    ],
+    "id": 57
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "A definição sobre qual é o tamanho máximo de caracteres do nome de um usuário é feita no modelo:",
+    "alternativas": [
+      {
+        "texto": "Lógico",
+        "correta": true
+      },
+      {
+        "texto": "Físico",
+        "correta": false
+      },
+      {
+        "texto": "Conceitual",
+        "correta": false
+      },
+      {
+        "texto": "Abstrato",
+        "correta": false
+      }
+    ],
+    "id": 58
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "O modelo que registra quais dados podem aparecer no banco de dados, mas não como esses dados estão armazenados no SGBD é o modelo:",
+    "alternativas": [
+      {
+        "texto": "Lógico",
+        "correta": false
+      },
+      {
+        "texto": "Físico",
+        "correta": false
+      },
+      {
+        "texto": "Conceitual",
+        "correta": true
+      },
+      {
+        "texto": "Abstrato",
+        "correta": false
+      }
+    ],
+    "id": 59
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "O modelo Entidade-Relacionamento é um modelo:",
+    "alternativas": [
+      {
+        "texto": "Lógico",
+        "correta": false
+      },
+      {
+        "texto": "Físico",
+        "correta": false
+      },
+      {
+        "texto": "Conceitual",
+        "correta": true
+      },
+      {
+        "texto": "Abstrato",
+        "correta": false
+      }
+    ],
+    "id": 60
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "A regra que indica quantas ocorrências de uma entidade estão associadas a quantas ocorrências de outra entidade dentro de um relacionamento se chama:",
+    "alternativas": [
+      {
+        "texto": "Atomicidade",
+        "correta": false
+      },
+      {
+        "texto": "Cardinalidade",
+        "correta": true
+      },
+      {
+        "texto": "Indivisibilidade",
+        "correta": false
+      },
+      {
+        "texto": "Ansiedade",
+        "correta": false
+      }
+    ],
+    "id": 61
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Quando um objeto de uma entidade pode se relacionar a muitos objetos de outra entidade, mas não o contrário temos uma cardinalidade:",
+    "alternativas": [
+      {
+        "texto": "Nula",
+        "correta": false
+      },
+      {
+        "texto": "1:1",
+        "correta": false
+      },
+      {
+        "texto": "n:n",
+        "correta": false
+      },
+      {
+        "texto": "1:n",
+        "correta": true
+      }
+    ],
+    "id": 62
+  },
+  {
+    "categoria": "Modelagem de Bancos de Dados",
+    "texto": "Uma entidade que não possui atributo identificador geralmente é uma entidade:",
+    "alternativas": [
+      {
+        "texto": "Primária",
+        "correta": false
+      },
+      {
+        "texto": "Fraca",
+        "correta": true
+      },
+      {
+        "texto": "Forte",
+        "correta": false
+      },
+      {
+        "texto": "Independente",
+        "correta": false
+      }
+    ],
+    "id": 63
   }
 ]

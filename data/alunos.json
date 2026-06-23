@@ -142,5 +142,26 @@
     "historicoCompeticao": [],
     "criadoEm": "2026-06-16T18:55:33.517Z",
     "atualizadoEm": "2026-06-16T18:55:33.517Z"
+  },
+  {
+    "id": "aluno_1782233994800_78715",
+    "nomeCompleto": "Wagner de Almeida Junior",
+    "apelido": "wagneraljr",
+    "senhaHash": "a1133c2be1ac92a059e8345f2e6bd946d171d43c76ae442a2d744cb624c8b37a",
+    "historicoCompeticao": [
+      {
+        "competicaoId": 1782234315131,
+        "data": "23/06/2026",
+        "hora": "14:05",
+        "motivo": "tempo",
+        "duracaoSeg": 300,
+        "pontuacao": 69000,
+        "vidas": 11,
+        "posicao": 1,
+        "totalParticipantes": 1
+      }
+    ],
+    "criadoEm": "2026-06-23T16:59:54.800Z",
+    "atualizadoEm": "2026-06-23T16:59:54.800Z"
   }
 ]
