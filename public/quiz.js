@@ -166,15 +166,16 @@ function verificarColisaoComResposta() {
         if (acertou) {
             acertosConsecutivos++;
 
-            const bonusExplora = Math.min(20, Math.floor(pontinhosColecionados / 5)) * 100;
+            const bonusExploraBase = Math.min(20, Math.floor(pontinhosColecionados / 5)) * 100;
 
             const multCombo = acertosConsecutivos >= 4 ? 3
                             : acertosConsecutivos === 3 ? 2
                             : acertosConsecutivos === 2 ? 1.5
                             : 1;
 
-            const baseAcerto  = 1000;
-            const totalAcerto = Math.round(baseAcerto * multCombo) + bonusExplora;
+            const baseAcerto = 1000;
+            const bonusExplora = Math.round(bonusExploraBase * multCombo);
+            const totalAcerto = baseAcerto + bonusExplora;
 
             pontuacao += totalAcerto;
             vidas++;
@@ -187,7 +188,7 @@ function verificarColisaoComResposta() {
             atualizarCombo(acertosConsecutivos);
 
             let detalhes = `+${totalAcerto} pts`;
-            if (multCombo > 1)    detalhes += `  |  combo ×${multCombo}`;
+            if (multCombo > 1)    detalhes += `  |  combo na exploração ×${multCombo}`;
             if (bonusExplora > 0) detalhes += `  |  exploração +${bonusExplora}`;
             detalhes += "  |  +1 vida";
 

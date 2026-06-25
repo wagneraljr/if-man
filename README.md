@@ -202,3 +202,57 @@ Observação: competição agora exige aluno autenticado (via alunoId). O modo l
 - Atividade de aquecimento no início da aula.
 - Torneios curtos por categoria para fixação.
 - Análise de desempenho por turma com base no histórico.
+
+## Testes manuais de layout responsivo
+
+O jogo agora usa configuração central de layout em `window.CONFIG_LAYOUT_JOGO` (definida em `public/jogo.html`) e botão de início desenhado no próprio canvas.
+
+### Pré-condição
+
+1. Inicie o projeto com `npm start`.
+2. Abra `http://localhost:3000/jogo.html`.
+3. Abra o DevTools (F12) para simular larguras de tela quando necessário.
+
+### 1) Fluxo de início da rodada (sem regressão)
+
+1. Com a rodada pausada, confirme que aparece o botão "▶ INICIAR RODADA" dentro do canvas.
+2. Clique no botão desenhado no canvas e valide que a rodada inicia normalmente.
+3. Pause por erro/captura e confirme que o botão volta a aparecer dentro do canvas.
+4. Com o botão visível, pressione Enter e confirme que também inicia normalmente.
+
+### 2) HUD de vidas compacto
+
+1. Valide que o HUD mostra `❤ × N` (ou `☠ × 0`) em vez de múltiplos corações repetidos.
+2. Force ganho e perda de vidas durante a partida e confirme atualização imediata do contador.
+
+### 3) Presets de mapa para validar escala futura
+
+No console do navegador, execute:
+
+```js
+aplicarPresetLayoutMapa('pequeno');
+aplicarPresetLayoutMapa('medio');
+aplicarPresetLayoutMapa('grande');
+restaurarLayoutMapaAtual();
+```
+
+Critérios esperados:
+
+1. `pequeno` (19x15): canvas não deve estourar a largura nem altura disponíveis.
+2. `medio` (24x18): deve reduzir escala sem sobrepor o painel superior.
+3. `grande` (30x22): deve permanecer navegável visualmente sem corte lateral.
+4. `restaurarLayoutMapaAtual()` deve retornar ao tamanho do mapa da rodada.
+
+### 4) Larguras-alvo para validação
+
+Repita os testes acima em 3 faixas de tela:
+
+1. Desktop: 1366x768 (ou superior).
+2. Tablet: 768x1024.
+3. Mobile: 390x844 (ou largura próxima de 360-430px).
+
+Critérios gerais:
+
+1. O painel de pergunta permanece alinhado com a largura escalada do canvas.
+2. Botões flutuantes (sair, conta, d-pad touch) continuam acessíveis.
+3. Feedback no canvas (OK, acerto/erro) continua funcional.

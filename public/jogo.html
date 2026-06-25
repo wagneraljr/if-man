@@ -11,26 +11,28 @@
             position: absolute;
             bottom: 14px;
             right: 14px;
-            width: 132px;
-            height: 132px;
+            width: clamp(108px, 24vw, 152px);
+            height: clamp(108px, 24vw, 152px);
             display: none;          /* visível só em touch */
             z-index: 20;
             user-select: none;
             -webkit-user-select: none;
             touch-action: none;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 3px;
         }
 
         .dpad-btn {
-            position: absolute;
-            width: 42px;
-            height: 42px;
+            width: 100%;
+            height: 100%;
             background: rgba(47, 158, 65, 0.55);
             border: 2px solid rgba(47, 158, 65, 0.85);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: clamp(15px, 2.8vw, 19px);
             color: #fff;
             cursor: pointer;
             backdrop-filter: blur(4px);
@@ -44,16 +46,15 @@
         }
 
         /* Posições: cima centro, baixo centro, esq meio, dir meio */
-        #dpad-up    { top: 0;   left: 45px; }
-        #dpad-down  { bottom: 0; left: 45px; }
-        #dpad-left  { top: 45px; left: 0;   }
-        #dpad-right { top: 45px; right: 0;  }
+        #dpad-up    { grid-column: 2; grid-row: 1; }
+        #dpad-down  { grid-column: 2; grid-row: 3; }
+        #dpad-left  { grid-column: 1; grid-row: 2; }
+        #dpad-right { grid-column: 3; grid-row: 2; }
 
         /* Centro decorativo */
         #dpad-center {
-            position: absolute;
-            top: 45px; left: 45px;
-            width: 42px; height: 42px;
+            grid-column: 2;
+            grid-row: 2;
             background: rgba(0, 0, 16, 0.5);
             border-radius: 6px;
         }
@@ -77,7 +78,7 @@
                     <div class="hud-divider"></div>
                     <div class="hud-item">
                         <span class="hud-label">VIDAS</span>
-                        <span id="vidas" class="hud-valor hud-vidas">❤ ❤ ❤</span>
+                        <span id="vidas" class="hud-valor hud-vidas">❤ × 3</span>
                     </div>
                     <div class="hud-divider"></div>
                     <div class="hud-item">
@@ -88,10 +89,6 @@
                         <span id="indicador-combo" class="hud-combo"></span>
                     </div>
                 </div>
-            </div>
-
-            <div id="btn-wrapper">
-                <button id="btn-iniciar" onclick="iniciarRodada()">▶ Iniciar Rodada</button>
             </div>
 
             <!-- Canvas com botões flutuantes sobrepostos -->
@@ -128,6 +125,34 @@
 
         </div>
     </main>
+
+    <script>
+        // Configuração central de layout compartilhada entre os módulos do jogo.
+        window.CONFIG_LAYOUT_JOGO = Object.freeze({
+            canvas: {
+                margemLateral: 32,
+                reservaAltura: 48,
+                escalaMinima: 0.42
+            },
+            mapa: {
+                tamanhoBlocoBase: 40,
+                larguraSala: 3,
+                alturaSala: 2
+            },
+            overlay: {
+                espera: {
+                    cardMaxLargura: 440,
+                    cardAltura: 120,
+                    botaoInicio: {
+                        larguraProporcaoCard: 0.62,
+                        altura: 40,
+                        afastamentoBase: 18,
+                        raio: 8
+                    }
+                }
+            }
+        });
+    </script>
 
     <script src="questoes-storage.js"></script>
     <script src="mapa.js"></script>
@@ -170,7 +195,7 @@
 
             // Detecta touch real (não apenas hover em desktop)
             const temTouch = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
-            if (temTouch) dpad.style.display = "block";
+            if (temTouch) dpad.style.display = "grid";
 
             // Mapeia cada botão para a tecla correspondente
             const mapeamento = {
@@ -257,34 +282,97 @@
 
     <script>
         // ── Responsividade do canvas ──────────────────────────────────────────
-        const CANVAS_W = 760;
-        const CANVAS_H = 600;
-        const MARGEM   = 32;
+        function obterConfigLayoutCanvas() {
+            const cfg = window.CONFIG_LAYOUT_JOGO || {};
+            const canvas = cfg.canvas || {};
+
+            return {
+                margemLateral: Number(canvas.margemLateral) || 32,
+                reservaAltura: Number(canvas.reservaAltura) || 48,
+                escalaMinima: Number(canvas.escalaMinima) || 0.42
+            };
+        }
+
+        function obterDimensoesCanvasBase() {
+            const canvas = document.getElementById("telaJogo");
+            return {
+                largura: canvas?.width || 760,
+                altura:  canvas?.height || 600
+            };
+        }
 
         function ajustarEscala() {
-            const wrapper    = document.getElementById("canvas-wrapper");
-            const container  = document.querySelector(".jogo-container");
-            const painel     = document.getElementById("painel");
-            const btnWrapper = document.getElementById("btn-wrapper");
+            const wrapper   = document.getElementById("canvas-wrapper");
+            const container = document.querySelector(".jogo-container");
+            const painel    = document.getElementById("painel");
+            if (!wrapper || !container || !painel) return;
+
+            const cfg = obterConfigLayoutCanvas();
+            const base = obterDimensoesCanvasBase();
+
+            wrapper.style.width  = `${base.largura}px`;
+            wrapper.style.height = `${base.altura}px`;
 
             const largDisp = Math.min(
-                window.innerWidth - MARGEM,
-                container.clientWidth || window.innerWidth - MARGEM
+                window.innerWidth - cfg.margemLateral,
+                container.clientWidth || window.innerWidth - cfg.margemLateral
             );
 
-            const escala = largDisp < CANVAS_W ? largDisp / CANVAS_W : 1;
+            const altDisp = Math.max(
+                260,
+                window.innerHeight - painel.getBoundingClientRect().height - cfg.reservaAltura
+            );
+
+            const escalaAlvo = Math.min(largDisp / base.largura, altDisp / base.altura, 1);
+            const escala = Math.max(cfg.escalaMinima, escalaAlvo);
 
             wrapper.style.transform       = `scale(${escala})`;
             wrapper.style.transformOrigin = "top center";
 
-            const alturaReal    = CANVAS_H * escala;
-            const alturaOcupada = CANVAS_H;
+            const alturaReal    = base.altura * escala;
+            const alturaOcupada = base.altura;
             wrapper.style.marginBottom = `${alturaReal - alturaOcupada}px`;
 
-            const larguraEscalada = CANVAS_W * escala;
-            painel.style.maxWidth     = larguraEscalada + "px";
-            btnWrapper.style.maxWidth = larguraEscalada + "px";
+            const larguraEscalada = base.largura * escala;
+            painel.style.maxWidth = larguraEscalada + "px";
         }
+
+        // Utilitários de teste manual para validar responsividade em mapas futuros.
+        function aplicarPresetLayoutMapa(preset) {
+            const canvas = document.getElementById("telaJogo");
+            if (!canvas) return;
+
+            const bloco = Number(window.CONFIG_LAYOUT_JOGO?.mapa?.tamanhoBlocoBase) || 40;
+            const presets = {
+                pequeno: { colunas: 19, linhas: 15 },
+                medio:   { colunas: 24, linhas: 18 },
+                grande:  { colunas: 30, linhas: 22 }
+            };
+
+            const alvo = presets[preset];
+            if (!alvo) return;
+
+            canvas.width = alvo.colunas * bloco;
+            canvas.height = alvo.linhas * bloco;
+
+            if (typeof ajustarEscala === "function") ajustarEscala();
+            if (typeof atualizarTela === "function") atualizarTela();
+            if (typeof desenharTelaEspera === "function") desenharTelaEspera();
+        }
+
+        function restaurarLayoutMapaAtual() {
+            if (typeof ajustarDimensoesCanvasPorMapa === "function") {
+                ajustarDimensoesCanvasPorMapa();
+            } else if (typeof ajustarEscala === "function") {
+                ajustarEscala();
+            }
+
+            if (typeof atualizarTela === "function") atualizarTela();
+            if (typeof desenharTelaEspera === "function") desenharTelaEspera();
+        }
+
+        window.aplicarPresetLayoutMapa = aplicarPresetLayoutMapa;
+        window.restaurarLayoutMapaAtual = restaurarLayoutMapaAtual;
 
         window.addEventListener("load",   ajustarEscala);
         window.addEventListener("resize", ajustarEscala);

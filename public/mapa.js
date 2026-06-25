@@ -135,12 +135,29 @@ const bancoDeMapas = [mapa1, mapa2, mapa3, mapa4, mapa5];
 
 let labirinto = [];
 let posicoesRespostasAtuais = [];
-const tamanhoBloco = 40;
-const LARGURA_SALA = 3;
-const ALTURA_SALA  = 2;
+
+const CONFIG_MAPA_LAYOUT = window.CONFIG_LAYOUT_JOGO?.mapa || {};
+const tamanhoBloco = Number(CONFIG_MAPA_LAYOUT.tamanhoBlocoBase) || 40;
+const LARGURA_SALA = Number(CONFIG_MAPA_LAYOUT.larguraSala) || 3;
+const ALTURA_SALA  = Number(CONFIG_MAPA_LAYOUT.alturaSala) || 2;
 
 let frameTick = 0;
 let ultimoMapaIndex = -1; // evita repetição do mesmo mapa
+
+function ajustarDimensoesCanvasPorMapa() {
+    const canvas = document.getElementById("telaJogo");
+    if (!canvas || labirinto.length === 0 || labirinto[0].length === 0) return;
+
+    const larguraDesejada = labirinto[0].length * tamanhoBloco;
+    const alturaDesejada = labirinto.length * tamanhoBloco;
+
+    if (canvas.width !== larguraDesejada) canvas.width = larguraDesejada;
+    if (canvas.height !== alturaDesejada) canvas.height = alturaDesejada;
+
+    if (typeof ajustarEscala === "function") {
+        ajustarEscala();
+    }
+}
 
 // ─── Montagem do labirinto ────────────────────────────────────────────────────
 
@@ -198,6 +215,8 @@ function sortearMapaDaRodada() {
         [posicoesEmbaralhadas[j], posicoesEmbaralhadas[i]];
     }
     posicoesRespostasAtuais = posicoesEmbaralhadas;
+
+    ajustarDimensoesCanvasPorMapa();
 }
 
 // ─── Desenho do mapa ──────────────────────────────────────────────────────────

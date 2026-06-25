@@ -19,6 +19,59 @@ let direcaoAtual    = null; // "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRig
 let direcaoPendente = null; // próxima direção (fila de 1 input)
 let intervaloMovimento = null;
 const INTERVALO_MOVIMENTO_MS = 150; // ms entre cada passo do jogador
+let aguardandoInicioRodada = false;
+let hitboxInicioRodada = null;
+
+function obterConfigEspera() {
+    const espera = window.CONFIG_LAYOUT_JOGO?.overlay?.espera || {};
+    const botao = espera.botaoInicio || {};
+
+    return {
+        cardMaxLargura: Number(espera.cardMaxLargura) || 440,
+        cardAltura: Number(espera.cardAltura) || 120,
+        botao: {
+            larguraProporcaoCard: Number(botao.larguraProporcaoCard) || 0.62,
+            altura: Number(botao.altura) || 40,
+            afastamentoBase: Number(botao.afastamentoBase) || 18,
+            raio: Number(botao.raio) || 8
+        }
+    };
+}
+
+function atualizarEstadoBotaoInicio(visivel) {
+    aguardandoInicioRodada = !!visivel;
+    if (!visivel) hitboxInicioRodada = null;
+}
+
+function obterPosicaoNoCanvas(evento) {
+    const rect = canvas.getBoundingClientRect();
+    const toque = evento.touches && evento.touches[0] ? evento.touches[0] : null;
+    const clientX = toque ? toque.clientX : evento.clientX;
+    const clientY = toque ? toque.clientY : evento.clientY;
+
+    if (typeof clientX !== "number" || typeof clientY !== "number") return null;
+
+    return {
+        x: ((clientX - rect.left) / rect.width) * canvas.width,
+        y: ((clientY - rect.top) / rect.height) * canvas.height
+    };
+}
+
+function pontoDentroRetangulo(ponto, retangulo) {
+    if (!ponto || !retangulo) return false;
+    return ponto.x >= retangulo.x && ponto.x <= retangulo.x + retangulo.largura &&
+           ponto.y >= retangulo.y && ponto.y <= retangulo.y + retangulo.altura;
+}
+
+function tratarCliqueInicioCanvas(evento) {
+    if (!aguardandoInicioRodada || jogoAtivo || vidas <= 0 || feedbackEstaAtivo()) return;
+
+    const ponto = obterPosicaoNoCanvas(evento);
+    if (!pontoDentroRetangulo(ponto, hitboxInicioRodada)) return;
+
+    evento.preventDefault();
+    iniciarRodada();
+}
 
 const TECLAS_MOVIMENTO = new Set([
     "ArrowUp","ArrowDown","ArrowLeft","ArrowRight",
@@ -54,8 +107,7 @@ function tratarEnterAcao(evento) {
 
     if (jogoAtivo || vidas <= 0) return;
 
-    const botaoIniciar = document.getElementById("btn-iniciar");
-    if (!botaoIniciar || botaoIniciar.classList.contains("oculto")) return;
+    if (!aguardandoInicioRodada) return;
 
     evento.preventDefault();
     iniciarRodada();
@@ -237,9 +289,9 @@ function tocarSom(tipo) {
 
 function atualizarPlacar() {
     document.getElementById("pontos").innerText = pontuacao;
-    let coracoes = "";
-    for (let i = 0; i < vidas; i++) coracoes += "❤ ";
-    document.getElementById("vidas").innerText = coracoes.trim() || "☠";
+    const vidasSeguras = Math.max(0, Number(vidas) || 0);
+    const prefixo = vidasSeguras > 0 ? "❤" : "☠";
+    document.getElementById("vidas").innerText = `${prefixo} × ${vidasSeguras}`;
 }
 
 function atualizarCombo(consecutivos) {
@@ -309,10 +361,13 @@ function atualizarTela() {
 
 // ── Tela de espera ────────────────────────────────────────────────────────────
 function desenharTelaEspera() {
+    const cfg = obterConfigEspera();
+
     contexto.fillStyle = "rgba(0, 0, 10, 0.75)";
     contexto.fillRect(0, 0, canvas.width, canvas.height);
 
-    let bw = 440, bh = 120;
+    let bw = Math.min(cfg.cardMaxLargura, Math.max(300, canvas.width - 48));
+    let bh = cfg.cardAltura;
     let bx = (canvas.width  - bw) / 2;
     let by = (canvas.height - bh) / 2;
 
@@ -340,7 +395,36 @@ function desenharTelaEspera() {
 
     contexto.fillStyle = "#2D3436";
     contexto.font = "13px 'Open Sans', sans-serif";
-    contexto.fillText("Clique em ▶ ou pressione Enter para Iniciar a Rodada", canvas.width / 2, by + 72);
+    //contexto.fillText("Clique no botão abaixo ou pressione Enter para iniciar", canvas.width / 2, by + 72);
+
+    const larguraBotao = Math.max(170, Math.min(bw - 24, bw * cfg.botao.larguraProporcaoCard));
+    const alturaBotao = cfg.botao.altura;
+    const xBotao = canvas.width / 2 - larguraBotao / 2;
+    const yBotao = by + bh - alturaBotao - cfg.botao.afastamentoBase;
+
+    hitboxInicioRodada = {
+        x: xBotao,
+        y: yBotao,
+        largura: larguraBotao,
+        altura: alturaBotao
+    };
+
+    contexto.fillStyle = "#2F9E41";
+    contexto.beginPath();
+    contexto.roundRect(xBotao, yBotao, larguraBotao, alturaBotao, cfg.botao.raio);
+    contexto.fill();
+
+    contexto.strokeStyle = "rgba(255,255,255,0.28)";
+    contexto.lineWidth = 1.5;
+    contexto.beginPath();
+    contexto.roundRect(xBotao + 0.5, yBotao + 0.5, larguraBotao - 1, alturaBotao - 1, cfg.botao.raio);
+    contexto.stroke();
+
+    contexto.fillStyle = "#ffffff";
+    contexto.font = "700 14px 'Open Sans', sans-serif";
+    contexto.fillText("▶ INICIAR RODADA", canvas.width / 2, yBotao + alturaBotao / 2 + 1);
+
+    atualizarEstadoBotaoInicio(true);
 
     contexto.strokeStyle = "#2F9E41";
     contexto.lineWidth = 3;
@@ -409,17 +493,9 @@ function pausarRodada(exibirBotaoIniciar = true) {
         intervaloMovimento = null;
     }
     window.removeEventListener("keydown", registrarDirecao);
-    const botaoIniciar = document.getElementById("btn-iniciar");
-    if (!botaoIniciar) return;
-
-    if (exibirBotaoIniciar) {
-        botaoIniciar.classList.remove("oculto");
-    } else {
-        botaoIniciar.classList.add("oculto");
-    }
+    atualizarEstadoBotaoInicio(exibirBotaoIniciar);
 }
 
-// Chamada pelo onclick do botão no HTML
 function iniciarRodada() {
     if (jogoAtivo) return;
     if (vidas <= 0) return;
@@ -429,7 +505,7 @@ function iniciarRodada() {
     obterAudioCtx();
 
     jogoAtivo = true;
-    document.getElementById("btn-iniciar").classList.add("oculto");
+    atualizarEstadoBotaoInicio(false);
     atualizarTela();
 
     window.addEventListener("keydown", registrarDirecao);
@@ -482,6 +558,8 @@ function atualizarIndicadorVelocidade() {
 // ── Fluxo de inicialização ────────────────────────────────────────────────────
 function iniciarJogo() {
     window.addEventListener("keydown", tratarEnterAcao);
+    canvas.addEventListener("click", tratarCliqueInicioCanvas);
+    canvas.addEventListener("touchstart", tratarCliqueInicioCanvas, { passive: false });
     carregarBancoDeQuestoes();
 }
 
@@ -516,8 +594,6 @@ function prepararNovaRodada() {
 
     atualizarTela();
     desenharTelaEspera();
-
-    document.getElementById("btn-iniciar").classList.remove("oculto");
 }
 
 window.onload = iniciarJogo;
