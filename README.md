@@ -190,12 +190,6 @@ Observação: competição agora exige aluno autenticado (via alunoId). O modo l
 - GET /api/historico/:id
 - DELETE /api/historico/:id
 
-## Dados padrão importantes
-
-- Porta do servidor: 3000.
-- Senha inicial de professor: ifmg2026.
-- Categoria padrão: Informática Básica.
-
 ## Uso didático sugerido
 
 - Revisão antes de avaliação.
@@ -220,12 +214,7 @@ O jogo agora usa configuração central de layout em `window.CONFIG_LAYOUT_JOGO`
 3. Pause por erro/captura e confirme que o botão volta a aparecer dentro do canvas.
 4. Com o botão visível, pressione Enter e confirme que também inicia normalmente.
 
-### 2) HUD de vidas compacto
-
-1. Valide que o HUD mostra `❤ × N` (ou `☠ × 0`) em vez de múltiplos corações repetidos.
-2. Force ganho e perda de vidas durante a partida e confirme atualização imediata do contador.
-
-### 3) Presets de mapa para validar escala futura
+### 2) Presets de mapa para validar escala futura
 
 No console do navegador, execute:
 
@@ -243,16 +232,10 @@ Critérios esperados:
 3. `grande` (30x22): deve permanecer navegável visualmente sem corte lateral.
 4. `restaurarLayoutMapaAtual()` deve retornar ao tamanho do mapa da rodada.
 
-### 4) Larguras-alvo para validação
+### 3) Larguras-alvo para validação
 
 Repita os testes acima em 3 faixas de tela:
 
 1. Desktop: 1366x768 (ou superior).
 2. Tablet: 768x1024.
 3. Mobile: 390x844 (ou largura próxima de 360-430px).
-
-Critérios gerais:
-
-1. O painel de pergunta permanece alinhado com a largura escalada do canvas.
-2. Botões flutuantes (sair, conta, d-pad touch) continuam acessíveis.
-3. Feedback no canvas (OK, acerto/erro) continua funcional.
