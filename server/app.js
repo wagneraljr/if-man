@@ -268,6 +268,7 @@ let estado = {
     duracaoSeg: 600,
     inicioMs:   null,
     categoria:  "Todas",
+    ocultarPontuacaoAlunos: false,
     alunos:     {},
     espera:     [],
     historicoSalvo: false
@@ -767,7 +768,13 @@ const servidor = http.createServer(async (req, res) => {
             estado.fase = "encerrada";
             salvarHistorico("tempo");
         }
-        responderJSON(res, 200, { fase: estado.fase, restante, duracao: estado.duracaoSeg, categoria: estado.categoria || "Todas" });
+        responderJSON(res, 200, {
+            fase: estado.fase,
+            restante,
+            duracao: estado.duracaoSeg,
+            categoria: estado.categoria || "Todas",
+            ocultarPontuacaoAlunos: !!estado.ocultarPontuacaoAlunos
+        });
         return;
     }
 
@@ -782,6 +789,7 @@ const servidor = http.createServer(async (req, res) => {
         estado.duracaoSeg = parseInt(corpo.duracaoSeg) || 600;
         estado.inicioMs   = Date.now();
         estado.categoria  = (corpo.categoria || "Todas").trim() || "Todas";
+        estado.ocultarPontuacaoAlunos = !!corpo.ocultarPontuacaoAlunos;
         estado.alunos     = {};
         estado.espera     = [];
         estado.historicoSalvo = false;
@@ -810,7 +818,16 @@ const servidor = http.createServer(async (req, res) => {
         definirCookieSessaoAdmin(res, sessao.token);
 
         if (estado.fase === "encerrada") salvarHistorico("manual"); // garante salvamento se não havia sido salvo
-        estado = { fase: "aguardando", duracaoSeg: 600, inicioMs: null, categoria: "Todas", alunos: {}, espera: [], historicoSalvo: false };
+        estado = {
+            fase: "aguardando",
+            duracaoSeg: 600,
+            inicioMs: null,
+            categoria: "Todas",
+            ocultarPontuacaoAlunos: false,
+            alunos: {},
+            espera: [],
+            historicoSalvo: false
+        };
         console.log(`[${new Date().toLocaleTimeString()}] Estado resetado`);
         responderJSON(res, 200, { ok: true });
         return;
@@ -885,15 +902,21 @@ const servidor = http.createServer(async (req, res) => {
             .sort((a, b) => b.pontuacao - a.pontuacao);
         const posicao   = ranking.findIndex(a => a.alunoId === alunoId) + 1;
         const meusDados = estado.alunos[alunoId] || { pontuacao: 0, vidas: 0, nome: "Aluno" };
+        const ocultarPontuacaoAlunos = !!estado.ocultarPontuacaoAlunos && estado.fase === "encerrada";
         responderJSON(res, 200, {
             fase: estado.fase,
+            ocultarPontuacaoAlunos,
             posicao: posicao || null,
             total: ranking.length,
             nome: meusDados.nome,
             pontuacao: meusDados.pontuacao,
             vidas: meusDados.vidas,
-            top3: ranking.slice(0, 3),
-            ranking
+            top3: ocultarPontuacaoAlunos
+                ? ranking.slice(0, 3).map((a) => ({ nome: a.nome }))
+                : ranking.slice(0, 3),
+            ranking: ocultarPontuacaoAlunos
+                ? []
+                : ranking
         });
         return;
     }

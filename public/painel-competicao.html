@@ -64,6 +64,11 @@
                             <span>min</span>
                         </div>
                     </div>
+                    <label for="ocultar-pontuacao-alunos" class="hint" style="display:inline-flex; align-items:center; justify-content:flex-start; align-self:flex-start; gap:8px; margin-top:10px; font-size:1rem; white-space:nowrap;">
+                        <input type="checkbox" id="ocultar-pontuacao-alunos" style="width:auto; margin:0;">
+                        Ocultar pontuação dos alunos
+                    </label>
+                    <span class="hint">Quando marcado, os alunos verão apenas o ranking dos 3 melhores ao final da rodada.</span>
                 </div>
 
                 <div class="campo-grupo">
@@ -135,6 +140,7 @@
         let faseAtual          = "aguardando";
         let rankingAtual       = []; // cache do ranking para exportação
         let categoriaSelecionada = "Todas";
+        let ocultarPontuacaoAlunos = false;
 
         async function sairProfessor(event) {
             if (event) event.preventDefault();
@@ -175,13 +181,18 @@
 
         async function iniciarCompeticao() {
             categoriaSelecionada = document.getElementById("categoria-competicao")?.value || "Todas";
+            ocultarPontuacaoAlunos = !!document.getElementById("ocultar-pontuacao-alunos")?.checked;
             if (!confirm(`Iniciar competição de ${Math.round(duracaoSelecionada/60)} minutos na categoria ${categoriaSelecionada}?\n\nTodos os alunos na sala de espera entrarão no jogo automaticamente.`)) return;
 
             try {
                 await fetch("/api/iniciar", {
                     method:  "POST",
                     headers: { "Content-Type": "application/json" },
-                    body:    JSON.stringify({ duracaoSeg: duracaoSelecionada, categoria: categoriaSelecionada })
+                    body:    JSON.stringify({
+                        duracaoSeg: duracaoSelecionada,
+                        categoria: categoriaSelecionada,
+                        ocultarPontuacaoAlunos
+                    })
                 });
                 mudarFase("rodando");
             } catch {
@@ -275,7 +286,7 @@
                     </div>
                     <div class="placar-nome">${aluno.nome}</div>
                     <div class="placar-pontos">${aluno.pontuacao} pts</div>
-                    <div class="placar-vidas">${"❤".repeat(Math.max(0, aluno.vidas))}</div>
+                    <div class="placar-vidas">❤ × ${Math.max(0, Number(aluno.vidas) || 0)}</div>
                 </div>
             `).join("");
         }
@@ -409,7 +420,7 @@
                         </div>
                         <div class="placar-nome">${aluno.nome}</div>
                         <div class="placar-pontos">${aluno.pontuacao} pts</div>
-                        <div class="placar-vidas">${"❤".repeat(Math.max(0, aluno.vidas))}</div>
+                        <div class="placar-vidas">❤ × ${Math.max(0, Number(aluno.vidas) || 0)}</div>
                     </div>`;
                 }).join("")}`;
         }
@@ -445,6 +456,9 @@
                 const res   = await fetch("/api/estado");
                 const dados = await res.json();
                 categoriaSelecionada = dados.categoria || "Todas";
+                ocultarPontuacaoAlunos = !!dados.ocultarPontuacaoAlunos;
+                const checkOcultar = document.getElementById("ocultar-pontuacao-alunos");
+                if (checkOcultar) checkOcultar.checked = ocultarPontuacaoAlunos;
                 mudarFase(dados.fase);
                 if (dados.fase === "encerrada") carregarResultadoFinal();
             } catch {

@@ -96,6 +96,7 @@
         const MEDALHAS  = ["🥇", "🥈", "🥉"];
         const COR_TOP   = ["#FEF9E7", "#F8F9FA", "#FDF3EC"];
         const COR_BORDA = ["#F1C40F", "#95A5A6", "#CD6133"];
+        let ocultarPontuacaoAlunos = false;
 
         if (sessionStorage.getItem("aluno_logado") === "true" && ALUNO_ID) {
             const atalho = document.getElementById("atalho-minha-conta");
@@ -140,6 +141,35 @@
 
         function mostrarResultado(dados) {
             const { posicao, total, pontuacao, vidas, top3, ranking, nome } = dados;
+            ocultarPontuacaoAlunos = !!dados.ocultarPontuacaoAlunos;
+
+            if (ocultarPontuacaoAlunos) {
+                document.getElementById("resultado-titulo").innerText = "🏆 Resultado da competição";
+                document.getElementById("resultado-subtitulo").innerText =
+                    "Você vê apenas sua pontuação. Confira os apelidos do Top 3.";
+
+                const header = document.getElementById("resultado-header");
+                header.style.background = "";
+
+                const cardEl = document.getElementById("posicao-card");
+                cardEl.style.display = "flex";
+                cardEl.style.borderColor = "var(--if-verde)";
+                cardEl.style.background = "var(--if-verde-claro)";
+
+                document.getElementById("posicao-num").innerText = posicao
+                    ? (posicao <= 3 ? MEDALHAS[posicao - 1] : posicao + "º")
+                    : "—";
+                document.getElementById("resultado-nome").innerText = nome || NOME || "Anônimo";
+                document.getElementById("resultado-pontos").innerText = `${pontuacao} pontos`;
+                document.getElementById("resultado-vidas").innerText = `❤ × ${Math.max(0, Number(vidas) || 0)}`;
+
+                document.getElementById("secao-ranking").style.display = "none";
+                document.getElementById("btn-toggle-ranking").style.display = "none";
+
+                renderizarLista("lista-top3", top3, 1);
+                mostrarEstado("resultado");
+                return;
+            }
 
             // Header dinâmico com ícone e mensagem conforme posição
             let icone, mensagem;
@@ -173,8 +203,7 @@
                 posicao ? (posicao <= 3 ? MEDALHAS[posicao - 1] : posicao + "º") : "—";
             document.getElementById("resultado-nome").innerText   = nome || NOME || "Anônimo";
             document.getElementById("resultado-pontos").innerText = pontuacao + " pontos";
-            document.getElementById("resultado-vidas").innerText  =
-                "❤".repeat(Math.max(0, vidas));
+            document.getElementById("resultado-vidas").innerText  = `❤ × ${Math.max(0, Number(vidas) || 0)}`;
 
             // Top 3
             renderizarLista("lista-top3", top3, 1);
@@ -206,7 +235,7 @@
                      style="margin-bottom:6px; padding: 10px 14px;">
                     <div class="placar-posicao" style="font-size:1.1rem; min-width:34px">${medal}</div>
                     <div class="placar-nome">${aluno.nome}${sou ? " <span class='tag-eu'>Você</span>" : ""}</div>
-                    <div class="placar-pontos">${aluno.pontuacao} pts</div>
+                    ${ocultarPontuacaoAlunos ? "" : `<div class="placar-pontos">${aluno.pontuacao} pts</div>`}
                 </div>`;
             }).join("");
         }

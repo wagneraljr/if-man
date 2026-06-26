@@ -4,7 +4,30 @@
     "nomeCompleto": "Wagner",
     "apelido": "Wagner",
     "senhaHash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
-    "historicoCompeticao": [],
+    "historicoCompeticao": [
+      {
+        "competicaoId": 1782481679636,
+        "data": "26/06/2026",
+        "hora": "10:47",
+        "motivo": "manual",
+        "duracaoSeg": 60,
+        "pontuacao": 3850,
+        "vidas": 4,
+        "posicao": 1,
+        "totalParticipantes": 1
+      },
+      {
+        "competicaoId": 1782481266818,
+        "data": "26/06/2026",
+        "hora": "10:41",
+        "motivo": "manual",
+        "duracaoSeg": 120,
+        "pontuacao": 19700,
+        "vidas": 8,
+        "posicao": 1,
+        "totalParticipantes": 1
+      }
+    ],
     "criadoEm": "2026-06-12T17:01:15.740Z",
     "atualizadoEm": "2026-06-12T17:01:15.740Z"
   },
