@@ -195,7 +195,12 @@
 
                 if (dados.fase === "encerrada") {
                     document.getElementById("espera-dica").innerText =
-                        "A competição foi encerrada. Aguarde o professor iniciar uma nova ou jogue no Modo Livre.";
+                        "Uma rodada foi encerrada. Aguarde o professor iniciar a próxima rodada.";
+                }
+
+                if (dados.fase === "finalizada") {
+                    document.getElementById("espera-dica").innerText =
+                        "A competição foi finalizada. Aguarde o professor iniciar uma nova competição.";
                 }
 
             } catch {
@@ -243,10 +248,13 @@
                         sessionStorage.setItem("categoria_competicao", dados.categoria || "Todas");
                         window.location.href = "jogo.html";
                     } else if (dados.fase === "encerrada") {
+                        document.getElementById("espera-dica").innerText =
+                            "Rodada encerrada. Aguarde o professor iniciar a próxima rodada.";
+                    } else if (dados.fase === "finalizada") {
                         clearInterval(intervaloVerificacao);
                         clearInterval(intervaloHeartbeat);
                         document.getElementById("espera-dica").innerText =
-                            "A competição foi encerrada. Volte e jogue no Modo Livre ou aguarde uma nova competição.";
+                            "Competição finalizada. Aguarde o professor iniciar uma nova competição.";
                     }
                 } catch { /* continua tentando */ }
             }, 2000);

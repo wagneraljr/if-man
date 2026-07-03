@@ -193,12 +193,26 @@ if (!fs.existsSync(ARQUIVO_ALUNOS)) {
 }
 
 
-// ── Salva snapshot da competição encerrada no histórico ───────────────────────
+// ── Estado e utilitários da competição (memória) ─────────────────────────────
 
-function salvarHistorico(motivo) {
-    if (!estado.inicioMs || estado.historicoSalvo) return; // competição nunca iniciou ou já foi salva
+function criarEstadoInicial() {
+    return {
+        fase: "aguardando", // aguardando | rodando | encerrada | finalizada
+        duracaoSeg: 600,
+        inicioMs: null,
+        categoria: "Todas",
+        ocultarPontuacaoAlunos: false,
+        alunos: {}, // ranking da rodada atual/última rodada encerrada
+        espera: [],
+        competicao: null,
+        historicoSalvo: false
+    };
+}
 
-    const ranking = Object.values(estado.alunos)
+let estado = criarEstadoInicial();
+
+function montarRankingAtual() {
+    return Object.values(estado.alunos)
         .map((d) => ({
             alunoId: d.alunoId,
             nome: d.nome,
@@ -206,30 +220,90 @@ function salvarHistorico(motivo) {
             vidas: d.vidas
         }))
         .sort((a, b) => b.pontuacao - a.pontuacao);
+}
 
-    if (ranking.length === 0) return; // ninguém jogou
+function calcularRelatorioFinal(rodadas = []) {
+    const melhorPontuacaoPorAluno = new Map();
+    const mediasPorAluno = new Map();
+
+    rodadas.forEach((rodada) => {
+        (rodada.ranking || []).forEach((item) => {
+            const atualMelhor = melhorPontuacaoPorAluno.get(item.alunoId);
+            if (!atualMelhor || item.pontuacao > atualMelhor.pontuacao) {
+                melhorPontuacaoPorAluno.set(item.alunoId, {
+                    alunoId: item.alunoId,
+                    nome: item.nome,
+                    pontuacao: item.pontuacao,
+                    rodada: rodada.numero
+                });
+            }
+
+            const agg = mediasPorAluno.get(item.alunoId) || {
+                alunoId: item.alunoId,
+                nome: item.nome,
+                soma: 0,
+                rodadas: 0
+            };
+
+            agg.soma += item.pontuacao;
+            agg.rodadas += 1;
+            mediasPorAluno.set(item.alunoId, agg);
+        });
+    });
+
+    const topPontuacoesUnicas = Array.from(melhorPontuacaoPorAluno.values())
+        .sort((a, b) => b.pontuacao - a.pontuacao || a.rodada - b.rodada)
+        .slice(0, 3);
+
+    const topPontuacoesMedias = Array.from(mediasPorAluno.values())
+        .map((item) => ({
+            alunoId: item.alunoId,
+            nome: item.nome,
+            media: item.rodadas > 0 ? Number((item.soma / item.rodadas).toFixed(2)) : 0,
+            rodadasParticipadas: item.rodadas
+        }))
+        .sort((a, b) => b.media - a.media || b.rodadasParticipadas - a.rodadasParticipadas)
+        .slice(0, 3);
+
+    return {
+        topPontuacoesUnicas,
+        topPontuacoesMedias
+    };
+}
+
+function salvarHistoricoFinal(motivoFinal) {
+    if (!estado.competicao || !estado.competicao.finalizada || estado.historicoSalvo) return;
+
+    const ultimaRodada = estado.competicao.rodadas[estado.competicao.rodadas.length - 1] || null;
+    const ranking = ultimaRodada?.ranking || [];
+    if (ranking.length === 0) return;
 
     const historico = lerJSON(ARQUIVO_HIST, []);
     const agora     = new Date();
 
     const registro = {
-        id:           Date.now(),
-        data:         agora.toLocaleDateString("pt-BR"),
-        hora:         agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
-        duracaoSeg:   estado.duracaoSeg,
-        motivo,       // "tempo" | "manual"
+        id: Date.now(),
+        data: agora.toLocaleDateString("pt-BR"),
+        hora: agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+        duracaoSeg: estado.duracaoSeg,
+        motivo: motivoFinal,
         participantes: ranking.length,
-        ranking
+        totalRodadas: estado.competicao.totalRodadas,
+        rodadas: (estado.competicao.rodadas || []).map((rodada) => ({
+            numero: rodada.numero,
+            motivo: rodada.motivo,
+            inicioMs: rodada.inicioMs,
+            fimMs: rodada.fimMs,
+            ranking: rodada.ranking || []
+        })),
+        ranking,
+        relatorioFinal: estado.competicao.relatorioFinal || null
     };
 
     historico.unshift(registro);
-
-    // Mantém no máximo 50 competições no histórico
     if (historico.length > 50) historico.splice(50);
-
     salvarJSON(ARQUIVO_HIST, historico);
 
-    // Também salva o histórico por aluno para consulta individual.
     ranking.forEach((item, idx) => {
         if (!item.alunoId) return;
         const aluno = obterAlunoPorId(item.alunoId);
@@ -248,7 +322,8 @@ function salvarHistorico(motivo) {
             pontuacao: item.pontuacao,
             vidas: item.vidas,
             posicao: idx + 1,
-            totalParticipantes: ranking.length
+            totalParticipantes: ranking.length,
+            totalRodadas: registro.totalRodadas
         });
 
         if (aluno.historicoCompeticao.length > 100) {
@@ -258,21 +333,47 @@ function salvarHistorico(motivo) {
 
     salvarJSON(ARQUIVO_ALUNOS, alunos);
     estado.historicoSalvo = true;
-    console.log(`[${new Date().toLocaleTimeString()}] Histórico salvo (${ranking.length} participantes)`);
 }
 
-// ── Estado da competição (memória) ────────────────────────────────────────────
+function iniciarRodada() {
+    if (!estado.competicao) return false;
 
-let estado = {
-    fase:       "aguardando",
-    duracaoSeg: 600,
-    inicioMs:   null,
-    categoria:  "Todas",
-    ocultarPontuacaoAlunos: false,
-    alunos:     {},
-    espera:     [],
-    historicoSalvo: false
-};
+    if (estado.competicao.rodadaAtual >= estado.competicao.totalRodadas) return false;
+
+    estado.competicao.rodadaAtual += 1;
+    estado.fase = "rodando";
+    estado.inicioMs = Date.now();
+    estado.alunos = {};
+    return true;
+}
+
+function encerrarRodada(motivo) {
+    if (estado.fase !== "rodando" || !estado.competicao) return false;
+
+    const ranking = montarRankingAtual();
+
+    estado.competicao.rodadas.push({
+        numero: estado.competicao.rodadaAtual,
+        motivo,
+        inicioMs: estado.inicioMs,
+        fimMs: Date.now(),
+        ranking
+    });
+
+    estado.inicioMs = null;
+
+    if (estado.competicao.rodadaAtual >= estado.competicao.totalRodadas) {
+        estado.fase = "finalizada";
+        estado.competicao.finalizada = true;
+        estado.competicao.motivoFinal = motivo;
+        estado.competicao.relatorioFinal = calcularRelatorioFinal(estado.competicao.rodadas);
+        salvarHistoricoFinal(motivo);
+    } else {
+        estado.fase = "encerrada";
+    }
+
+    return true;
+}
 
 // ── Utilitários HTTP ──────────────────────────────────────────────────────────
 
@@ -763,17 +864,28 @@ const servidor = http.createServer(async (req, res) => {
     if (metodo === "GET" && url === "/api/estado") {
         const agora     = Date.now();
         const decorrido = estado.inicioMs ? Math.floor((agora - estado.inicioMs) / 1000) : 0;
-        const restante  = Math.max(0, estado.duracaoSeg - decorrido);
+        const restante  = estado.fase === "rodando"
+            ? Math.max(0, estado.duracaoSeg - decorrido)
+            : 0;
         if (estado.fase === "rodando" && restante === 0) {
-            estado.fase = "encerrada";
-            salvarHistorico("tempo");
+            encerrarRodada("tempo");
         }
+
+        const rodadaAtual = estado.competicao?.rodadaAtual || 0;
+        const totalRodadas = estado.competicao?.totalRodadas || 0;
+        const rodadasConcluidas = estado.competicao?.rodadas?.length || 0;
+        const temProximaRodada = !!estado.competicao && rodadaAtual < totalRodadas;
+
         responderJSON(res, 200, {
             fase: estado.fase,
             restante,
             duracao: estado.duracaoSeg,
             categoria: estado.categoria || "Todas",
-            ocultarPontuacaoAlunos: !!estado.ocultarPontuacaoAlunos
+            ocultarPontuacaoAlunos: !!estado.ocultarPontuacaoAlunos,
+            rodadaAtual,
+            totalRodadas,
+            rodadasConcluidas,
+            temProximaRodada
         });
         return;
     }
@@ -785,16 +897,44 @@ const servidor = http.createServer(async (req, res) => {
         definirCookieSessaoAdmin(res, sessao.token);
 
         const corpo = await lerCorpo(req);
-        estado.fase       = "rodando";
-        estado.duracaoSeg = parseInt(corpo.duracaoSeg) || 600;
-        estado.inicioMs   = Date.now();
-        estado.categoria  = (corpo.categoria || "Todas").trim() || "Todas";
-        estado.ocultarPontuacaoAlunos = !!corpo.ocultarPontuacaoAlunos;
-        estado.alunos     = {};
-        estado.espera     = [];
-        estado.historicoSalvo = false;
-        console.log(`[${new Date().toLocaleTimeString()}] Competição iniciada — ${estado.duracaoSeg}s | categoria: ${estado.categoria}`);
-        responderJSON(res, 200, { ok: true });
+        if (estado.fase === "rodando") {
+            responderJSON(res, 409, { ok: false, erro: "Já existe uma rodada em andamento." });
+            return;
+        }
+
+        if (!estado.competicao || estado.fase === "aguardando") {
+            const totalRodadas = Math.max(1, parseInt(corpo.totalRodadas) || 1);
+            estado.duracaoSeg = Math.max(60, parseInt(corpo.duracaoSeg) || 600);
+            estado.categoria = (corpo.categoria || "Todas").trim() || "Todas";
+            estado.ocultarPontuacaoAlunos = !!corpo.ocultarPontuacaoAlunos;
+            estado.competicao = {
+                totalRodadas,
+                rodadaAtual: 0,
+                rodadas: [],
+                finalizada: false,
+                motivoFinal: null,
+                relatorioFinal: null
+            };
+            estado.historicoSalvo = false;
+            estado.espera = [];
+        } else if (estado.fase !== "encerrada") {
+            responderJSON(res, 409, { ok: false, erro: "Não é possível iniciar rodada neste momento." });
+            return;
+        }
+
+        if (!iniciarRodada()) {
+            responderJSON(res, 409, { ok: false, erro: "Todas as rodadas já foram concluídas." });
+            return;
+        }
+
+        console.log(
+            `[${new Date().toLocaleTimeString()}] Rodada ${estado.competicao.rodadaAtual}/${estado.competicao.totalRodadas} iniciada — ${estado.duracaoSeg}s | categoria: ${estado.categoria}`
+        );
+        responderJSON(res, 200, {
+            ok: true,
+            rodadaAtual: estado.competicao.rodadaAtual,
+            totalRodadas: estado.competicao.totalRodadas
+        });
         return;
     }
 
@@ -804,10 +944,20 @@ const servidor = http.createServer(async (req, res) => {
         if (!sessao) return;
         definirCookieSessaoAdmin(res, sessao.token);
 
-        salvarHistorico("manual");
-        estado.fase = "encerrada";
-        console.log(`[${new Date().toLocaleTimeString()}] Competição encerrada pelo professor`);
-        responderJSON(res, 200, { ok: true });
+        if (estado.fase !== "rodando") {
+            responderJSON(res, 400, { ok: false, erro: "Não há rodada em andamento para encerrar." });
+            return;
+        }
+
+        encerrarRodada("manual");
+        console.log(`[${new Date().toLocaleTimeString()}] Rodada encerrada pelo professor`);
+        responderJSON(res, 200, {
+            ok: true,
+            fase: estado.fase,
+            rodadaAtual: estado.competicao?.rodadaAtual || 0,
+            totalRodadas: estado.competicao?.totalRodadas || 0,
+            temProximaRodada: !!estado.competicao && estado.competicao.rodadaAtual < estado.competicao.totalRodadas
+        });
         return;
     }
 
@@ -817,17 +967,10 @@ const servidor = http.createServer(async (req, res) => {
         if (!sessao) return;
         definirCookieSessaoAdmin(res, sessao.token);
 
-        if (estado.fase === "encerrada") salvarHistorico("manual"); // garante salvamento se não havia sido salvo
-        estado = {
-            fase: "aguardando",
-            duracaoSeg: 600,
-            inicioMs: null,
-            categoria: "Todas",
-            ocultarPontuacaoAlunos: false,
-            alunos: {},
-            espera: [],
-            historicoSalvo: false
-        };
+        if (estado.fase === "finalizada") {
+            salvarHistoricoFinal(estado.competicao?.motivoFinal || "manual");
+        }
+        estado = criarEstadoInicial();
         console.log(`[${new Date().toLocaleTimeString()}] Estado resetado`);
         responderJSON(res, 200, { ok: true });
         return;
@@ -886,10 +1029,16 @@ const servidor = http.createServer(async (req, res) => {
 
     // GET /api/placar
     if (metodo === "GET" && url === "/api/placar") {
-        const ranking = Object.values(estado.alunos)
-            .map((d) => ({ ...d }))
-            .sort((a, b) => b.pontuacao - a.pontuacao);
-        responderJSON(res, 200, { fase: estado.fase, ranking });
+        const ranking = montarRankingAtual();
+        responderJSON(res, 200, {
+            fase: estado.fase,
+            ranking,
+            rodadaAtual: estado.competicao?.rodadaAtual || 0,
+            totalRodadas: estado.competicao?.totalRodadas || 0,
+            rodadasConcluidas: estado.competicao?.rodadas?.length || 0,
+            temProximaRodada: !!estado.competicao && estado.competicao.rodadaAtual < estado.competicao.totalRodadas,
+            relatorioFinal: estado.competicao?.relatorioFinal || null
+        });
         return;
     }
 
@@ -897,15 +1046,16 @@ const servidor = http.createServer(async (req, res) => {
     if (metodo === "GET" && url.startsWith("/api/resultado-aluno")) {
         const params    = new URLSearchParams(req.url.split("?")[1] || "");
         const alunoId   = (params.get("alunoId") || "").trim();
-        const ranking   = Object.values(estado.alunos)
-            .map((d) => ({ ...d }))
-            .sort((a, b) => b.pontuacao - a.pontuacao);
+        const ranking   = montarRankingAtual();
         const posicao   = ranking.findIndex(a => a.alunoId === alunoId) + 1;
         const meusDados = estado.alunos[alunoId] || { pontuacao: 0, vidas: 0, nome: "Aluno" };
-        const ocultarPontuacaoAlunos = !!estado.ocultarPontuacaoAlunos && estado.fase === "encerrada";
+        const ocultarPontuacaoAlunos =
+            !!estado.ocultarPontuacaoAlunos && (estado.fase === "encerrada" || estado.fase === "finalizada");
         responderJSON(res, 200, {
             fase: estado.fase,
             ocultarPontuacaoAlunos,
+            rodadaAtual: estado.competicao?.rodadaAtual || 0,
+            totalRodadas: estado.competicao?.totalRodadas || 0,
             posicao: posicao || null,
             total: ranking.length,
             nome: meusDados.nome,
@@ -963,8 +1113,9 @@ const servidor = http.createServer(async (req, res) => {
         definirCookieSessaoAdmin(res, sessao.token);
 
         const historico = lerJSON(ARQUIVO_HIST, []);
-        const resumo = historico.map(({ id, data, hora, duracaoSeg, motivo, participantes, ranking }) => ({
+        const resumo = historico.map(({ id, data, hora, duracaoSeg, motivo, participantes, ranking, totalRodadas, rodadas }) => ({
             id, data, hora, duracaoSeg, motivo, participantes,
+            totalRodadas: totalRodadas || (Array.isArray(rodadas) ? rodadas.length : 1),
             top3: (ranking || []).slice(0, 3)
         }));
         responderJSON(res, 200, resumo);

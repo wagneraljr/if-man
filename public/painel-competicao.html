@@ -72,6 +72,19 @@
                 </div>
 
                 <div class="campo-grupo">
+                    <label style="font-size:1rem;">Formato da competição</label>
+                    <div class="duracao-opcoes" style="margin-top:4px;">
+                        <button class="btn-duracao ativo" id="btn-rodada-unica" onclick="selecionarModoRodadas(false)">Rodada única</button>
+                        <button class="btn-duracao" id="btn-multiplas-rodadas" onclick="selecionarModoRodadas(true)">Múltiplas rodadas</button>
+                    </div>
+                    <div id="grupo-total-rodadas" class="duracao-custom" style="margin-top:10px; display:none;">
+                        <input type="number" id="total-rodadas" min="2" max="20" value="2" oninput="atualizarTotalRodadas(this)">
+                        <span>rodadas</span>
+                    </div>
+                    <span class="hint" style="font-size:1rem;">Todas as rodadas terão a mesma duração configurada acima.</span>
+                </div>
+
+                <div class="campo-grupo">
                     <label for="categoria-competicao" style="font-size:1rem;">Categoria das questões</label>
                     <select id="categoria-competicao" class="input-selecao"></select>
                     <span class="hint" style="font-size:1rem;">Selecione uma categoria específica ou Todas para usar o banco inteiro.</span>
@@ -141,6 +154,9 @@
         let rankingAtual       = []; // cache do ranking para exportação
         let categoriaSelecionada = "Todas";
         let ocultarPontuacaoAlunos = false;
+        let totalRodadasSelecionadas = 1;
+        let rodadaAtualCompeticao = 0;
+        let relatorioFinalAtual = null;
 
         async function sairProfessor(event) {
             if (event) event.preventDefault();
@@ -168,6 +184,30 @@
             if (val > 0) duracaoSelecionada = val * 60;
         }
 
+        function selecionarModoRodadas(multiplas) {
+            const btnUnica = document.getElementById("btn-rodada-unica");
+            const btnMultiplas = document.getElementById("btn-multiplas-rodadas");
+            const grupoRodadas = document.getElementById("grupo-total-rodadas");
+
+            if (multiplas) {
+                btnUnica.classList.remove("ativo");
+                btnMultiplas.classList.add("ativo");
+                grupoRodadas.style.display = "inline-flex";
+                totalRodadasSelecionadas = Math.max(2, parseInt(document.getElementById("total-rodadas")?.value) || 2);
+            } else {
+                btnMultiplas.classList.remove("ativo");
+                btnUnica.classList.add("ativo");
+                grupoRodadas.style.display = "none";
+                totalRodadasSelecionadas = 1;
+            }
+        }
+
+        function atualizarTotalRodadas(input) {
+            const val = parseInt(input.value);
+            totalRodadasSelecionadas = Number.isFinite(val) ? Math.max(2, Math.min(20, val)) : 2;
+            input.value = totalRodadasSelecionadas;
+        }
+
         async function carregarCategoriasCompeticao() {
             try {
                 const categorias = await obterCategoriasQuestoes();
@@ -182,7 +222,11 @@
         async function iniciarCompeticao() {
             categoriaSelecionada = document.getElementById("categoria-competicao")?.value || "Todas";
             ocultarPontuacaoAlunos = !!document.getElementById("ocultar-pontuacao-alunos")?.checked;
-            if (!confirm(`Iniciar competição de ${Math.round(duracaoSelecionada/60)} minutos na categoria ${categoriaSelecionada}?\n\nTodos os alunos na sala de espera entrarão no jogo automaticamente.`)) return;
+            const mensagemRodadas = totalRodadasSelecionadas === 1
+                ? "1 rodada"
+                : `${totalRodadasSelecionadas} rodadas`;
+
+            if (!confirm(`Iniciar competição de ${mensagemRodadas}, com ${Math.round(duracaoSelecionada/60)} minutos por rodada, na categoria ${categoriaSelecionada}?\n\nTodos os alunos na sala de espera entrarão no jogo automaticamente.`)) return;
 
             try {
                 await fetch("/api/iniciar", {
@@ -191,7 +235,8 @@
                     body:    JSON.stringify({
                         duracaoSeg: duracaoSelecionada,
                         categoria: categoriaSelecionada,
-                        ocultarPontuacaoAlunos
+                        ocultarPontuacaoAlunos,
+                        totalRodadas: totalRodadasSelecionadas
                     })
                 });
                 mudarFase("rodando");
@@ -203,9 +248,9 @@
         // ── Encerrar manualmente ───────────────────────────────────────────────
 
         async function encerrarManualmente() {
-            if (!confirm("Encerrar a competição agora?")) return;
+            if (!confirm("Encerrar a rodada atual agora?")) return;
             await fetch("/api/encerrar", { method: "POST" });
-            mudarFase("encerrada");
+            await sincronizarEstadoAtual();
             carregarResultadoFinal();
         }
 
@@ -222,7 +267,7 @@
             faseAtual = fase;
             document.getElementById("secao-configurar").style.display = fase === "aguardando" ? "block" : "none";
             document.getElementById("secao-rodando").style.display    = fase === "rodando"    ? "block" : "none";
-            document.getElementById("secao-resultado").style.display  = fase === "encerrada"  ? "block" : "none";
+            document.getElementById("secao-resultado").style.display  = (fase === "encerrada" || fase === "finalizada") ? "block" : "none";
 
             if (fase === "rodando") {
                 iniciarPollingPlacar();
@@ -248,9 +293,10 @@
                 const resEstado = await fetch("/api/estado");
                 const estado    = await resEstado.json();
                 renderizarTimerProfessor(estado.restante);
+                rodadaAtualCompeticao = estado.rodadaAtual || rodadaAtualCompeticao;
 
-                if (estado.fase === "encerrada" && faseAtual === "rodando") {
-                    mudarFase("encerrada");
+                if ((estado.fase === "encerrada" || estado.fase === "finalizada") && faseAtual === "rodando") {
+                    mudarFase(estado.fase);
                     carregarResultadoFinal();
                     return;
                 }
@@ -298,12 +344,99 @@
                 const res    = await fetch("/api/placar");
                 const dados  = await res.json();
                 rankingAtual = dados.ranking; // armazena para exportação
+                rodadaAtualCompeticao = dados.rodadaAtual || rodadaAtualCompeticao;
+                relatorioFinalAtual = dados.relatorioFinal || null;
+
+                const titulo = document.querySelector("#secao-resultado h2");
+                const subtitulo = document.querySelector("#secao-resultado .texto-secundario");
+                if (titulo) {
+                    titulo.innerText = dados.fase === "finalizada"
+                        ? "Resultado Final da Competição"
+                        : `Resultado da Rodada ${dados.rodadaAtual || 1}`;
+                }
+                if (subtitulo) {
+                    subtitulo.innerText = dados.fase === "finalizada"
+                        ? `${dados.totalRodadas || 1} rodada(s) concluída(s).`
+                        : `Rodada ${dados.rodadaAtual || 1} encerrada. A próxima só inicia quando o professor clicar no botão.`;
+                }
+
+                renderizarAcoesResultado(dados);
                 renderizarPodio(dados.ranking);
                 renderizarListaCompleta(dados.ranking);
+                const exibirRelatorioFinal =
+                    dados.fase === "finalizada" && (Number(dados.totalRodadas) || 1) > 1;
+                renderizarRelatorioFinal(dados.relatorioFinal, exibirRelatorioFinal);
             } catch {
                 document.getElementById("podio").innerHTML =
                     "<p>Erro ao carregar resultado. Verifique o servidor.</p>";
             }
+        }
+
+        function renderizarAcoesResultado(dados) {
+            const acoes = document.querySelector("#secao-resultado .painel-cabecalho > div:last-child");
+            if (!acoes) return;
+
+            const podeIniciarProxima = dados.fase === "encerrada" && !!dados.temProximaRodada;
+
+            acoes.innerHTML = `
+                <button onclick="exportarCSV()" class="btn-outline-sm">⬇ Exportar CSV</button>
+                ${podeIniciarProxima
+                    ? '<button onclick="iniciarProximaRodada()" class="btn-primario">▶ Iniciar Próxima Rodada</button>'
+                    : ''}
+                <button onclick="resetarCompeticao()" class="btn-primario">+ Nova Competição</button>
+            `;
+        }
+
+        async function iniciarProximaRodada() {
+            if (!confirm("Iniciar a próxima rodada agora?")) return;
+            try {
+                await fetch("/api/iniciar", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({})
+                });
+                mudarFase("rodando");
+            } catch {
+                alert("Não foi possível iniciar a próxima rodada.");
+            }
+        }
+
+        function renderizarRelatorioFinal(relatorio, exibir) {
+            let secao = document.getElementById("secao-relatorio-final");
+            if (!secao) {
+                secao = document.createElement("div");
+                secao.id = "secao-relatorio-final";
+                secao.className = "lista-questoes";
+                secao.style.marginTop = "20px";
+                document.getElementById("secao-resultado").appendChild(secao);
+            }
+
+            if (!exibir || !relatorio) {
+                secao.style.display = "none";
+                secao.innerHTML = "";
+                return;
+            }
+
+            secao.style.display = "block";
+
+            const unicas = relatorio.topPontuacoesUnicas || [];
+            const medias = relatorio.topPontuacoesMedias || [];
+
+            secao.innerHTML = `
+                <h3 style="margin-bottom:12px; color:var(--if-verde-escuro)">Relatório Final</h3>
+                <div class="questao-card" style="margin-bottom:12px;">
+                    <h4 style="margin:0 0 8px;">Top 3 pontuações únicas</h4>
+                    ${unicas.length === 0
+                        ? '<p class="texto-secundario" style="margin:0;">Sem dados.</p>'
+                        : unicas.map((item, i) => `<p style="margin:4px 0;">${i + 1}º ${item.nome}: ${item.pontuacao} pts (Rodada ${item.rodada})</p>`).join("")}
+                </div>
+                <div class="questao-card">
+                    <h4 style="margin:0 0 8px;">Top 3 pontuações médias</h4>
+                    ${medias.length === 0
+                        ? '<p class="texto-secundario" style="margin:0;">Sem dados.</p>'
+                        : medias.map((item, i) => `<p style="margin:4px 0;">${i + 1}º ${item.nome}: média ${item.media} pts (${item.rodadasParticipadas} rodada(s))</p>`).join("")}
+                </div>
+            `;
         }
 
         function exportarCSV() {
@@ -457,15 +590,34 @@
                 const dados = await res.json();
                 categoriaSelecionada = dados.categoria || "Todas";
                 ocultarPontuacaoAlunos = !!dados.ocultarPontuacaoAlunos;
+                rodadaAtualCompeticao = dados.rodadaAtual || 0;
+                totalRodadasSelecionadas = Math.max(1, dados.totalRodadas || 1);
                 const checkOcultar = document.getElementById("ocultar-pontuacao-alunos");
                 if (checkOcultar) checkOcultar.checked = ocultarPontuacaoAlunos;
+                if (totalRodadasSelecionadas > 1) {
+                    const totalInput = document.getElementById("total-rodadas");
+                    if (totalInput) totalInput.value = totalRodadasSelecionadas;
+                    selecionarModoRodadas(true);
+                } else {
+                    selecionarModoRodadas(false);
+                }
                 mudarFase(dados.fase);
-                if (dados.fase === "encerrada") carregarResultadoFinal();
+                if (dados.fase === "encerrada" || dados.fase === "finalizada") carregarResultadoFinal();
             } catch {
                 // Servidor fora: fica na tela de configuração
                 mudarFase("aguardando");
             }
             await carregarCategoriasCompeticao();
+        }
+
+        async function sincronizarEstadoAtual() {
+            try {
+                const res = await fetch("/api/estado");
+                const dados = await res.json();
+                mudarFase(dados.fase || "aguardando");
+            } catch {
+                mudarFase("aguardando");
+            }
         }
 
         setInterval(atualizarAlunosEspera, 3000);

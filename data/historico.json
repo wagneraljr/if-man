@@ -1,5 +1,100 @@
 [
   {
+    "id": 1783083739703,
+    "data": "03/07/2026",
+    "hora": "10:02",
+    "duracaoSeg": 120,
+    "motivo": "manual",
+    "participantes": 2,
+    "totalRodadas": 2,
+    "rodadas": [
+      {
+        "numero": 1,
+        "motivo": "manual",
+        "inicioMs": 1783083739697,
+        "fimMs": 1783083739699,
+        "ranking": [
+          {
+            "alunoId": "aluno_1781283675740_25409",
+            "nome": "Wagner",
+            "pontuacao": 100,
+            "vidas": 3
+          },
+          {
+            "alunoId": "aluno_1781634917042_43471",
+            "nome": "Sofia",
+            "pontuacao": 80,
+            "vidas": 2
+          }
+        ]
+      },
+      {
+        "numero": 2,
+        "motivo": "manual",
+        "inicioMs": 1783083739700,
+        "fimMs": 1783083739702,
+        "ranking": [
+          {
+            "alunoId": "aluno_1781634917042_43471",
+            "nome": "Sofia",
+            "pontuacao": 130,
+            "vidas": 3
+          },
+          {
+            "alunoId": "aluno_1781283675740_25409",
+            "nome": "Wagner",
+            "pontuacao": 90,
+            "vidas": 1
+          }
+        ]
+      }
+    ],
+    "ranking": [
+      {
+        "alunoId": "aluno_1781634917042_43471",
+        "nome": "Sofia",
+        "pontuacao": 130,
+        "vidas": 3
+      },
+      {
+        "alunoId": "aluno_1781283675740_25409",
+        "nome": "Wagner",
+        "pontuacao": 90,
+        "vidas": 1
+      }
+    ],
+    "relatorioFinal": {
+      "topPontuacoesUnicas": [
+        {
+          "alunoId": "aluno_1781634917042_43471",
+          "nome": "Sofia",
+          "pontuacao": 130,
+          "rodada": 2
+        },
+        {
+          "alunoId": "aluno_1781283675740_25409",
+          "nome": "Wagner",
+          "pontuacao": 100,
+          "rodada": 1
+        }
+      ],
+      "topPontuacoesMedias": [
+        {
+          "alunoId": "aluno_1781634917042_43471",
+          "nome": "Sofia",
+          "media": 105,
+          "rodadasParticipadas": 2
+        },
+        {
+          "alunoId": "aluno_1781283675740_25409",
+          "nome": "Wagner",
+          "media": 95,
+          "rodadasParticipadas": 2
+        }
+      ]
+    }
+  },
+  {
     "id": 1782481679636,
     "data": "26/06/2026",
     "hora": "10:47",

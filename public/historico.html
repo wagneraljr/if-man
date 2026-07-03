@@ -67,6 +67,12 @@
 
             <!-- Ranking completo -->
             <div id="detalhe-ranking" style="margin-top: 8px;"></div>
+
+            <!-- Rodadas da competição -->
+            <div id="detalhe-rodadas" style="margin-top: 16px;"></div>
+
+            <!-- Relatório final -->
+            <div id="detalhe-relatorio" style="margin-top: 16px;"></div>
         </div>
 
     </main>
@@ -129,6 +135,7 @@
                         <div class="hist-meta">
                             <span>👥 ${comp.participantes} participante${comp.participantes !== 1 ? "s" : ""}</span>
                             <span>⏱ ${Math.round(comp.duracaoSeg / 60)} min</span>
+                            <span>🔁 ${comp.totalRodadas || 1} rodada${(comp.totalRodadas || 1) !== 1 ? "s" : ""}</span>
                         </div>
 
                         <div class="alts-wrap" style="margin-top:10px;">
@@ -168,13 +175,16 @@
         }
 
         function renderizarDetalhe(comp) {
+            const totalRodadas = comp.totalRodadas || (Array.isArray(comp.rodadas) ? comp.rodadas.length : 1);
             document.getElementById("detalhe-titulo").innerText =
                 `${comp.data} às ${comp.hora}`;
             document.getElementById("detalhe-info").innerText =
-                `${comp.participantes} participante${comp.participantes !== 1 ? "s" : ""} · ${Math.round(comp.duracaoSeg / 60)} min · ${comp.motivo === "tempo" ? "Tempo esgotado" : "Encerrada manualmente"}`;
+                `${comp.participantes} participante${comp.participantes !== 1 ? "s" : ""} · ${Math.round(comp.duracaoSeg / 60)} min por rodada · ${totalRodadas} rodada${totalRodadas !== 1 ? "s" : ""} · ${comp.motivo === "tempo" ? "Tempo esgotado" : "Encerrada manualmente"}`;
 
             renderizarPodioDetalhe(comp.ranking);
             renderizarRankingDetalhe(comp.ranking);
+            renderizarRodadasDetalhe(comp.rodadas || []);
+            renderizarRelatorioFinalDetalhe(comp.relatorioFinal || null);
         }
 
         function renderizarPodioDetalhe(ranking) {
@@ -223,6 +233,66 @@
                         <div class="placar-vidas">${"❤".repeat(Math.max(0, aluno.vidas || 0))}</div>
                     </div>`;
                 }).join("")}`;
+        }
+
+        function renderizarRodadasDetalhe(rodadas) {
+            const el = document.getElementById("detalhe-rodadas");
+            if (!Array.isArray(rodadas) || rodadas.length === 0) {
+                el.innerHTML = "";
+                return;
+            }
+
+            el.innerHTML = `
+                <h3 style="margin-bottom:12px; color:var(--if-verde-escuro)">Rodadas</h3>
+                ${rodadas.map((rodada) => {
+                    const top3 = (rodada.ranking || []).slice(0, 3);
+                    return `
+                    <div class="questao-card" style="margin-bottom:10px;">
+                        <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:6px;">
+                            <strong>Rodada ${rodada.numero}</strong>
+                            <span class="hist-badge ${rodada.motivo === "tempo" ? "" : "hist-badge-manual"}">
+                                ${rodada.motivo === "tempo" ? "⏱ Tempo esgotado" : "■ Encerrada manualmente"}
+                            </span>
+                        </div>
+                        <div class="alts-wrap">
+                            ${top3.length === 0
+                                ? '<span class="hint">Sem pontuações registradas nesta rodada.</span>'
+                                : top3.map((a, i) => `<span class="alt-badge ${i === 0 ? "alt-correta" : ""}">${MEDALHAS[i]} ${a.nome} — ${a.pontuacao} pts</span>`).join("")}
+                        </div>
+                    </div>`;
+                }).join("")}
+            `;
+        }
+
+        function renderizarRelatorioFinalDetalhe(relatorio) {
+            const el = document.getElementById("detalhe-relatorio");
+            if (!relatorio) {
+                el.innerHTML = "";
+                return;
+            }
+
+            const unicas = relatorio.topPontuacoesUnicas || [];
+            const medias = relatorio.topPontuacoesMedias || [];
+
+            el.innerHTML = `
+                <h3 style="margin-bottom:12px; color:var(--if-verde-escuro)">Relatório Final</h3>
+                <div class="questao-card" style="margin-bottom:10px;">
+                    <strong>Top 3 pontuações únicas</strong>
+                    <div style="margin-top:8px; display:flex; flex-direction:column; gap:4px;">
+                        ${unicas.length === 0
+                            ? '<span class="hint">Sem dados.</span>'
+                            : unicas.map((item, i) => `<span>${i + 1}º ${item.nome}: ${item.pontuacao} pts (Rodada ${item.rodada})</span>`).join("")}
+                    </div>
+                </div>
+                <div class="questao-card">
+                    <strong>Top 3 pontuações médias</strong>
+                    <div style="margin-top:8px; display:flex; flex-direction:column; gap:4px;">
+                        ${medias.length === 0
+                            ? '<span class="hint">Sem dados.</span>'
+                            : medias.map((item, i) => `<span>${i + 1}º ${item.nome}: média ${item.media} pts (${item.rodadasParticipadas} rodada(s))</span>`).join("")}
+                    </div>
+                </div>
+            `;
         }
 
         // ── Exportação CSV ────────────────────────────────────────────────────────

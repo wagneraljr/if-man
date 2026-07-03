@@ -30,7 +30,7 @@ function iniciarPolling(onEncerrar) {
 
             atualizarTimerVisual(dados.restante);
 
-            if (dados.fase === "encerrada" && competicaoAtiva) {
+            if ((dados.fase === "encerrada" || dados.fase === "finalizada") && competicaoAtiva) {
                 competicaoAtiva = false;
                 pararPolling();
                 if (callbackEncerrar) callbackEncerrar();

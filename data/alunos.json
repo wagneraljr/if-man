@@ -6,6 +6,18 @@
     "senhaHash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
     "historicoCompeticao": [
       {
+        "competicaoId": 1783083739703,
+        "data": "03/07/2026",
+        "hora": "10:02",
+        "motivo": "manual",
+        "duracaoSeg": 120,
+        "pontuacao": 90,
+        "vidas": 1,
+        "posicao": 2,
+        "totalParticipantes": 2,
+        "totalRodadas": 2
+      },
+      {
         "competicaoId": 1782481679636,
         "data": "26/06/2026",
         "hora": "10:47",
@@ -36,7 +48,20 @@
     "nomeCompleto": "Sofia Costa Schultz",
     "apelido": "Sofia",
     "senhaHash": "31df289a6c3987aea286834da3ce9a94683ca8e0ced4beb6950c441ad73e2551",
-    "historicoCompeticao": [],
+    "historicoCompeticao": [
+      {
+        "competicaoId": 1783083739703,
+        "data": "03/07/2026",
+        "hora": "10:02",
+        "motivo": "manual",
+        "duracaoSeg": 120,
+        "pontuacao": 130,
+        "vidas": 3,
+        "posicao": 1,
+        "totalParticipantes": 2,
+        "totalRodadas": 2
+      }
+    ],
     "criadoEm": "2026-06-16T18:35:17.042Z",
     "atualizadoEm": "2026-06-16T18:35:17.042Z"
   },

@@ -86,6 +86,7 @@
                             <span>⭐ ${item.pontuacao} pts</span>
                             <span>❤ ${item.vidas}</span>
                             <span>⏱ ${Math.round(item.duracaoSeg / 60)} min</span>
+                            <span>🔁 ${item.totalRodadas || 1} rodada${(item.totalRodadas || 1) !== 1 ? "s" : ""}</span>
                         </div>
                     </div>`).join("");
 
