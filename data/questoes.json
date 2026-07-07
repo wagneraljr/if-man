@@ -1447,5 +1447,971 @@
       }
     ],
     "id": 63
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Em qual década houve o marco inicial do entendimento moderno de qualidade?",
+    "alternativas": [
+      {
+        "texto": "1920",
+        "correta": true
+      },
+      {
+        "texto": "1960",
+        "correta": false
+      },
+      {
+        "texto": "1980",
+        "correta": false
+      },
+      {
+        "texto": "2010",
+        "correta": false
+      }
+    ],
+    "id": 64
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "No ciclo PDCA, qual é a etapa de identificar e planejar melhorias?",
+    "alternativas": [
+      {
+        "texto": "Plan",
+        "correta": true
+      },
+      {
+        "texto": "Do",
+        "correta": false
+      },
+      {
+        "texto": "Act",
+        "correta": false
+      },
+      {
+        "texto": "Identify",
+        "correta": false
+      }
+    ],
+    "id": 65
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "No ciclo PDCA, qual é a etapa de implementar as alterações?",
+    "alternativas": [
+      {
+        "texto": "Plan",
+        "correta": false
+      },
+      {
+        "texto": "Implement",
+        "correta": false
+      },
+      {
+        "texto": "Act",
+        "correta": false
+      },
+      {
+        "texto": "Do",
+        "correta": true
+      }
+    ],
+    "id": 66
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "No ciclo PDCA, qual é a etapa de verificar se a melhoria foi alcançada?",
+    "alternativas": [
+      {
+        "texto": "Plan",
+        "correta": false
+      },
+      {
+        "texto": "Check",
+        "correta": true
+      },
+      {
+        "texto": "Verify",
+        "correta": false
+      },
+      {
+        "texto": "Act",
+        "correta": false
+      }
+    ],
+    "id": 67
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "No ciclo PDCA, qual é a etapa de realizar ações corretivas?",
+    "alternativas": [
+      {
+        "texto": "Plan",
+        "correta": false
+      },
+      {
+        "texto": "Do",
+        "correta": false
+      },
+      {
+        "texto": "Correct",
+        "correta": false
+      },
+      {
+        "texto": "Act",
+        "correta": true
+      }
+    ],
+    "id": 68
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual das opções não faz parte da trilogia de Juran?",
+    "alternativas": [
+      {
+        "texto": "Controle",
+        "correta": false
+      },
+      {
+        "texto": "Planejamento",
+        "correta": false
+      },
+      {
+        "texto": "Ação",
+        "correta": true
+      },
+      {
+        "texto": "Melhoria da Qualidade",
+        "correta": false
+      }
+    ],
+    "id": 69
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual dessas não é uma organização de gestão de qualidade brasileira?",
+    "alternativas": [
+      {
+        "texto": "IBPQ",
+        "correta": false
+      },
+      {
+        "texto": "ISO",
+        "correta": true
+      },
+      {
+        "texto": "ABNT",
+        "correta": false
+      },
+      {
+        "texto": "FNQ",
+        "correta": false
+      }
+    ],
+    "id": 70
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual dessas não é uma organização/abordagem de qualidade?",
+    "alternativas": [
+      {
+        "texto": "TQM",
+        "correta": false
+      },
+      {
+        "texto": "QMS",
+        "correta": false
+      },
+      {
+        "texto": "OAB",
+        "correta": true
+      },
+      {
+        "texto": "ASQ",
+        "correta": false
+      }
+    ],
+    "id": 71
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual é a ferramenta utilizada para a organização sequencial dos processos?",
+    "alternativas": [
+      {
+        "texto": "Pareto",
+        "correta": false
+      },
+      {
+        "texto": "Fluxograma",
+        "correta": true
+      },
+      {
+        "texto": "Ishikawa",
+        "correta": false
+      },
+      {
+        "texto": "Dispersão",
+        "correta": false
+      }
+    ],
+    "id": 72
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual é a ferramenta a ser usada na verificação de processos?",
+    "alternativas": [
+      {
+        "texto": "Ishikawa",
+        "correta": false
+      },
+      {
+        "texto": "Lista de Verificação",
+        "correta": true
+      },
+      {
+        "texto": "Pareto",
+        "correta": false
+      },
+      {
+        "texto": "Histograma",
+        "correta": false
+      }
+    ],
+    "id": 73
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual é a ferramenta usada para identificar as causas de um problema?",
+    "alternativas": [
+      {
+        "texto": "Pareto",
+        "correta": false
+      },
+      {
+        "texto": "Histograma",
+        "correta": false
+      },
+      {
+        "texto": "Ishikawa",
+        "correta": true
+      },
+      {
+        "texto": "Dispersão",
+        "correta": false
+      }
+    ],
+    "id": 74
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual é a ferramenta usada para verificar não conformidades?",
+    "alternativas": [
+      {
+        "texto": "Pareto",
+        "correta": false
+      },
+      {
+        "texto": "Lista de Verificação",
+        "correta": false
+      },
+      {
+        "texto": "DIspersão",
+        "correta": false
+      },
+      {
+        "texto": "Carta de Controle",
+        "correta": true
+      }
+    ],
+    "id": 75
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual ferramenta exibe a frequência que uma determinada amostra de dados ocorre?",
+    "alternativas": [
+      {
+        "texto": "Fluxograma",
+        "correta": false
+      },
+      {
+        "texto": "Carta de Controle",
+        "correta": false
+      },
+      {
+        "texto": "Histograma",
+        "correta": true
+      },
+      {
+        "texto": "Dispersão",
+        "correta": false
+      }
+    ],
+    "id": 76
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual ferramenta mostra a possível relação entre duas variáveis?",
+    "alternativas": [
+      {
+        "texto": "Dispersão",
+        "correta": true
+      },
+      {
+        "texto": "Fluxograma",
+        "correta": false
+      },
+      {
+        "texto": "Pareto",
+        "correta": false
+      },
+      {
+        "texto": "Carta de Controle",
+        "correta": false
+      }
+    ],
+    "id": 77
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual dessas não é uma categoria de software?",
+    "alternativas": [
+      {
+        "texto": "Embarcado",
+        "correta": false
+      },
+      {
+        "texto": "Científico",
+        "correta": false
+      },
+      {
+        "texto": "Sistema",
+        "correta": false
+      },
+      {
+        "texto": "Delegado",
+        "correta": true
+      }
+    ],
+    "id": 78
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Um software feito para atender a outros programas é um software de:",
+    "alternativas": [
+      {
+        "texto": "Aplicação",
+        "correta": false
+      },
+      {
+        "texto": "Sistema",
+        "correta": true
+      },
+      {
+        "texto": "Engenharia",
+        "correta": false
+      },
+      {
+        "texto": "Linha de produtos",
+        "correta": false
+      }
+    ],
+    "id": 79
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Um programa projetado para prover capacidade específica de utilização por muitos clientes diferentes é um software:",
+    "alternativas": [
+      {
+        "texto": "Embarcado",
+        "correta": false
+      },
+      {
+        "texto": "Web",
+        "correta": false
+      },
+      {
+        "texto": "Linha de produtos",
+        "correta": true
+      },
+      {
+        "texto": "Móvel",
+        "correta": false
+      }
+    ],
+    "id": 80
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Um programa independentes que soluciona uma necessidade específica de negócio é um software:",
+    "alternativas": [
+      {
+        "texto": "Embarcado",
+        "correta": false
+      },
+      {
+        "texto": "Aplicação",
+        "correta": true
+      },
+      {
+        "texto": "Científico",
+        "correta": false
+      },
+      {
+        "texto": "Sistema",
+        "correta": false
+      }
+    ],
+    "id": 81
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "O programa existente em uma catraca de ônibus é um exemplo de software:",
+    "alternativas": [
+      {
+        "texto": "Embarcado",
+        "correta": true
+      },
+      {
+        "texto": "Embutido",
+        "correta": false
+      },
+      {
+        "texto": "Incluso",
+        "correta": false
+      },
+      {
+        "texto": "Anexo",
+        "correta": false
+      }
+    ],
+    "id": 82
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual dessas não é uma plataforma móvel para softwares?",
+    "alternativas": [
+      {
+        "texto": "iOS",
+        "correta": false
+      },
+      {
+        "texto": "macOS",
+        "correta": true
+      },
+      {
+        "texto": "Windows Mobile",
+        "correta": false
+      },
+      {
+        "texto": "Android",
+        "correta": false
+      }
+    ],
+    "id": 83
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "O desenvolvimento focado em servidores, recursos e sistema de armazenamento é:",
+    "alternativas": [
+      {
+        "texto": "Front-End",
+        "correta": false
+      },
+      {
+        "texto": "Full Stack",
+        "correta": false
+      },
+      {
+        "texto": "Back-End",
+        "correta": true
+      },
+      {
+        "texto": "Nuvem",
+        "correta": false
+      }
+    ],
+    "id": 84
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "A tecnologia que fornece dispositivos de computação para compartilhar recursos computacionais em grande escala é:",
+    "alternativas": [
+      {
+        "texto": "Torrent",
+        "correta": false
+      },
+      {
+        "texto": "Nuvem",
+        "correta": true
+      },
+      {
+        "texto": "Cluster",
+        "correta": false
+      },
+      {
+        "texto": "Scrum",
+        "correta": false
+      }
+    ],
+    "id": 85
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Problemas complexos que não são passíveis de computação ou análise direta podem ser resolvidos aproximadamente usando:",
+    "alternativas": [
+      {
+        "texto": "Heurística",
+        "correta": true
+      },
+      {
+        "texto": "Probabilidade",
+        "correta": false
+      },
+      {
+        "texto": "Polimorfismo",
+        "correta": false
+      },
+      {
+        "texto": "Aproximação",
+        "correta": false
+      }
+    ],
+    "id": 86
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Softwares muito antigos que ainda continuam em uso são chamados de:",
+    "alternativas": [
+      {
+        "texto": "Ultrapassados",
+        "correta": false
+      },
+      {
+        "texto": "Legado",
+        "correta": true
+      },
+      {
+        "texto": "Incompatíveis",
+        "correta": false
+      },
+      {
+        "texto": "Desatualizados",
+        "correta": false
+      }
+    ],
+    "id": 87
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "O quanto o programa satisfaz a sua especificação e atende aos objetivos da missão do cliente é:",
+    "alternativas": [
+      {
+        "texto": "Correção",
+        "correta": true
+      },
+      {
+        "texto": "Compatibilidade",
+        "correta": false
+      },
+      {
+        "texto": "Eficiência",
+        "correta": false
+      },
+      {
+        "texto": "Usabilidade",
+        "correta": false
+      }
+    ],
+    "id": 88
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "O quanto se pode esperar que um programa realize a função pretendida com a precisão exigida é:",
+    "alternativas": [
+      {
+        "texto": "Correção",
+        "correta": false
+      },
+      {
+        "texto": "Confiabilidade",
+        "correta": true
+      },
+      {
+        "texto": "Eficiência",
+        "correta": false
+      },
+      {
+        "texto": "Integridade",
+        "correta": false
+      }
+    ],
+    "id": 89
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "A quantidade de recursos computacionais e código exigidos por um programa para desempenhar sua função está relacionada a:",
+    "alternativas": [
+      {
+        "texto": "Confiabilidade",
+        "correta": false
+      },
+      {
+        "texto": "Integridade",
+        "correta": false
+      },
+      {
+        "texto": "Eficiência",
+        "correta": true
+      },
+      {
+        "texto": "Facilidade de Manutenção",
+        "correta": false
+      }
+    ],
+    "id": 90
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "O quanto o acesso ao software ou dados por pessoas não autorizadas pode ser controlado está relacionado a:",
+    "alternativas": [
+      {
+        "texto": "Usabilidade",
+        "correta": false
+      },
+      {
+        "texto": "Testabilidade",
+        "correta": false
+      },
+      {
+        "texto": "Correção",
+        "correta": false
+      },
+      {
+        "texto": "Integridade",
+        "correta": true
+      }
+    ],
+    "id": 91
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "O esforço necessário para aprender, operar, preparar a entrada de dados e interpretar a saída de um programa está relacionado a:",
+    "alternativas": [
+      {
+        "texto": "Usabilidade",
+        "correta": true
+      },
+      {
+        "texto": "Facilidade de Manutenção",
+        "correta": false
+      },
+      {
+        "texto": "Flexibilidade",
+        "correta": false
+      },
+      {
+        "texto": "Portabilidade",
+        "correta": false
+      }
+    ],
+    "id": 92
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "O esforço necessário para localizar e corrigir um erro em um programa está relacionado a:",
+    "alternativas": [
+      {
+        "texto": "Flexibilidade",
+        "correta": false
+      },
+      {
+        "texto": "Testabilidade",
+        "correta": false
+      },
+      {
+        "texto": "Facilidade de Manutenção",
+        "correta": true
+      },
+      {
+        "texto": "Usabilidade",
+        "correta": false
+      }
+    ],
+    "id": 93
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "O esforço necessário para modificar um programa em operação está relacionado a:",
+    "alternativas": [
+      {
+        "texto": "Facilidade de Manutenção",
+        "correta": false
+      },
+      {
+        "texto": "Testabilidade",
+        "correta": false
+      },
+      {
+        "texto": "Flexibilidade",
+        "correta": true
+      },
+      {
+        "texto": "Interoperabilidade",
+        "correta": false
+      }
+    ],
+    "id": 94
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "O esforço necessário para testar um programa de modo a garantir que ele desempenhe a função pretendida está relacionado a:",
+    "alternativas": [
+      {
+        "texto": "Usabilidade",
+        "correta": false
+      },
+      {
+        "texto": "Testabilidade",
+        "correta": true
+      },
+      {
+        "texto": "Interoperabilidade",
+        "correta": false
+      },
+      {
+        "texto": "Reusabilidade",
+        "correta": false
+      }
+    ],
+    "id": 95
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "O esforço necessário para transferir o programa de um ambiente de hardware e/ou software para outro está relacionado a",
+    "alternativas": [
+      {
+        "texto": "Flexibilidade",
+        "correta": false
+      },
+      {
+        "texto": "Reusabilidade",
+        "correta": false
+      },
+      {
+        "texto": "Portabilidade",
+        "correta": true
+      },
+      {
+        "texto": "Interoperabilidade",
+        "correta": false
+      }
+    ],
+    "id": 96
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "O quanto de um programa (ou partes dele) pode ser reutilizado em outras aplicações está relacionado a:",
+    "alternativas": [
+      {
+        "texto": "Reusabilidade",
+        "correta": true
+      },
+      {
+        "texto": "Interoperabilidade",
+        "correta": false
+      },
+      {
+        "texto": "Portabilidade",
+        "correta": false
+      },
+      {
+        "texto": "Testabilidade",
+        "correta": false
+      }
+    ],
+    "id": 97
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "O esforço necessário para integrar um sistema a outro está relacionado a:",
+    "alternativas": [
+      {
+        "texto": "Flexibilidade",
+        "correta": false
+      },
+      {
+        "texto": "Reusabilidade",
+        "correta": false
+      },
+      {
+        "texto": "Interoperabilidade",
+        "correta": true
+      },
+      {
+        "texto": "Portabilidade",
+        "correta": false
+      }
+    ],
+    "id": 98
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Um resultado errado causado por erro de implementação ou condição inesperada é:",
+    "alternativas": [
+      {
+        "texto": "Defeito",
+        "correta": false
+      },
+      {
+        "texto": "Falha",
+        "correta": true
+      },
+      {
+        "texto": "Bug",
+        "correta": false
+      },
+      {
+        "texto": "Quebra",
+        "correta": false
+      }
+    ],
+    "id": 99
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual dessas é a forma mais segura de declarar uma variável chamada resultado?",
+    "alternativas": [
+      {
+        "texto": "const resultado",
+        "correta": false
+      },
+      {
+        "texto": "var resultado",
+        "correta": false
+      },
+      {
+        "texto": "let resultado",
+        "correta": true
+      },
+      {
+        "texto": "int resultado",
+        "correta": false
+      }
+    ],
+    "id": 100
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "A ideia de que o código deve ser compreensível não apenas para a máquina, mas principalmente para outros seres humanos está relacionada a:",
+    "alternativas": [
+      {
+        "texto": "Clean Code",
+        "correta": true
+      },
+      {
+        "texto": "Zero Defeitos",
+        "correta": false
+      },
+      {
+        "texto": "PDCA",
+        "correta": false
+      },
+      {
+        "texto": "Responsabilidade Única",
+        "correta": false
+      }
+    ],
+    "id": 101
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual é o processo de alterar um sistema de software melhorando sua estrutura interna sem alterar seu funcionamento?",
+    "alternativas": [
+      {
+        "texto": "Clean Code",
+        "correta": false
+      },
+      {
+        "texto": "Refatoração",
+        "correta": true
+      },
+      {
+        "texto": "Responsabilidade Única",
+        "correta": false
+      },
+      {
+        "texto": "Correção",
+        "correta": false
+      }
+    ],
+    "id": 102
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "A métrica que define a quantidade de caminhos independentes de execução existentes em um método ou função é:",
+    "alternativas": [
+      {
+        "texto": "SRP",
+        "correta": false
+      },
+      {
+        "texto": "Clean Code",
+        "correta": false
+      },
+      {
+        "texto": "Complexidade Assintótica",
+        "correta": false
+      },
+      {
+        "texto": "Complexidade Ciclomática",
+        "correta": true
+      }
+    ],
+    "id": 103
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "O princípio que define que uma função deve realizar apenas uma tarefa e fazê-la bem é:",
+    "alternativas": [
+      {
+        "texto": "Responsabilidade Única",
+        "correta": true
+      },
+      {
+        "texto": "Complexidade Ciclomática",
+        "correta": false
+      },
+      {
+        "texto": "Clean Code",
+        "correta": false
+      },
+      {
+        "texto": "Pareto",
+        "correta": false
+      }
+    ],
+    "id": 104
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Não é considerado no cálculo de complexidade ciclomática:",
+    "alternativas": [
+      {
+        "texto": "If",
+        "correta": false
+      },
+      {
+        "texto": "Else",
+        "correta": true
+      },
+      {
+        "texto": "For",
+        "correta": false
+      },
+      {
+        "texto": "||",
+        "correta": false
+      }
+    ],
+    "id": 105
   }
 ]
