@@ -2413,5 +2413,212 @@
       }
     ],
     "id": 105
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "O modelo para avaliar e melhorar a capacidade das organizações de desenvolvimento de software criado no fim da década de 1980 é:",
+    "alternativas": [
+      {
+        "texto": "CMMD",
+        "correta": false
+      },
+      {
+        "texto": "CMM",
+        "correta": true
+      },
+      {
+        "texto": "CMMI",
+        "correta": false
+      },
+      {
+        "texto": "CMMB",
+        "correta": false
+      }
+    ],
+    "id": 106
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Não é um nível de maturidade do CMM:",
+    "alternativas": [
+      {
+        "texto": "Inicial",
+        "correta": false
+      },
+      {
+        "texto": "Repetível",
+        "correta": false
+      },
+      {
+        "texto": "Completo",
+        "correta": true
+      },
+      {
+        "texto": "Gerenciado",
+        "correta": false
+      }
+    ],
+    "id": 107
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Uma organização disciplinada ao executar projetos, mas que não está bem preparada para mudanças está em qual nível do CMM?",
+    "alternativas": [
+      {
+        "texto": "1",
+        "correta": false
+      },
+      {
+        "texto": "2",
+        "correta": true
+      },
+      {
+        "texto": "3",
+        "correta": false
+      },
+      {
+        "texto": "4",
+        "correta": false
+      }
+    ],
+    "id": 108
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Uma organização que está focada na melhoria contínua dos processos com base na análise de dados quantitativos e na inovação está em qual nível do CMM?",
+    "alternativas": [
+      {
+        "texto": "Otimizado",
+        "correta": true
+      },
+      {
+        "texto": "Gerenciado",
+        "correta": false
+      },
+      {
+        "texto": "Completo",
+        "correta": false
+      },
+      {
+        "texto": "Definido",
+        "correta": false
+      }
+    ],
+    "id": 109
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "A versão mais atual do CMMI é:",
+    "alternativas": [
+      {
+        "texto": "1.8",
+        "correta": false
+      },
+      {
+        "texto": "2.0",
+        "correta": false
+      },
+      {
+        "texto": "3.0",
+        "correta": true
+      },
+      {
+        "texto": "4.0",
+        "correta": false
+      }
+    ],
+    "id": 110
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Em qual nível do CMMI 1.x os processos são consistentes e há uma base para o aprendizado e melhoria organizacional?",
+    "alternativas": [
+      {
+        "texto": "2 - Gerenciado",
+        "correta": false
+      },
+      {
+        "texto": "3 - Definido",
+        "correta": true
+      },
+      {
+        "texto": "4 - Gerenciado Quantitativamente",
+        "correta": false
+      },
+      {
+        "texto": "5 - Otimizado",
+        "correta": false
+      }
+    ],
+    "id": 111
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual é a sigla do modelo de avaliação de maturidade brasileiro?",
+    "alternativas": [
+      {
+        "texto": "MPS.BR",
+        "correta": true
+      },
+      {
+        "texto": "FPS.BR",
+        "correta": false
+      },
+      {
+        "texto": "GPS.BR",
+        "correta": false
+      },
+      {
+        "texto": "SPS.BR",
+        "correta": false
+      }
+    ],
+    "id": 112
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "Qual dessas normas ISO não trata sobre qualidade?",
+    "alternativas": [
+      {
+        "texto": "9000",
+        "correta": false
+      },
+      {
+        "texto": "12207",
+        "correta": false
+      },
+      {
+        "texto": "25000",
+        "correta": false
+      },
+      {
+        "texto": "37500",
+        "correta": true
+      }
+    ],
+    "id": 113
+  },
+  {
+    "categoria": "Qualidade e Teste de Software",
+    "texto": "A garantia que ações ou eventos realizados por um usuário ou sistema possam ser comprovados como tendo ocorrido de forma irrefutável é:",
+    "alternativas": [
+      {
+        "texto": "Viés de Confirmação",
+        "correta": false
+      },
+      {
+        "texto": "Não Repúdio",
+        "correta": true
+      },
+      {
+        "texto": "Responsabilidade",
+        "correta": false
+      },
+      {
+        "texto": "Integridade",
+        "correta": false
+      }
+    ],
+    "id": 114
   }
 ]
