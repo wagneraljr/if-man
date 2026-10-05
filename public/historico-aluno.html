@@ -84,7 +84,7 @@
                         <div class="hist-meta">
                             <span>🏆 ${item.posicao}º de ${item.totalParticipantes}</span>
                             <span>⭐ ${item.pontuacao} pts</span>
-                            <span>❤ ${item.vidas}</span>
+                            <span>❤ × ${Math.max(0, Number(item.vidas) || 0)}</span>
                             <span>⏱ ${Math.round(item.duracaoSeg / 60)} min</span>
                             <span>🔁 ${item.totalRodadas || 1} rodada${(item.totalRodadas || 1) !== 1 ? "s" : ""}</span>
                         </div>

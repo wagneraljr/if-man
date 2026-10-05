@@ -91,7 +91,7 @@
                 </div>
 
                 <div class="alunos-aguardando">
-                    <p class="campo-grupo-label" style="font-size:1rem;">Alunos na sala de espera</p>
+                    <p id="total-alunos-espera" class="campo-grupo-label" style="font-size:1rem;">Alunos na sala de espera 0</p>
                     <div id="lista-alunos-espera" class="chips-alunos">
                         <span class="chip-vazio">Nenhum aluno conectado ainda...</span>
                     </div>
@@ -566,17 +566,22 @@
                 const res   = await fetch("/api/sala");
                 const dados = await res.json();
                 const lista = document.getElementById("lista-alunos-espera");
+                const alunos = Array.isArray(dados.alunos) ? dados.alunos : [];
+                document.getElementById("total-alunos-espera").innerText =
+                    `Alunos na sala de espera: ${alunos.length}`;
 
-                if (!dados.alunos || dados.alunos.length === 0) {
+                if (alunos.length === 0) {
                     lista.innerHTML = `<span class="chip-vazio">Nenhum aluno na sala ainda...</span>`;
                     return;
                 }
 
-                lista.innerHTML = dados.alunos
+                lista.innerHTML = alunos
                     .map(a => `<span class="chip-aluno">🎮 ${a.nome}</span>`)
                     .join("");
 
             } catch {
+                document.getElementById("total-alunos-espera").innerText =
+                    "Alunos na sala de espera —";
                 document.getElementById("lista-alunos-espera").innerHTML =
                     `<span class="chip-vazio">Não foi possível contatar o servidor.</span>`;
             }

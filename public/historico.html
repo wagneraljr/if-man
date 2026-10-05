@@ -58,15 +58,12 @@
                 </div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
                     <button onclick="exportarCSV()" class="btn-outline-sm">⬇ Exportar CSV</button>
-                    <button onclick="fecharDetalhe()" class="btn-secundario">✕ Fechar</button>
+                    <button onclick="fecharDetalhe()" class="btn-perigo-sm">✕ Fechar</button>
                 </div>
             </div>
 
-            <!-- Pódio -->
-            <div id="detalhe-podio" class="podio-wrap" style="margin: 20px 0 8px;"></div>
-
-            <!-- Ranking completo -->
-            <div id="detalhe-ranking" style="margin-top: 8px;"></div>
+            <!-- Pódios da competição -->
+            <div id="detalhe-podio" class="historico-podios"></div>
 
             <!-- Rodadas da competição -->
             <div id="detalhe-rodadas" style="margin-top: 16px;"></div>
@@ -181,58 +178,117 @@
             document.getElementById("detalhe-info").innerText =
                 `${comp.participantes} participante${comp.participantes !== 1 ? "s" : ""} · ${Math.round(comp.duracaoSeg / 60)} min por rodada · ${totalRodadas} rodada${totalRodadas !== 1 ? "s" : ""} · ${comp.motivo === "tempo" ? "Tempo esgotado" : "Encerrada manualmente"}`;
 
-            renderizarPodioDetalhe(comp.ranking);
-            renderizarRankingDetalhe(comp.ranking);
+            renderizarPodiosCompeticao(comp);
             renderizarRodadasDetalhe(comp.rodadas || []);
             renderizarRelatorioFinalDetalhe(comp.relatorioFinal || null);
         }
 
-        function renderizarPodioDetalhe(ranking) {
-            const podio  = document.getElementById("detalhe-podio");
-            const top3   = ranking.slice(0, 3);
+        function renderizarPodiosCompeticao(comp) {
+            const podio = document.getElementById("detalhe-podio");
+            const rankingsCalculados = calcularRankingsCompeticao(comp);
+            const relatorio = comp.relatorioFinal || {};
+            const pontuacoesUnicas = Array.isArray(relatorio.topPontuacoesUnicas) && relatorio.topPontuacoesUnicas.length > 0
+                ? relatorio.topPontuacoesUnicas
+                : rankingsCalculados.pontuacoesUnicas;
+            const pontuacoesMedias = Array.isArray(relatorio.topPontuacoesMedias) && relatorio.topPontuacoesMedias.length > 0
+                ? relatorio.topPontuacoesMedias
+                : rankingsCalculados.pontuacoesMedias;
 
-            // Preenche vagas vazias
+            podio.innerHTML = `
+                <section class="historico-podio">
+                    <h3 class="historico-podio-titulo">Pontuações únicas</h3>
+                    <p class="historico-podio-subtitulo">Melhor pontuação de cada participante</p>
+                    <div class="podio-wrap">
+                        ${renderizarLugaresPodio(pontuacoesUnicas, "unica")}
+                    </div>
+                </section>
+                <section class="historico-podio">
+                    <h3 class="historico-podio-titulo">Pontuações médias</h3>
+                    <p class="historico-podio-subtitulo">Média nas rodadas participadas</p>
+                    <div class="podio-wrap">
+                        ${renderizarLugaresPodio(pontuacoesMedias, "media")}
+                    </div>
+                </section>`;
+        }
+
+        function calcularRankingsCompeticao(comp) {
+            const rodadas = Array.isArray(comp.rodadas) && comp.rodadas.length > 0
+                ? comp.rodadas
+                : [{ numero: 1, ranking: Array.isArray(comp.ranking) ? comp.ranking : [] }];
+            const porAluno = new Map();
+
+            rodadas.forEach((rodada, index) => {
+                const numeroRodada = rodada.numero || index + 1;
+                (Array.isArray(rodada.ranking) ? rodada.ranking : []).forEach((aluno) => {
+                    const id = aluno.alunoId || aluno.nome;
+                    const pontuacao = Number(aluno.pontuacao) || 0;
+                    const atual = porAluno.get(id) || {
+                        alunoId: id,
+                        nome: aluno.nome,
+                        pontuacao,
+                        rodada: numeroRodada,
+                        soma: 0,
+                        rodadasParticipadas: 0
+                    };
+
+                    if (pontuacao > atual.pontuacao || atual.rodadasParticipadas === 0) {
+                        atual.pontuacao = pontuacao;
+                        atual.rodada = numeroRodada;
+                    }
+                    atual.nome = aluno.nome || atual.nome;
+                    atual.soma += pontuacao;
+                    atual.rodadasParticipadas++;
+                    porAluno.set(id, atual);
+                });
+            });
+
+            const alunos = Array.from(porAluno.values());
+            return {
+                pontuacoesUnicas: alunos
+                    .map(({ alunoId, nome, pontuacao, rodada }) => ({ alunoId, nome, pontuacao, rodada }))
+                    .sort((a, b) => b.pontuacao - a.pontuacao || a.rodada - b.rodada)
+                    .slice(0, 3),
+                pontuacoesMedias: alunos
+                    .map(({ alunoId, nome, soma, rodadasParticipadas }) => ({
+                        alunoId,
+                        nome,
+                        media: Number((soma / rodadasParticipadas).toFixed(2)),
+                        rodadasParticipadas
+                    }))
+                    .sort((a, b) => b.media - a.media || b.rodadasParticipadas - a.rodadasParticipadas)
+                    .slice(0, 3)
+            };
+        }
+
+        function renderizarLugaresPodio(ranking, tipo) {
+            const top3 = ranking.slice(0, 3);
             while (top3.length < 3) top3.push(null);
 
-            const config  = [
+            const config = [
                 { pos: "2º", medalha: "🥈", cor: "#95A5A6", alt: "prata"  },
                 { pos: "1º", medalha: "🥇", cor: "#F1C40F", alt: "ouro"   },
                 { pos: "3º", medalha: "🥉", cor: "#CD6133", alt: "bronze" }
             ];
             const ordemVisual = [top3[1], top3[0], top3[2]];
 
-            podio.innerHTML = ordemVisual.map((aluno, i) => {
+            return ordemVisual.map((aluno, i) => {
                 const cfg = config[i];
                 if (!aluno) return `<div class="podio-lugar podio-${cfg.alt} vazio"></div>`;
+                const pontuacao = tipo === "media"
+                    ? `Média ${aluno.media} pts`
+                    : `${aluno.pontuacao} pts`;
+                const detalhe = tipo === "media"
+                    ? `${aluno.rodadasParticipadas} rodada${aluno.rodadasParticipadas !== 1 ? "s" : ""}`
+                    : `Rodada ${aluno.rodada}`;
                 return `
                 <div class="podio-lugar podio-${cfg.alt}">
                     <div class="podio-medalha">${cfg.medalha}</div>
                     <div class="podio-nome">${aluno.nome}</div>
-                    <div class="podio-pts">${aluno.pontuacao} pts</div>
+                    <div class="podio-pts">${pontuacao}</div>
+                    <div class="historico-podio-detalhe">${detalhe}</div>
                     <div class="podio-base" style="background:${cfg.cor}">${cfg.pos}</div>
                 </div>`;
             }).join("");
-        }
-
-        function renderizarRankingDetalhe(ranking) {
-            const el = document.getElementById("detalhe-ranking");
-            el.innerHTML = `
-                <h3 style="margin-bottom:12px; color:var(--if-verde-escuro)">Ranking completo</h3>
-                ${ranking.map((aluno, i) => {
-                    const pos    = i + 1;
-                    const empate = i > 0 && aluno.pontuacao === ranking[i-1].pontuacao;
-                    const label  = pos <= 3 ? MEDALHAS[pos-1] : pos + "º";
-                    return `
-                    <div class="questao-card placar-linha ${pos <= 3 ? "placar-destaque-"+pos : ""}"
-                         style="margin-bottom:6px;">
-                        <div class="placar-posicao">
-                            ${empate ? '<span style="color:#aaa;font-size:.75rem">=</span>' : label}
-                        </div>
-                        <div class="placar-nome">${aluno.nome}</div>
-                        <div class="placar-pontos">${aluno.pontuacao} pts</div>
-                        <div class="placar-vidas">${"❤".repeat(Math.max(0, aluno.vidas || 0))}</div>
-                    </div>`;
-                }).join("")}`;
         }
 
         function renderizarRodadasDetalhe(rodadas) {
@@ -244,12 +300,14 @@
 
             el.innerHTML = `
                 <h3 style="margin-bottom:12px; color:var(--if-verde-escuro)">Rodadas</h3>
-                ${rodadas.map((rodada) => {
-                    const top3 = (rodada.ranking || []).slice(0, 3);
+                ${rodadas.map((rodada, index) => {
+                    const numero = rodada.numero || index + 1;
+                    const ranking = Array.isArray(rodada.ranking) ? rodada.ranking : [];
+                    const top3 = ranking.slice(0, 3);
                     return `
                     <div class="questao-card" style="margin-bottom:10px;">
                         <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:6px;">
-                            <strong>Rodada ${rodada.numero}</strong>
+                            <strong>Rodada ${numero}</strong>
                             <span class="hist-badge ${rodada.motivo === "tempo" ? "" : "hist-badge-manual"}">
                                 ${rodada.motivo === "tempo" ? "⏱ Tempo esgotado" : "■ Encerrada manualmente"}
                             </span>
@@ -259,9 +317,47 @@
                                 ? '<span class="hint">Sem pontuações registradas nesta rodada.</span>'
                                 : top3.map((a, i) => `<span class="alt-badge ${i === 0 ? "alt-correta" : ""}">${MEDALHAS[i]} ${a.nome} — ${a.pontuacao} pts</span>`).join("")}
                         </div>
+                        <button id="btn-ranking-rodada-${numero}" type="button" class="btn-outline-sm"
+                            style="margin-top:10px" aria-expanded="false"
+                            aria-controls="ranking-rodada-${numero}"
+                            onclick="toggleRankingRodada(${numero})">Ranking Completo</button>
+                        <div id="ranking-rodada-${numero}" style="display:none; margin-top:10px;">
+                            ${renderizarLinhasRanking(ranking)}
+                        </div>
                     </div>`;
                 }).join("")}
             `;
+        }
+
+        function renderizarLinhasRanking(ranking) {
+            if (ranking.length === 0) {
+                return '<span class="hint">Sem pontuações registradas nesta rodada.</span>';
+            }
+
+            return ranking.map((aluno, i) => {
+                const pos = i + 1;
+                const empate = i > 0 && aluno.pontuacao === ranking[i - 1].pontuacao;
+                const label = pos <= 3 ? MEDALHAS[pos - 1] : pos + "º";
+                return `
+                    <div class="questao-card placar-linha ${pos <= 3 ? "placar-destaque-" + pos : ""}"
+                         style="margin-bottom:6px;">
+                        <div class="placar-posicao">
+                            ${empate ? '<span style="color:#aaa;font-size:.75rem">=</span>' : label}
+                        </div>
+                        <div class="placar-nome">${aluno.nome}</div>
+                        <div class="placar-pontos">${aluno.pontuacao} pts</div>
+                        <div class="placar-vidas">❤ × ${Math.max(0, Number(aluno.vidas) || 0)}</div>
+                    </div>`;
+            }).join("");
+        }
+
+        function toggleRankingRodada(numero) {
+            const ranking = document.getElementById(`ranking-rodada-${numero}`);
+            const botao = document.getElementById(`btn-ranking-rodada-${numero}`);
+            const expandido = ranking.style.display === "none";
+            ranking.style.display = expandido ? "block" : "none";
+            botao.setAttribute("aria-expanded", String(expandido));
+            botao.innerText = expandido ? "Ocultar Ranking" : "Ranking Completo";
         }
 
         function renderizarRelatorioFinalDetalhe(relatorio) {
@@ -301,10 +397,23 @@
             if (!competicaoAtual) return;
 
             const comp   = competicaoAtual;
-            const linhas = [
-                ["Posição","Nome","Pontuação","Vidas"],
-                ...comp.ranking.map((a, i) => [i+1, a.nome, a.pontuacao, a.vidas || 0])
-            ];
+            const rodadas = Array.isArray(comp.rodadas) && comp.rodadas.length > 0
+                ? comp.rodadas
+                : [{ numero: 1, ranking: Array.isArray(comp.ranking) ? comp.ranking : [] }];
+            const linhas = [["Rodada", "Posição", "Nome", "Pontuação", "Vidas"]];
+
+            rodadas.forEach((rodada, index) => {
+                const ranking = Array.isArray(rodada.ranking) ? rodada.ranking : [];
+                ranking.forEach((aluno, posicao) => {
+                    linhas.push([
+                        rodada.numero || index + 1,
+                        posicao + 1,
+                        aluno.nome,
+                        aluno.pontuacao,
+                        aluno.vidas || 0
+                    ]);
+                });
+            });
 
             const csv = linhas
                 .map(l => l.map(v => `"${String(v).replace(/"/g,'""')}"`).join(","))
@@ -378,6 +487,79 @@
             border-radius: var(--raio);
             box-shadow: var(--sombra);
             margin-bottom: 12px;
+        }
+        .historico-podios {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin: 20px 0 8px;
+        }
+        .historico-podio {
+            min-width: 0;
+            padding: 18px 14px 12px;
+            background: var(--cor-fundo-card);
+            border: var(--borda);
+            border-top: 3px solid var(--if-verde);
+            border-radius: var(--raio);
+            box-shadow: var(--sombra);
+        }
+        .historico-podio-titulo {
+            margin: 0;
+            color: var(--if-verde-escuro);
+            text-align: center;
+        }
+        .historico-podio-subtitulo {
+            margin: 5px 0 0;
+            color: var(--cor-texto-claro);
+            font-size: 0.88rem;
+            text-align: center;
+        }
+        .historico-podio .podio-wrap {
+            gap: 8px;
+            min-height: 190px;
+            padding-top: 16px;
+        }
+        .historico-podio .podio-lugar {
+            flex: 1 1 0;
+            min-width: 0;
+            gap: 6px;
+        }
+        .historico-podio .podio-medalha {
+            font-size: 2.2rem;
+        }
+        .historico-podio .podio-nome {
+            max-width: 100%;
+            overflow-wrap: anywhere;
+            font-size: 0.9rem;
+        }
+        .historico-podio .podio-pts {
+            text-align: center;
+            font-size: 0.82rem;
+        }
+        .historico-podio-detalhe {
+            color: var(--cor-texto-claro);
+            font-size: 0.75rem;
+            text-align: center;
+        }
+        @media (max-width: 900px) {
+            .historico-podios {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+        @media (max-width: 480px) {
+            .historico-podio {
+                padding-right: 8px;
+                padding-left: 8px;
+            }
+            .historico-podio .podio-wrap {
+                gap: 4px;
+            }
+            .historico-podio .podio-medalha {
+                font-size: 1.8rem;
+            }
+            .historico-podio .podio-nome {
+                font-size: 0.8rem;
+            }
         }
     </style>
 
